@@ -2,20 +2,30 @@
 
 ## About
 
-SMSLoc can be used by friends to check each other's location in areas with poor internet connection, or to locate a lost phone with the help of a friend.
+Locate your friend and be found via SMS in areas with no internet or poor connectivity.
+
+### Offline
+
+SMSLoc can be used offline by whitelisted friends to check each other's exact location at any time. It is designed for outdoor use when hiking, climbing, canyoning, paragliding etc.
+
+SMSLoc requires SMS and background location permission so that it can always respond hands-free to an SMS request with the exact location while the user is engaged in their outdoor activity or being in distress.
+
+### Need help
+
+Send short, predefined messages **along with your location**.
 
 ## Screenshots
 
-<div align="center">
-  <img src="screenshots/1-sidebar.jpg" width="200px" />
+<div align="center">  
   <img src="screenshots/2-contacts.jpg" width="200px" />
   <img src="screenshots/3-actions.jpg" width="200px" />
+  <img src="screenshots/map-lite.jpg" width="200px" />
 </div>
 
 <div align="center">
-  <img src="screenshots/rain.jpg" width="200px" />
-  <img src="screenshots/rain-clouds.jpg" width="200px" />
-  <img src="screenshots/5-about.jpg" width="200px" />
+  <img src="screenshots/settings.jpg" width="200px" />
+  <img src="screenshots/settings-dark.jpg" width="200px" />
+  <img src="screenshots/map-dark.jpg" width="200px" />
 </div>
 
 ## configuration
@@ -79,3 +89,11 @@ native-run android --list
 
 - [generate release article](https://ionicframework.com/docs/deployment/play-store)
 - [sign release apk article](https://developer.android.com/studio/publish/app-signing)
+
+### Donate
+
+![Bitcoin donations](https://img.shields.io/badge/BTC-bc1q9fjcpcgm5cj4295f88uvld9g8vssgq3wy33rn3-FFA500.svg)
+
+<div align="left">
+  <img src="screenshots/btc.png" width="200px" />
+</div>
