@@ -1,0 +1,18 @@
+# Files Prettier should not format
+**/*.log
+**/.DS_Store
+*.
+dist
+node_modules
+android/*
+src/services/client-types/*
+config
+deploy
+icon_resources
+keystores
+public/assets
+public/docs
+.eslintrc.js
+.vscode/*
+cypress.config.ts
+ionic.config.json

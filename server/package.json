@@ -1,0 +1,41 @@
+{
+  "name": "server",
+  "description": "sms-loc-server",
+  "version": "0.0.0",
+  "homepage": "",
+  "private": true,
+  "keywords": [],
+  "contributors": [],
+  "directories": {
+    "lib": "src",
+    "test": "test"
+  },
+  "main": "./lib/index.js",
+  "scripts": {
+    "dev": "nodemon -x ts-node src/index.ts",
+    "compile": "shx rm -rf lib/ && tsc",
+    "install-prod": "rm -rf node_modules && yarn install --production --frozen-lockfile",
+    "start": "node lib/",
+    "prettier": "npx prettier \"**/*.ts\" --write",
+    "sync-server": "yarn install && yarn compile && yarn install-prod && rm -rf ../public/nodejs && rm -rf ./data && cd .. && cp -r ./server ./public/nodejs && rm -rf ./public/nodejs/src"
+  },
+  "dependencies": {
+    "compressing": "^1.10.0",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "express-async-errors": "^3.1.1",
+    "fs-jetpack": "^5.1.0",
+    "got": "^13.0.0",
+    "serve-static": "^1.15.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.14",
+    "@types/express": "^4.17.18",
+    "@types/node": "^20.8.2",
+    "nodemon": "^3.0.1",
+    "prettier": "^3.0.3",
+    "shx": "^0.3.4",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.2.2"
+  }
+}

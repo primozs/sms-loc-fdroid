@@ -1,0 +1,7 @@
+{
+  "name": "SMSLocFD",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "vue-vite"
+}

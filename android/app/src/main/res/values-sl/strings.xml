@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="capacitor_background_geolocation_notification_channel_name">SMSLoc lokacija v ozadju</string>
+    <string name="waiting_for_gps_fix">Čakanje na GPS lokacijo</string>
+    <string name="could_not_get_gps_fix">Ni bilo mogoče pridobiti GPS lokacije</string>
+    <string name="response">Odziv</string>
+    <string name="invalid">ne veljaven</string>
+    <string name="location_valid">veljavna</string>
+    <string name="location_invalid">neveljavna</string>
+    <string name="gps_data_invalid">GPS podatki so neveljavni</string>
+    <string name="error">error</string>
+    <string name="missing_send_sms_permission">Manjka dovoljenje za pošiljanje SMS sporočil</string>
+    <string name="request_from">Poizvedba od %s</string>
+    <string name="request_from_unlisted">Poizvedba od %s (ni na seznamu)</string>
+    <string name="unlisted">(ni na seznamu)</string>
+    <string name="not_whitelisted">Ni na odobrenem seznamu</string>
+    <string name="response_error">Napaka pri odzivu</string>
+    <string name="response_from">Odziv od %s</string>
+    <string name="response_from_unlisted">Odziv od %s (ni na seznamu)</string>
+    <string name="location">Lokacija</string>
+    <string name="location_from_time">Lokacija od %s nazaj</string>
+</resources>

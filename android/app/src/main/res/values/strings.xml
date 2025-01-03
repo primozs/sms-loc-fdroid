@@ -1,0 +1,29 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<resources>
+    <string name="app_name">SMSLocFD (DEV)</string>
+    <string name="title_activity_main" translatable="false">SMSLoc</string>
+    <string name="package_name" translatable="false">si.stenar.smsloc</string>
+    <string name="custom_url_scheme" translatable="false">si.stenar.smsloc</string>
+    <string name="capacitor_background_geolocation_notification_channel_name">SMSLoc background gps</string>
+    <string name="capacitor_background_geolocation_notification_icon" translatable="false">
+        drawable/notification_icon
+    </string>
+    <string name="waiting_for_gps_fix">Waiting for GPS location</string>
+    <string name="could_not_get_gps_fix">Could not get GPS</string>
+    <string name="response">Response</string>
+    <string name="invalid">invalid</string>
+    <string name="location_valid">valid</string>
+    <string name="location_invalid">invalid</string>
+    <string name="gps_data_invalid">GPS data invalid</string>
+    <string name="error">error</string>
+    <string name="missing_send_sms_permission">Missing permission to send SMS</string>
+    <string name="request_from">Request from %s</string>
+    <string name="request_from_unlisted">Request from (unlisted) %s</string>
+    <string name="unlisted">(unlisted)</string>
+    <string name="not_whitelisted">Not whitelisted</string>
+    <string name="response_error">Response error</string>
+    <string name="response_from">Response from %s</string>
+    <string name="response_from_unlisted">Response from (unlisted) %s</string>
+    <string name="location">Location</string>
+    <string name="location_from_time">Location from %s ago</string>
+</resources>

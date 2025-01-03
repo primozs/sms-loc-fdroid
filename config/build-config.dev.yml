@@ -1,0 +1,16 @@
+vars:
+  PACKAGE_VERSION:
+  BUILD_NUMBER:
+
+platforms:
+  android:
+    appName: SMSLocFD (DEV)
+    versionName: $PACKAGE_VERSION
+    versionCode: $BUILD_NUMBER
+    versionNameSuffix: staging
+    packageName: si.stenar.smsloc
+
+project:
+  copy:
+    - src: config/dev/index.ts
+      dest: src/config.ts

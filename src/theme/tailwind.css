@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+  * Component icons
+  */
+
+.app-icon {
+  border-radius: 50%;
+
+  padding: 7px;
+  height: 18px;
+  width: 18px;
+
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+.app-icon-dark {
+  background: var(--ion-color-step-850, #27323e);
+  color: var(--ion-item-background, #fff);
+}
+
+.app-icon-primary {
+  background: var(--ion-color-primary);
+  color: #fff;
+}
+
+.paragraphs p {
+  padding: 4px 0 8px 0;
+}
