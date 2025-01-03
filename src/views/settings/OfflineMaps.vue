@@ -163,8 +163,11 @@ const formatProgress = (p: ProgressEv | undefined) => {
 
 <template>
   <IonItem lines="full">
-    <IonIcon slot="start" :color="mapsInstalled ? 'success' : ''"
-      :icon="mapsInstalled ? checkmarkCircleOutline : downloadOutline"></IonIcon>
+    <IonIcon
+      slot="start"
+      :color="mapsInstalled ? 'success' : ''"
+      :icon="mapsInstalled ? checkmarkCircleOutline : downloadOutline"
+    ></IonIcon>
     <div class="flex flex-col gap-y-1.5 w-full py-3">
       <div class="flex flex-col h-8 relative">
         <IonText class="text-xs leading-5">
@@ -175,12 +178,19 @@ const formatProgress = (p: ProgressEv | undefined) => {
         </IonText>
       </div>
       <div class="mr-3">
-        <IonProgressBar :value="installProgress?.percent" :color="downloading ? 'primary' : 'medium'" />
+        <IonProgressBar
+          :value="installProgress?.percent"
+          :color="downloading ? 'primary' : 'medium'"
+        />
       </div>
     </div>
 
-    <IonButton slot="end" @click="handleClick" :color="mapsInstalled ? 'danger' : downloading ? 'warning' : 'primary'"
-      :disabled="buttonDisabled">
+    <IonButton
+      slot="end"
+      @click="handleClick"
+      :color="mapsInstalled ? 'danger' : downloading ? 'warning' : 'primary'"
+      :disabled="buttonDisabled"
+    >
       {{
         mapsInstalled
           ? t('message.remove')

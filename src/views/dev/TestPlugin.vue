@@ -67,7 +67,6 @@ const handler2 = async () => {
     <IonFabButton @click="handler1">
       <IonIcon :icon="stopOutline"></IonIcon>
     </IonFabButton>
-
   </IonFab>
 
   <IonFab slot="fixed" horizontal="center" vertical="center">

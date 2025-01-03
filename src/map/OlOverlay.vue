@@ -44,8 +44,10 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div ref="overlayEl" :class="[
-    `
+  <div
+    ref="overlayEl"
+    :class="[
+      `
       relative
       bg-white dark:bg-neutral-800 text-gray-800 dark:text-gray-50
         w-max
@@ -55,17 +57,22 @@ onUnmounted(() => {
         border
         border-gray-200 dark:border-gray-700
         `,
-    { 'opacity-100': props.visible },
-  ]" role="tooltip">
+      { 'opacity-100': props.visible },
+    ]"
+    role="tooltip"
+  >
     <slot></slot>
-    <div ref="arrowEl" :class="[
-      `
+    <div
+      ref="arrowEl"
+      :class="[
+        `
         bg-white dark:bg-neutral-800
          w-2 h-2 transform rotate-45
       `,
-      {
-        'absolute -bottom-1 left-1/2': props.positioning === 'bottom-center',
-      },
-    ]"></div>
+        {
+          'absolute -bottom-1 left-1/2': props.positioning === 'bottom-center',
+        },
+      ]"
+    ></div>
   </div>
 </template>

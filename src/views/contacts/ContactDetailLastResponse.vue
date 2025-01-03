@@ -31,31 +31,38 @@ const {
   <IonGrid class="p-3" v-if="response">
     <IonRow>
       <IonCol>
-        <span class="font-medium">{{ t('message.time') }}</span>: {{ timeFormated }}
+        <span class="font-medium">{{ t('message.time') }}</span
+        >: {{ timeFormated }}
       </IonCol>
       <IonCol>
-        <span class="font-medium">{{ t('message.elapsed') }}</span>: {{ timeElapsed }}
-      </IonCol>
-    </IonRow>
-    <IonRow>
-      <IonCol>
-        <span class="font-medium">{{ t('message.distance') }}</span>: {{ distance }}
-      </IonCol>
-      <IonCol>
-        <span class="font-medium">{{ t('message.elevation') }}</span>: {{ elevation }}
+        <span class="font-medium">{{ t('message.elapsed') }}</span
+        >: {{ timeElapsed }}
       </IonCol>
     </IonRow>
     <IonRow>
       <IonCol>
-        <span class="font-medium">{{ t('message.battery') }}</span>: {{ battery }}
+        <span class="font-medium">{{ t('message.distance') }}</span
+        >: {{ distance }}
       </IonCol>
       <IonCol>
-        <span class="font-medium">{{ t('message.speed') }}</span>: {{ speed }}
+        <span class="font-medium">{{ t('message.elevation') }}</span
+        >: {{ elevation }}
       </IonCol>
     </IonRow>
     <IonRow>
       <IonCol>
-        <span class="font-medium">{{ t('message.location') }}</span>:
+        <span class="font-medium">{{ t('message.battery') }}</span
+        >: {{ battery }}
+      </IonCol>
+      <IonCol>
+        <span class="font-medium">{{ t('message.speed') }}</span
+        >: {{ speed }}
+      </IonCol>
+    </IonRow>
+    <IonRow>
+      <IonCol>
+        <span class="font-medium">{{ t('message.location') }}</span
+        >:
         <Link :router-link="`/contacts/list/map/${response?.id}`">{{
           locationFormated
         }}</Link>

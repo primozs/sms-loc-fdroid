@@ -54,7 +54,6 @@ const dev = useDevMode();
         <IonListHeader class="text-lg leading-6 font-semibold">
           <IonLabel>DEVELOPMENT</IonLabel>
         </IonListHeader>
-
       </IonList>
 
       <IonList :inset="true">
@@ -63,15 +62,15 @@ const dev = useDevMode();
         <OfflineMaps />
 
         <Link router-link="/logs">
-        <IonItem button :detail="false" lines="full">
-          <IonIcon slot="start" :icon="readerOutline"></IonIcon>
-          <IonLabel>
-            {{ $t('message.logs') }}
-            <p>
-              {{ $t('message.version') }}: {{ config.APPLICATION_VERSION }}
-            </p>
-          </IonLabel>
-        </IonItem>
+          <IonItem button :detail="false" lines="full">
+            <IonIcon slot="start" :icon="readerOutline"></IonIcon>
+            <IonLabel>
+              {{ $t('message.logs') }}
+              <p>
+                {{ $t('message.version') }}: {{ config.APPLICATION_VERSION }}
+              </p>
+            </IonLabel>
+          </IonItem>
         </Link>
       </IonList>
     </IonContent>
