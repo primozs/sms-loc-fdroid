@@ -1,4 +1,5 @@
-FROM debian:bullseye
+# FROM debian:bullseye
+FROM openjdk:21-rc-jdk-slim-bookworm
 
 ENV DEBIAN_FRONTEND=noninteractive
 
