@@ -1,6 +1,11 @@
 apply plugin: 'com.android.application'
 
 android {
+    packaging {
+        jniLibs {
+            useLegacyPackaging false
+        }
+    }
     namespace "si.stenar.smsloc"
     compileSdkVersion rootProject.ext.compileSdkVersion
     defaultConfig {
