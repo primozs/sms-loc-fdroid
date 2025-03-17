@@ -32,7 +32,7 @@ const handleDidDismiss = () => {
 <template>
   <IonModal
     :is-open="isOpen"
-    @ionModalDidDismiss="handleDidDismiss"
+    @didDismiss="handleDidDismiss"
     :initial-breakpoint="0.75"
     :breakpoints="[0, 0.2, 0.5, 0.75]"
     :backdrop-dismiss="false"
