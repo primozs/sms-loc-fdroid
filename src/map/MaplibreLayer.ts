@@ -7,6 +7,10 @@ import maplibregl from 'maplibre-gl';
 import type { Options as LayerOptions } from 'ol/layer/Layer.js';
 import mlcontour from 'maplibre-contour';
 import type { Map as OlMap } from 'ol';
+import { Protocol } from 'pmtiles';
+
+const protocol = new Protocol();
+maplibregl.addProtocol('pmtiles', protocol.tile);
 
 export type MapLibreMap = maplibregl.Map;
 
@@ -15,7 +19,7 @@ export type MapLibreLayerOptions = LayerOptions & {
 };
 
 const demSource = new mlcontour.DemSource({
-  url: 'https://tiles.stenar.si/terrarium/{z}/{x}/{y}.png',
+  url: 'https://pmtiles.stenar.si/512/terrarium_tiles/{z}/{x}/{y}.png',
   encoding: 'terrarium',
   maxzoom: 12,
   worker: true,
