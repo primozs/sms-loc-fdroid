@@ -1,5 +1,8 @@
 package si.stenar.smsloc;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.IntentFilter;
 import android.os.Build;
 import android.os.Bundle;
 
@@ -10,12 +13,22 @@ import android.provider.Settings;
 import android.content.Intent;
 import android.content.ActivityNotFoundException;
 
+import androidx.annotation.Nullable;
+
 import si.stenar.smsloc.core.CorePlugin;
 import si.stenar.smsloc.plugins.Locale.LocalePlugin;
 import si.stenar.smsloc.plugins.GeoLocation.GeoLocationPlugin;
 import si.stenar.smsloc.plugins.Sms.SmsPlugin;
 
 public class MainActivity extends BridgeActivity {
+    @Override
+    public Intent registerReceiver(@Nullable BroadcastReceiver receiver, IntentFilter filter) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            return super.registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED);
+        } else {
+            return super.registerReceiver(receiver, filter);
+        }
+    }
     @Override
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(LocalePlugin.class);
