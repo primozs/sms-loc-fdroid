@@ -3,6 +3,7 @@ import { NavigationBar } from '@hugotomazi/capacitor-navigation-bar';
 import { Preferences } from '@capacitor/preferences';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { Capacitor } from '@capacitor/core';
+import { EdgeToEdge } from '@capawesome/capacitor-android-edge-to-edge-support';
 
 const THEME_KEY = 'theme-preference';
 
@@ -29,6 +30,7 @@ export const themePlugin = {
         style: userTheme === 'light' ? Style.Light : Style.Dark,
       });
       StatusBar.setBackgroundColor({ color: statusBarColor });
+      EdgeToEdge.setBackgroundColor({ color: statusBarColor });
     }
 
     const theme = ref<string>(userTheme);
@@ -47,6 +49,7 @@ export const themePlugin = {
           style: newTheme === 'light' ? Style.Light : Style.Dark,
         });
         StatusBar.setBackgroundColor({ color: statusBarColor });
+        EdgeToEdge.setBackgroundColor({ color: statusBarColor });
       }
 
       document.firstElementChild?.setAttribute('data-theme', newTheme);
