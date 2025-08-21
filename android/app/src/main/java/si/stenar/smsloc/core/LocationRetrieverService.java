@@ -10,17 +10,14 @@ import android.content.res.Resources;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.IBinder;
-import android.os.Looper;
 import android.util.Log;
+import java.util.function.Consumer;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.location.LocationManagerCompat;
 
 import com.mapbox.android.core.location.LocationEngine;
 import com.mapbox.android.core.location.LocationEngineCallback;
-import com.mapbox.android.core.location.LocationEngineProvider;
-import com.mapbox.android.core.location.LocationEngineRequest;
 import com.mapbox.android.core.location.LocationEngineResult;
 
 import java.util.ArrayList;
@@ -137,50 +134,25 @@ public class LocationRetrieverService extends Service {
     @SuppressLint("MissingPermission")
     public void sendLocation(boolean enableHighAccuracy, final LocationResultCallback resultCallback) {
         clearLocationUpdates();
-        long DEFAULT_INTERVAL_IN_MILLISECONDS = 1000L;
-        long DEFAULT_MAX_WAIT_TIME = DEFAULT_INTERVAL_IN_MILLISECONDS * 5;
-
-        locationEngine = LocationEngineProvider.getBestLocationEngine(this);
         LocationManager lm = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
 
         if (this.isLocationServicesEnabled()) {
-            boolean networkEnabled = false;
-            try {
-                networkEnabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-            } catch (Exception ex) {
-            }
-
-            int lowPriority = networkEnabled ? LocationEngineRequest.PRIORITY_BALANCED_POWER_ACCURACY : LocationEngineRequest.PRIORITY_LOW_POWER;
-            int priority = enableHighAccuracy ? LocationEngineRequest.PRIORITY_HIGH_ACCURACY : lowPriority;
-
-            LocationEngineRequest request = new LocationEngineRequest.Builder(DEFAULT_INTERVAL_IN_MILLISECONDS)
-                    .setPriority(priority)
-                    .setMaxWaitTime(DEFAULT_MAX_WAIT_TIME)
-                    .build();
-            locationCallback = new LocationEngineCallback<LocationEngineResult>() {
-                @Override
-                public void onSuccess(LocationEngineResult result) {
-                    Location location = result.getLastLocation();
-                    if (location == null) {
-                        resultCallback.error("location unavailable");
-                    } else {
+            lm.getCurrentLocation(
+                LocationManager.GPS_PROVIDER,
+                null,
+                this.getMainExecutor(),
+                new Consumer<Location>() {
+                    @Override
+                    public void accept(Location location) {
+                        if (location != null) {
+                            resultCallback.success(location);
+                        } else {
+                            Log.e(LOG_TAG, "location unavailable");
+                            resultCallback.error("location unavailable");
+                        }
                         clearLocationUpdates();
-                        resultCallback.success(location);
                     }
-                }
-
-                @Override
-                public void onFailure(@NonNull Exception exception) {
-                    Log.e(LOG_TAG, "onFailure: " + exception.getMessage());
-                    resultCallback.error(exception.getMessage());
-                }
-            };
-            try {
-                locationEngine.requestLocationUpdates(request, locationCallback, Looper.getMainLooper());
-            } catch (Exception e) {
-                Log.e(LOG_TAG, e.getMessage());
-            }
-
+                });
         } else {
             resultCallback.error("location disabled");
         }

@@ -14,7 +14,10 @@ export const useLocation = defineStore('use-location', () => {
         return;
       }
 
-      const loc = await GeoLocation.getCurrentPosition();
+      const loc = await GeoLocation.getCurrentPosition({
+        enableHighAccuracy: true,
+        maximumAge: 1000,
+      });
       lastLocation.value = loc;
       return loc;
     } catch (error) {

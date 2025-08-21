@@ -19,7 +19,7 @@ export type MapLibreLayerOptions = LayerOptions & {
 };
 
 const demSource = new mlcontour.DemSource({
-  url: 'https://pmtiles.stenar.si/512/terrarium_tiles/{z}/{x}/{y}.png',
+  url: 'https://tiles.stenar.si/terrarium/512/terrarium_tiles/{z}/{x}/{y}.png',
   encoding: 'terrarium',
   maxzoom: 12,
   worker: true,

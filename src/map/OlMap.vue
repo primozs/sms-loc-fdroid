@@ -82,10 +82,12 @@ watchEffect(() => {
     layersSetting.selectedLayer
   ) {
     mapInitialized.value = true;
-    initializeBaseLayers(mapEl.value, layersSetting.selectedLayer);
+    setTimeout(() => {
+      initializeBaseLayers(mapEl.value!, layersSetting.selectedLayer!);
 
-    map.setTarget(mapEl.value);
-    setBaseLayer(layersSetting.selectedLayer);
+      map.setTarget(mapEl.value);
+      setBaseLayer(layersSetting.selectedLayer!);
+    }, 0);
   }
 });
 
