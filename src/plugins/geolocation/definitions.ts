@@ -16,7 +16,7 @@ export interface PermissionStatus {
   location: PermissionState;
 
   /**
-   * Permission state for coarseLocation alias.
+   * Permission state for fineLocation alias.
    *
    * On Android it requests/checks ACCESS_COARSE_LOCATION.
    *
@@ -28,10 +28,10 @@ export interface PermissionStatus {
    *
    * @since 1.2.0
    */
-  coarseLocation: PermissionState;
+  fineLocation: PermissionState;
 }
 
-export type GeolocationPermissionType = 'location' | 'coarseLocation';
+export type GeolocationPermissionType = 'location' | 'fineLocation';
 
 export interface GeolocationPluginPermissions {
   permissions: GeolocationPermissionType[];
@@ -183,18 +183,10 @@ export interface PositionOptions {
    *
    * In Android, since version 4.0.0 of the plugin, timeout gets ignored for getCurrentPosition.
    *
-   * @default 10000
+   * @default 5000
    * @since 1.0.0
    */
   timeout?: number;
-
-  /**
-   * The maximum age in milliseconds of a possible cached position that is acceptable to return
-   *
-   * @default 0
-   * @since 1.0.0
-   */
-  maximumAge?: number;
 }
 
 export type WatchPositionCallback = (

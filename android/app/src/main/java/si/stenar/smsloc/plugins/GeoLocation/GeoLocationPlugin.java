@@ -42,12 +42,12 @@ import java.util.Map;
                         strings = { Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION },
                         alias = GeoLocationPlugin.LOCATION
                 ),
-                @Permission(strings = { Manifest.permission.ACCESS_COARSE_LOCATION }, alias = GeoLocationPlugin.COARSE_LOCATION)
+                @Permission(strings = { Manifest.permission.ACCESS_FINE_LOCATION }, alias = GeoLocationPlugin.FINE_LOCATION)
         }
 )
 public class GeoLocationPlugin extends Plugin{
     static final String LOCATION = "location";
-    static final String COARSE_LOCATION = "coarseLocation";
+    static final String FINE_LOCATION = "fineLocation";
     private Geolocation geolocation;
     private Map<String, PluginCall> watchingCalls = new HashMap<>();
     private Map<String, PluginCall> bgWatchingCalls = new HashMap<>();
@@ -70,7 +70,7 @@ public class GeoLocationPlugin extends Plugin{
          if (service != null) {
              service.onActivityStopped();
          }
-         boolean hasPermissions = getPermissionState(GeoLocationPlugin.COARSE_LOCATION) == PermissionState.GRANTED;
+         boolean hasPermissions = getPermissionState(GeoLocationPlugin.FINE_LOCATION) == PermissionState.GRANTED;
          stoppedWithoutPermissions = !hasPermissions;
          super.handleOnPause();
      }
@@ -85,7 +85,7 @@ public class GeoLocationPlugin extends Plugin{
          // foreground service
          if (service != null) {
              service.onActivityStarted();
-             boolean hasPermissions = getPermissionState(GeoLocationPlugin.COARSE_LOCATION) == PermissionState.GRANTED;
+             boolean hasPermissions = getPermissionState(GeoLocationPlugin.FINE_LOCATION) == PermissionState.GRANTED;
              if (stoppedWithoutPermissions && hasPermissions) {
                  service.onPermissionsGranted();
              }
@@ -138,7 +138,7 @@ public class GeoLocationPlugin extends Plugin{
      */
     @PermissionCallback
     private void completeCurrentPosition(PluginCall call) {
-        if (getPermissionState(GeoLocationPlugin.COARSE_LOCATION) == PermissionState.GRANTED) {
+        if (getPermissionState(GeoLocationPlugin.FINE_LOCATION) == PermissionState.GRANTED) {
             geolocation.sendLocation(
                     isHighAccuracy(call),
                 new LocationResultCallback() {
@@ -182,7 +182,7 @@ public class GeoLocationPlugin extends Plugin{
      */
     @PermissionCallback
     private void completeWatchPosition(PluginCall call) {
-        if (getPermissionState(GeoLocationPlugin.COARSE_LOCATION) == PermissionState.GRANTED) {
+        if (getPermissionState(GeoLocationPlugin.FINE_LOCATION) == PermissionState.GRANTED) {
             startWatch(call);
         } else {
             call.reject("Location permission was denied");
@@ -278,7 +278,7 @@ public class GeoLocationPlugin extends Plugin{
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             boolean enableHighAccuracy = call.getBoolean("enableHighAccuracy", false);
             if (!enableHighAccuracy) {
-                alias = GeoLocationPlugin.COARSE_LOCATION;
+                alias = GeoLocationPlugin.FINE_LOCATION;
             }
         }
         return alias;
@@ -416,7 +416,7 @@ public class GeoLocationPlugin extends Plugin{
 
     @PermissionCallback
     private void completeAddBackgroundWatcher(PluginCall call) {
-        if (getPermissionState(GeoLocationPlugin.COARSE_LOCATION) == PermissionState.GRANTED) {
+        if (getPermissionState(GeoLocationPlugin.FINE_LOCATION) == PermissionState.GRANTED) {
             addWatcher(call);
         } else {
             call.reject("Location permission was denied");

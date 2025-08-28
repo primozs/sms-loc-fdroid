@@ -8,17 +8,15 @@ import android.content.Intent;
 import android.content.pm.ServiceInfo;
 import android.content.res.Resources;
 import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.IBinder;
 import android.util.Log;
 import java.util.function.Consumer;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.location.LocationManagerCompat;
-
-import com.mapbox.android.core.location.LocationEngine;
-import com.mapbox.android.core.location.LocationEngineCallback;
-import com.mapbox.android.core.location.LocationEngineResult;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,8 +35,9 @@ public class LocationRetrieverService extends Service {
     protected String mTitle;
     protected String mResponseStatus;
     protected ArrayList<String> mDetails = new ArrayList<>();
-    private LocationEngine locationEngine;
-    private LocationEngineCallback<LocationEngineResult> locationCallback;
+    private LocationManager locationManager;
+    private LocationListener locationListener;
+
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -119,10 +118,10 @@ public class LocationRetrieverService extends Service {
     }
 
     public void clearLocationUpdates() {
-        if (locationCallback != null) {
-            locationEngine.removeLocationUpdates(locationCallback);
-            locationEngine = null;
-            locationCallback = null;
+        if (locationManager != null && locationListener != null) {
+            locationManager.removeUpdates(locationListener);
+            locationListener = null;
+            locationManager = null;
         }
     }
 
@@ -134,25 +133,23 @@ public class LocationRetrieverService extends Service {
     @SuppressLint("MissingPermission")
     public void sendLocation(boolean enableHighAccuracy, final LocationResultCallback resultCallback) {
         clearLocationUpdates();
-        LocationManager lm = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+        locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+
+        locationListener = new LocationListener() {
+            @Override
+            public void onLocationChanged(@NonNull Location location) {
+                resultCallback.success(location);
+                clearLocationUpdates();
+            }
+        };
 
         if (this.isLocationServicesEnabled()) {
-            lm.getCurrentLocation(
-                LocationManager.GPS_PROVIDER,
-                null,
-                this.getMainExecutor(),
-                new Consumer<Location>() {
-                    @Override
-                    public void accept(Location location) {
-                        if (location != null) {
-                            resultCallback.success(location);
-                        } else {
-                            Log.e(LOG_TAG, "location unavailable");
-                            resultCallback.error("location unavailable");
-                        }
-                        clearLocationUpdates();
-                    }
-                });
+            locationManager.requestLocationUpdates(
+                    LocationManager.GPS_PROVIDER,
+                    5000L,
+                    1,
+                    locationListener
+            );
         } else {
             resultCallback.error("location disabled");
         }

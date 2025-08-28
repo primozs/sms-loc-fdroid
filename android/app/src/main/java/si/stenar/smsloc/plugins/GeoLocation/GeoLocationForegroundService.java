@@ -17,11 +17,7 @@ import androidx.core.location.LocationManagerCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.getcapacitor.Logger;
-import com.mapbox.android.core.location.LocationEngine;
-import com.mapbox.android.core.location.LocationEngineCallback;
-import com.mapbox.android.core.location.LocationEngineProvider;
-import com.mapbox.android.core.location.LocationEngineRequest;
-import com.mapbox.android.core.location.LocationEngineResult;
+import android.location.LocationListener;
 
 import java.util.HashSet;
 
@@ -35,9 +31,8 @@ public class GeoLocationForegroundService extends Service {
 
     private class Watcher {
         public String id;
-        public LocationEngine client;
-        public LocationEngineRequest locationRequest;
-        public LocationEngineCallback<LocationEngineResult> locationCallback;
+        private LocationManager locationManager;
+        private LocationListener locationListener;
         public Notification backgroundNotification;
     }
     private HashSet<Watcher> watchers = new HashSet<Watcher>();
@@ -50,7 +45,7 @@ public class GeoLocationForegroundService extends Service {
     @Override
     public boolean onUnbind(Intent intent) {
         for (Watcher watcher : watchers) {
-            watcher.client.removeLocationUpdates(watcher.locationCallback);
+            watcher.locationManager.removeUpdates(watcher.locationListener);
         }
         watchers = new HashSet<Watcher>();
         stopSelf();
@@ -77,60 +72,36 @@ public class GeoLocationForegroundService extends Service {
                 Notification backgroundNotification,
                 boolean enableHighAccuracy
         ) {
-            long DEFAULT_INTERVAL_IN_MILLISECONDS = 1000L;
-            long DEFAULT_MAX_WAIT_TIME = DEFAULT_INTERVAL_IN_MILLISECONDS * 5;
-
-            LocationEngine client = LocationEngineProvider.getBestLocationEngine(GeoLocationForegroundService.this);
-            LocationManager lm = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
+            LocationManager locationManager = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
 
             if (isLocationServicesEnabled()) {
-                boolean networkEnabled = false;
-                try {
-                    networkEnabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-                } catch (Exception ex) {}
-
-                int lowPriority = networkEnabled ? LocationEngineRequest.PRIORITY_BALANCED_POWER_ACCURACY : LocationEngineRequest.PRIORITY_LOW_POWER;
-                int priority = enableHighAccuracy ? LocationEngineRequest.PRIORITY_HIGH_ACCURACY : lowPriority;
-
-                LocationEngineRequest request = new LocationEngineRequest.Builder(DEFAULT_INTERVAL_IN_MILLISECONDS)
-                        .setPriority(priority)
-                        .setMaxWaitTime(DEFAULT_MAX_WAIT_TIME)
-                        .build();
-                LocationEngineCallback<LocationEngineResult> callback = new LocationEngineCallback<LocationEngineResult>(){
+                LocationListener locationListener = new LocationListener() {
                     @Override
-                    public void onSuccess(LocationEngineResult result) {
-                        Location location = result.getLastLocation();
+                    public void onLocationChanged(@NonNull Location location) {
+                        Intent intent = new Intent(ACTION_BROADCAST);
+                        intent.putExtra("location", location);
+                        intent.putExtra("id", id);
 
-                        if (location != null) {
-                            Intent intent = new Intent(ACTION_BROADCAST);
-                            intent.putExtra("location", location);
-                            intent.putExtra("id", id);
-
-                            LocalBroadcastManager.getInstance(
-                                    getApplicationContext()
-                            ).sendBroadcast(intent);
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(@NonNull Exception exception) {
-                        Log.e(CLASS_TAG, "onFailure: " + exception.getMessage());
+                        LocalBroadcastManager.getInstance(
+                                getApplicationContext()
+                        ).sendBroadcast(intent);
                     }
                 };
 
+
                 Watcher watcher = new Watcher();
                 watcher.id = id;
-                watcher.client = client;
-                watcher.locationRequest = request;
-                watcher.locationCallback = callback;
+                watcher.locationManager = locationManager;
+                watcher.locationListener = locationListener;
                 watcher.backgroundNotification = backgroundNotification;
                 watchers.add(watcher);
 
                 try {
-                    watcher.client.requestLocationUpdates(
-                        watcher.locationRequest,
-                        watcher.locationCallback,
-                        Looper.getMainLooper()
+                    watcher.locationManager.requestLocationUpdates(
+                            LocationManager.GPS_PROVIDER,
+                        1000,
+                        1,
+                        watcher.locationListener
                     );
                 } catch (SecurityException ignore) {}
             }
@@ -139,9 +110,9 @@ public class GeoLocationForegroundService extends Service {
         void removeWatcher(String id) {
             for (Watcher watcher : watchers) {
                 if (watcher.id.equals(id)) {
-                    watcher.client.removeLocationUpdates(watcher.locationCallback);
-                    watcher.locationCallback = null;
-                    watcher.client = null;
+                    watcher.locationManager.removeUpdates(watcher.locationListener);
+                    watcher.locationListener = null;
+                    watcher.locationManager = null;
 
                     watchers.remove(watcher);
                     if (getNotification() == null) {
@@ -157,12 +128,13 @@ public class GeoLocationForegroundService extends Service {
             // If permissions were granted while the app was in the background, for example in
             // the Settings app, the watchers need restarting.
             for (Watcher watcher : watchers) {
-                watcher.client.removeLocationUpdates(watcher.locationCallback);
+                watcher.locationManager.removeUpdates(watcher.locationListener);
                 try {
-                    watcher.client.requestLocationUpdates(
-                        watcher.locationRequest,
-                        watcher.locationCallback,
-                        Looper.getMainLooper()
+                    watcher.locationManager.requestLocationUpdates(
+                            LocationManager.GPS_PROVIDER,
+                            1000,
+                            1,
+                        watcher.locationListener
                     );
                 } catch (SecurityException ignore) {}
             }

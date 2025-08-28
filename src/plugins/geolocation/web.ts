@@ -64,7 +64,7 @@ export class GeolocationWeb extends WebPlugin implements GeolocationPlugin {
     const permission = await window.navigator.permissions.query({
       name: 'geolocation',
     });
-    return { location: permission.state, coarseLocation: permission.state };
+    return { location: permission.state, fineLocation: permission.state };
   }
 
   async requestPermissions(): Promise<PermissionStatus> {
