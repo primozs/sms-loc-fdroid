@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { onMounted, ref } from 'vue';
 import {
   IonContent,
   IonHeader,
@@ -7,14 +8,63 @@ import {
   IonMenuButton,
   IonButtons,
   IonTitle,
+  onIonViewDidEnter,
 } from '@ionic/vue';
-import OlContactFeatures from '@/views/contacts/OlContactFeatures.vue';
-import OlMyLocation from './OlMyLocation.vue';
+import ContactFeatures from '@/views/contacts/ContactFeatures.vue';
+import MyLocation from './MyLocation.vue';
 import MlMap from '@/map/MlMap.vue';
 import MapModalData from './MapModalData.vue';
 import { useDevMode } from '@/views/dev/useDevMode';
+import { whenElementSized } from '@/map/whenElementSized';
+import { useContactsData } from '@/services/useContactsData';
+import { useLocation } from '@/services/useLocation';
+import {
+  cameraFromContactsOrLocation,
+  type MapCamera,
+} from '@/map/initialCamera';
 
 const dev = useDevMode();
+const { data } = useContactsData();
+const locStore = useLocation();
+
+const showMap = ref(false);
+const sizeProbe = ref<HTMLDivElement>();
+/** Snapshot when map is first shown — passed into `new Map()`. */
+const openCamera = ref<MapCamera>();
+/** Bump on later tab enters so the live map recenters. */
+const focusKey = ref(0);
+
+const prepareCamera = async () => {
+  try {
+    await locStore.getLocation();
+  } catch {
+    // Keep last known; camera helper falls back as needed.
+  }
+  return cameraFromContactsOrLocation(data.value, locStore.lastLocation);
+};
+
+const revealOrRefocus = async () => {
+  const probe = sizeProbe.value;
+  if (!probe) return;
+  await whenElementSized(probe);
+  const camera = await prepareCamera();
+
+  if (!showMap.value) {
+    openCamera.value = camera;
+    showMap.value = true;
+    return;
+  }
+
+  focusKey.value += 1;
+};
+
+onMounted(() => {
+  revealOrRefocus();
+});
+
+onIonViewDidEnter(() => {
+  revealOrRefocus();
+});
 </script>
 
 <template>
@@ -29,9 +79,17 @@ const dev = useDevMode();
     </IonHeader>
 
     <IonContent :scroll-y="false" class="map-page-content" :fullscreen="false">
-      <MlMap>
-        <OlContactFeatures />
-        <OlMyLocation />
+      <div ref="sizeProbe" class="map-size-probe" aria-hidden="true"></div>
+      <MlMap
+        v-if="showMap"
+        :initial-center="openCamera?.center"
+        :initial-zoom="openCamera?.zoom"
+      >
+        <ContactFeatures
+          :skip-initial-fit="!!openCamera"
+          :focus-key="focusKey"
+        />
+        <MyLocation />
         <MapModalData v-if="dev.isDevMode" />
       </MlMap>
     </IonContent>
@@ -50,11 +108,14 @@ const dev = useDevMode();
   min-height: 0;
   --overflow: hidden;
 }
-/* Scroll host becomes the sized parent MapLibre needs (height: 100%) */
+/* Positioning context for absolute-fill MlMap */
 .map-page-content::part(scroll) {
   position: relative;
-  display: flex;
-  flex-direction: column;
   height: 100%;
+}
+.map-size-probe {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
 }
 </style>

@@ -24,10 +24,16 @@ export class HistoryResponseLayer {
     this.ensureLayers();
   }
 
+  private fitOnStyleReload = true;
+
   private onStyleLoad = () => {
     this.ensureLayers();
     if (this.mResponse) {
-      this.drawPoint(this.mResponse.lon, this.mResponse.lat);
+      this.drawPoint(
+        this.mResponse.lon,
+        this.mResponse.lat,
+        this.fitOnStyleReload,
+      );
     }
   };
 
@@ -50,7 +56,7 @@ export class HistoryResponseLayer {
     });
   }
 
-  private drawPoint(lon: number, lat: number) {
+  private drawPoint(lon: number, lat: number, fitCamera: boolean) {
     const source = this.map.getSource(SOURCE_ID) as GeoJSONSource | undefined;
     source?.setData({
       type: 'FeatureCollection',
@@ -63,16 +69,24 @@ export class HistoryResponseLayer {
       ],
     });
 
+    if (!fitCamera) return;
+
     this.map.fitBounds(
       [
         [lon, lat],
         [lon, lat],
       ],
-      { padding: 100, maxZoom: 12 },
+      { padding: 100, maxZoom: 12, duration: 0 },
     );
   }
 
-  async drawResponseId(responseId: number | undefined) {
+  async drawResponseId(
+    responseId: number | undefined,
+    options?: { fitCamera?: boolean },
+  ) {
+    const fitCamera = options?.fitCamera ?? true;
+    this.fitOnStyleReload = fitCamera;
+
     if (responseId === undefined) {
       const source = this.map.getSource(SOURCE_ID) as GeoJSONSource | undefined;
       source?.setData(emptyFc());
@@ -87,7 +101,7 @@ export class HistoryResponseLayer {
 
     if (this.mResponse) {
       this.ensureLayers();
-      this.drawPoint(this.mResponse.lon, this.mResponse.lat);
+      this.drawPoint(this.mResponse.lon, this.mResponse.lat, fitCamera);
     }
   }
 

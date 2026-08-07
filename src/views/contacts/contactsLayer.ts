@@ -34,6 +34,8 @@ const emptyFc = (): FeatureCollection => ({
 const contactsToGeoJSON = (contacts: ContactDisplay[]) => {
   const features: Feature<Point | LineString, Record<string, unknown>>[] = [];
   const overlays: ContactOverlay[] = [];
+  let focusPin: [number, number] | undefined;
+  let focusTs = -Infinity;
 
   for (let index = 0, len = contacts.length; index < len; index++) {
     const contact = contacts[index];
@@ -45,6 +47,10 @@ const contactsToGeoJSON = (contacts: ContactDisplay[]) => {
     if (receivedResponses.length === 0) continue;
 
     const latest = receivedResponses[0];
+    if (latest.ts > focusTs) {
+      focusTs = latest.ts;
+      focusPin = [latest.lon, latest.lat];
+    }
     const pin: Feature<Point, PinProps> = {
       type: 'Feature',
       geometry: {
@@ -104,6 +110,7 @@ const contactsToGeoJSON = (contacts: ContactDisplay[]) => {
   return {
     collection: { type: 'FeatureCollection', features } as FeatureCollection,
     overlays,
+    focusPin,
   };
 };
 
@@ -180,16 +187,11 @@ export class ContactsLayer {
   }
 
   update(contacts: ContactDisplay[]) {
-    const { collection, overlays } = contactsToGeoJSON(contacts ?? []);
+    const { collection, overlays, focusPin } = contactsToGeoJSON(
+      contacts ?? [],
+    );
     this.features = collection;
-    this.firstPin = undefined;
-
-    for (const f of collection.features) {
-      if (f.geometry?.type === 'Point') {
-        this.firstPin = f.geometry.coordinates as [number, number];
-        break;
-      }
-    }
+    this.firstPin = focusPin;
 
     this.ensureLayers();
     this.setData(collection);
@@ -201,12 +203,12 @@ export class ContactsLayer {
       logDebug('contactsLayers', 'no features');
       return false;
     }
-    this.map.easeTo({ center: this.firstPin, zoom: 13 });
+    this.map.jumpTo({ center: this.firstPin, zoom: 13 });
     return true;
   }
 
   public fitToLoc(pos: Position) {
-    this.map.easeTo({
+    this.map.jumpTo({
       center: [pos.coords.longitude, pos.coords.latitude],
       zoom: 13,
     });

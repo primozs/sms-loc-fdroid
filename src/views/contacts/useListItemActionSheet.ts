@@ -15,6 +15,7 @@ import { Share } from '@capacitor/share';
 import { useModalSendSms } from './useModalSendSms';
 import { Alert } from '@/components/Alert';
 import { formatName } from '@/app/format';
+import { useLocation } from '@/services/useLocation';
 
 export const useListItemActionSheet = () => {
   const { requestStore, contactsStore } = useDataStore();
@@ -22,6 +23,7 @@ export const useListItemActionSheet = () => {
   const { t } = useI18n();
   const ionRouter = useIonRouter();
   const sendSmsModal = useModalSendSms();
+  const { getLocation } = useLocation();
 
   const requestLocationHandler = async (contact: ContactDisplay) => {
     try {
@@ -31,6 +33,9 @@ export const useListItemActionSheet = () => {
     }
 
     try {
+      // Fresh my-GPS for list distance/status; don't block SMS on failure.
+      void getLocation().catch(() => undefined);
+
       await SMS.sendSms({
         address: contact.address,
         message: 'Loc?',

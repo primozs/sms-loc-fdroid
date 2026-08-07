@@ -10,6 +10,13 @@ import { MapPopupSet } from '@/map/MapPopupSet';
 import { useLocation } from '@/services/useLocation';
 import type { ContactDisplay } from '@/services/useContactsData';
 
+const props = defineProps<{
+  /** True when MapLibre was constructed with that camera already. */
+  skipInitialFit?: boolean;
+  /** Bump to recenter on newest Loc: / my GPS without remounting. */
+  focusKey?: number;
+}>();
+
 const mlMap = inject(maplibreMapkey) as MapLibreAwaitedRef;
 const { t } = useI18n();
 const { isLoading, isError, data } = useContactsData();
@@ -18,6 +25,14 @@ const locStore = useLocation();
 let contactsLayer: ContactsLayer | undefined;
 let popups: MapPopupSet | undefined;
 let didFit = false;
+
+const focusMap = () => {
+  if (!contactsLayer) return;
+  if (contactsLayer.fitToSource()) return;
+  if (locStore.lastLocation) {
+    contactsLayer.fitToLoc(locStore.lastLocation);
+  }
+};
 
 const syncContacts = (contacts: ContactDisplay[] | undefined) => {
   if (!contactsLayer || !popups) return;
@@ -35,13 +50,12 @@ const syncContacts = (contacts: ContactDisplay[] | undefined) => {
 
   if (!didFit) {
     didFit = true;
-    requestAnimationFrame(() => {
-      if (hasFeatures) {
-        contactsLayer?.fitToSource();
-      } else if (locStore.lastLocation) {
-        contactsLayer?.fitToLoc(locStore.lastLocation);
-      }
-    });
+    if (props.skipInitialFit) return;
+    if (hasFeatures) {
+      contactsLayer.fitToSource();
+    } else if (locStore.lastLocation) {
+      contactsLayer.fitToLoc(locStore.lastLocation);
+    }
   }
 };
 
@@ -53,6 +67,14 @@ onMounted(() => {
 });
 
 watch(data, (contacts) => syncContacts(contacts));
+
+watch(
+  () => props.focusKey,
+  (key, prev) => {
+    if (key === undefined || key === prev) return;
+    focusMap();
+  },
+);
 
 onUnmounted(() => {
   popups?.clear();

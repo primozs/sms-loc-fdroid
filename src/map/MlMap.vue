@@ -1,13 +1,18 @@
 <script lang="ts" setup>
 import { onUnmounted, provide, ref, watch } from 'vue';
-import { onIonViewDidEnter } from '@ionic/vue';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { maplibreMapkey } from '@/map/mapKeys';
 import { mapSetStyleEffect, type MapLibreMap } from './MaplibreLayer';
 import { type LayerTypeItem, useUseBaseLayers } from './baseLayers';
 import { initMap } from './initMap';
-import { AttributionControl } from 'maplibre-gl';
+import { AttributionControl, type LngLatLike } from 'maplibre-gl';
 import { logError } from '@/services/useLogger';
+
+const props = defineProps<{
+  /** Camera used at `new Map()` when already known (avoids post-load jump). */
+  initialCenter?: LngLatLike;
+  initialZoom?: number;
+}>();
 
 const mapEl = ref<HTMLDivElement>();
 const mlMap = ref<MapLibreMap>();
@@ -54,6 +59,8 @@ const createMap = (el: HTMLDivElement) => {
   const map = initMap({
     container: el,
     style: baseLayer.url,
+    center: props.initialCenter,
+    zoom: props.initialZoom,
   });
   mlMap.value = map;
 
@@ -66,7 +73,6 @@ const createMap = (el: HTMLDivElement) => {
   map.once('load', () => {
     mapLoaded = true;
     ready.value = true;
-    map.resize();
   });
 };
 
@@ -87,10 +93,6 @@ watch(
   },
 );
 
-onIonViewDidEnter(() => {
-  mlMap.value?.resize();
-});
-
 onUnmounted(() => {
   ready.value = false;
   mapLoaded = false;
@@ -110,19 +112,14 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+/* Definite box once mounted into a laid-out IonContent scroll host */
 .map-host {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  min-height: 0;
+  position: absolute;
+  inset: 0;
 }
 .map-canvas {
-  width: 100%;
-  height: 100%;
-}
-.map-canvas :deep(.maplibregl-map),
-.map-canvas :deep(.maplibregl-canvas-container),
-.map-canvas :deep(.maplibregl-canvas) {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
 }
