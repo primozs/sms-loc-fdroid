@@ -8,12 +8,10 @@ export type MapCamera = {
 
 const DEFAULT_PIN_ZOOM = 13;
 
-/** Newest received Loc: across contacts (by ts), else device lastLocation. */
-export const cameraFromContactsOrLocation = (
+/** Newest received Loc: across contacts by `ts`. */
+export const newestReceived = (
   contacts: ContactDisplay[] | undefined,
-  lastLocation: Position | undefined,
-  zoom = DEFAULT_PIN_ZOOM,
-): MapCamera | undefined => {
+): { ts: number; lon: number; lat: number } | undefined => {
   let newest: { ts: number; lon: number; lat: number } | undefined;
 
   for (const contact of contacts ?? []) {
@@ -25,6 +23,20 @@ export const cameraFromContactsOrLocation = (
     }
   }
 
+  return newest;
+};
+
+export const newestReceivedTs = (
+  contacts: ContactDisplay[] | undefined,
+): number | undefined => newestReceived(contacts)?.ts;
+
+/** Newest received Loc: across contacts (by ts), else device lastLocation. */
+export const cameraFromContactsOrLocation = (
+  contacts: ContactDisplay[] | undefined,
+  lastLocation: Position | undefined,
+  zoom = DEFAULT_PIN_ZOOM,
+): MapCamera | undefined => {
+  const newest = newestReceived(contacts);
   if (newest) {
     return { center: [newest.lon, newest.lat], zoom };
   }

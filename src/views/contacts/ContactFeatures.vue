@@ -9,6 +9,7 @@ import { maplibreMapkey, type MapLibreAwaitedRef } from '@/map/mapKeys';
 import { MapPopupSet } from '@/map/MapPopupSet';
 import { useLocation } from '@/services/useLocation';
 import type { ContactDisplay } from '@/services/useContactsData';
+import { newestReceivedTs } from '@/map/initialCamera';
 
 const props = defineProps<{
   /** True when MapLibre was constructed with that camera already. */
@@ -25,6 +26,7 @@ const locStore = useLocation();
 let contactsLayer: ContactsLayer | undefined;
 let popups: MapPopupSet | undefined;
 let didFit = false;
+let lastFocusedTs = -Infinity;
 
 const focusMap = () => {
   if (!contactsLayer) return;
@@ -48,14 +50,23 @@ const syncContacts = (contacts: ContactDisplay[] | undefined) => {
     }),
   );
 
+  const newestTs = newestReceivedTs(contacts);
+
   if (!didFit) {
     didFit = true;
+    if (newestTs !== undefined) lastFocusedTs = newestTs;
     if (props.skipInitialFit) return;
     if (hasFeatures) {
       contactsLayer.fitToSource();
     } else if (locStore.lastLocation) {
       contactsLayer.fitToLoc(locStore.lastLocation);
     }
+    return;
+  }
+
+  if (newestTs !== undefined && newestTs > lastFocusedTs) {
+    lastFocusedTs = newestTs;
+    focusMap();
   }
 };
 
@@ -72,6 +83,8 @@ watch(
   () => props.focusKey,
   (key, prev) => {
     if (key === undefined || key === prev) return;
+    const newestTs = newestReceivedTs(data.value);
+    if (newestTs !== undefined) lastFocusedTs = newestTs;
     focusMap();
   },
 );
