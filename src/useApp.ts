@@ -4,12 +4,12 @@ import { useIonRouter } from '@ionic/vue';
 import { Capacitor } from '@capacitor/core';
 import { Core } from './plugins/core';
 import { useQueryClient } from '@tanstack/vue-query';
-// import { LogStore } from './services/logs';
 import { getPresentationHasBeenViewed } from './views/presentation/usePresentation';
 import {
   usePermissions,
   areAllPermisionsGranted,
 } from '@/services/usePermissions';
+import { runPermissionSetupLoop } from '@/services/permissionSetupLoop';
 
 export const useApp = () => {
   const ionRouter = useIonRouter();
@@ -20,19 +20,18 @@ export const useApp = () => {
 
   onMounted(async () => {
     const presBeenViewed = await getPresentationHasBeenViewed();
-    const allPermissionGranted = await areAllPermisionsGranted();
 
     if (presBeenViewed) {
-      while (!allPermissionGranted) {
-        const maybeCancel = await checkLocationAndPermissions();
-        if (maybeCancel === 1) break;
-      }
+      // must re-await areAllPermisionsGranted each iteration — a stale flag loops forever
+      await runPermissionSetupLoop(
+        areAllPermisionsGranted,
+        checkLocationAndPermissions,
+      );
     }
 
     App.addListener('resume', async () => {
-      const presBeenViewed = await getPresentationHasBeenViewed();
-
-      if (presBeenViewed) {
+      const viewed = await getPresentationHasBeenViewed();
+      if (viewed) {
         await checkLocationAndPermissions();
       }
     });
@@ -45,12 +44,6 @@ export const useApp = () => {
 
     if (Capacitor.getPlatform() === 'web') return;
     watchId.value = await Core.watchSmsReceiver({}, () => {
-      // LogStore.getInstance().addLog({
-      //   ts: new Date().getTime(),
-      //   message: 'Client watchSmsReceiver action',
-      //   data: action,
-      // });
-
       queryClient.invalidateQueries({
         queryKey: [`/contacts`],
       });

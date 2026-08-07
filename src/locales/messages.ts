@@ -46,7 +46,7 @@ export const messages = {
         'The SMSLoc application is designed to be used outdoors with poor or no internet connectivity when not actively using the application. Therefore, SMSLoc requires background location permission so that it can always respond hands-free to an SMS request with the exact location while the user is engaged in their outdoor activity or being in distress. Needed to respond to sms location requests.',
       permissionBgLocation: 'Background location permission',
       permissionBgLocationsWhy:
-        'The SMSLoc application is designed to be used outdoors with poor or no internet connectivity when not actively using the application. Therefore, SMSLoc requires background location permission so that it can always respond hands-free to an SMS request with the exact location while the user is engaged in their outdoor activity or being in distress. Needed to respond to sms location requests when the app is not running. Select (Allow all the time).',
+        'Needed to respond to SMS location requests when the app is not running. Confirm to open app settings, then set Location to Allow all the time.',
       permissionSms: 'SMS permission',
       permissionSmsWhy:
         'To be able to work offline without internet even with poor phone signal in the mountains, deep valleys or canyons. SMSLoc uses short SMS messages to communicate between whitelisted phones. Needed to receive location requests, to send location request and to respond to location requests.',
@@ -184,7 +184,7 @@ export const messages = {
         'Potrebno za odzivanje na zahteve za lokacijo sms sporočil',
       permissionBgLocation: 'Dovoljenje za lokacijo v ozadju.',
       permissionBgLocationsWhy:
-        'Potrebno za odzivanje na zahteve za lokacijo, ko aplikacija ne deluje. Izberite (Dovolite ves čas).',
+        'Potrebno za odzivanje na zahteve za lokacijo, ko aplikacija ne deluje. Potrdite, da odprete nastavitve aplikacije, nato za Lokacijo izberite Dovolite ves čas.',
       permissionSms: 'Dovoljenje za SMS',
       permissionSmsWhy:
         'Potrebno za sprejemanje lokacijskih zahtevkov, pošiljanje lokacijskega zahtevka in odzivanje na lokacijske zahtevke.',

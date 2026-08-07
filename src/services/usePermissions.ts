@@ -50,8 +50,18 @@ export const usePermissions = () => {
   });
 
   const setupPermissions = ref(false);
+  /** Coalesce overlapping prompts (resume while a system permission UI is up). */
+  let inFlight: Promise<number | void> | null = null;
 
   const checkLocationAndPermissions = async () => {
+    if (inFlight) return inFlight;
+    inFlight = runCheck().finally(() => {
+      inFlight = null;
+    });
+    return inFlight;
+  };
+
+  const runCheck = async (): Promise<number | void> => {
     const locationEnabled = await isLocationServiceEnabled();
     locService.locServiceEnabled = locationEnabled;
 
@@ -62,11 +72,6 @@ export const usePermissions = () => {
         cancelLabel: permsissionLabels.value.cancel,
         confirmLabel: permsissionLabels.value.confirm,
       });
-    }
-
-    if (!locationEnabled) {
-      // display notification in ui
-      // give up
       return 1;
     }
 
@@ -81,7 +86,7 @@ export const usePermissions = () => {
     if (!setupPermissions.value) return 1;
 
     if (permissionToRequest) {
-      await requestPermisson(permissionToRequest, {
+      const accepted = await requestPermisson(permissionToRequest, {
         cancelLabel: permsissionLabels.value.cancel,
         confirmLabel: permsissionLabels.value.confirm,
         permissionLocation: permsissionLabels.value.permissionLocation,
@@ -94,6 +99,16 @@ export const usePermissions = () => {
         permissionContacts: permsissionLabels.value.permissionContacts,
         permissionContactsWhy: permsissionLabels.value.permissionContactsWhy,
       });
+
+      if (!accepted) {
+        setupPermissions.value = false;
+        return 1;
+      }
+
+      // Android may leave background as denied ("while using"); don't re-prompt in a tight loop
+      if (!(await isNamedPermissionGranted(permissionToRequest.name))) {
+        return 1;
+      }
     }
   };
 
@@ -111,6 +126,15 @@ export const areAllPermisionsGranted = async () => {
   } else {
     return false;
   }
+};
+
+const isNamedPermissionGranted = async (name: string) => {
+  if (name === 'contacts') {
+    const { contacts } = await Contacts.checkPermissions();
+    return contacts === 'granted';
+  }
+  const status = await Core.checkPermissions();
+  return (status as Record<string, PermissionState>)[name] === 'granted';
 };
 
 const checkPermissionsStatus = async (options: {
@@ -180,8 +204,8 @@ const requestPermisson = async (
     cancelLabel: string;
     confirmLabel: string;
   },
-) => {
-  if (Capacitor.getPlatform() === 'web') return null;
+): Promise<boolean> => {
+  if (Capacitor.getPlatform() === 'web') return true;
 
   if (permission.name === 'location') {
     const { value } = await Alert.confirm({
@@ -190,10 +214,9 @@ const requestPermisson = async (
       okLabel: labels.confirmLabel,
       cancelLabel: labels.cancelLabel,
     });
-
-    if (value) {
-      await GeoLocation.requestPermissions();
-    }
+    if (!value) return false;
+    await GeoLocation.requestPermissions();
+    return true;
   }
 
   if (permission.name === 'background') {
@@ -203,10 +226,10 @@ const requestPermisson = async (
       okLabel: labels.confirmLabel,
       cancelLabel: labels.cancelLabel,
     });
-
-    if (value) {
-      await Core.requestPermissions();
-    }
+    if (!value) return false;
+    // "Allow all the time" is set in App info → Permissions → Location, not via runtime dialog
+    await Core.openApplicationSettings();
+    return true;
   }
 
   if (permission.name === 'sms') {
@@ -216,10 +239,9 @@ const requestPermisson = async (
       okLabel: labels.confirmLabel,
       cancelLabel: labels.cancelLabel,
     });
-
-    if (value) {
-      await SMS.requestPermissions();
-    }
+    if (!value) return false;
+    await SMS.requestPermissions();
+    return true;
   }
 
   if (permission.name === 'contacts') {
@@ -229,11 +251,12 @@ const requestPermisson = async (
       okLabel: labels.confirmLabel,
       cancelLabel: labels.cancelLabel,
     });
-
-    if (value) {
-      await Contacts.requestPermissions();
-    }
+    if (!value) return false;
+    await Contacts.requestPermissions();
+    return true;
   }
+
+  return false;
 };
 
 const isLocationServiceEnabled = async () => {
