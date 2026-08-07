@@ -1,11 +1,23 @@
 import { ref, type App } from 'vue';
-import { NavigationBar } from '@hugotomazi/capacitor-navigation-bar';
+import {
+  NavigationBar,
+  Style as NavigationBarStyle,
+} from '@capawesome/capacitor-navigation-bar';
 import { Preferences } from '@capacitor/preferences';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { Capacitor } from '@capacitor/core';
 import { EdgeToEdge } from '@capawesome/capacitor-android-edge-to-edge-support';
 
 const THEME_KEY = 'theme-preference';
+
+const applyNavigationBar = async (theme: string) => {
+  const color = theme === 'light' ? '#f7f7f7' : '#0d0d0d';
+  await NavigationBar.setColor({ color });
+  await NavigationBar.setStyle({
+    style:
+      theme === 'light' ? NavigationBarStyle.Light : NavigationBarStyle.Dark,
+  });
+};
 
 export const themePlugin = {
   install: async (app: App) => {
@@ -19,9 +31,7 @@ export const themePlugin = {
     const userTheme = storedTheme ?? themePref;
     window.document.firstElementChild?.setAttribute('data-theme', userTheme);
 
-    const color = userTheme === 'light' ? '#f7f7f7' : '#0d0d0d';
-    const darkButtons = userTheme === 'light' ? true : false;
-    NavigationBar.setColor({ color, darkButtons });
+    await applyNavigationBar(userTheme);
 
     if (Capacitor.isNativePlatform()) {
       const statusBarColor = userTheme === 'light' ? '#f7f7f7' : '#1f1f1f';
@@ -38,9 +48,7 @@ export const themePlugin = {
     const toggleTheme = async () => {
       const newTheme = theme.value === 'light' ? 'dark' : 'light';
 
-      const color = newTheme === 'light' ? '#f7f7f7' : '#0d0d0d';
-      const darkButtons = newTheme === 'light' ? true : false;
-      NavigationBar.setColor({ color, darkButtons });
+      await applyNavigationBar(newTheme);
 
       if (Capacitor.isNativePlatform()) {
         const statusBarColor = newTheme === 'light' ? '#f7f7f7' : '#1f1f1f';

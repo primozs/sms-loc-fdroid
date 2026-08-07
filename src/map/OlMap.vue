@@ -47,7 +47,7 @@ const initializeBaseLayers = (el: HTMLElement, baseLayer: LayerTypeItem) => {
   mlBaseLayer = mlMapAndLayer.mlLayer;
   mlMap.value = mlMapAndLayer.mlMap;
 
-  mlBaseLayer && map.addLayer(mlBaseLayer);
+  if (mlBaseLayer) map.addLayer(mlBaseLayer);
   mlBaseLayer?.setZIndex(0);
 };
 

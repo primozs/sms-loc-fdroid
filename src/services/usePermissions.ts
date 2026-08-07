@@ -167,7 +167,7 @@ const checkPermissionsStatus = async (options: {
 };
 
 const requestPermisson = async (
-  permission: { name: string; state: PermissionState },
+  permission: { name: string; state: PermissionState | 'limited' },
   labels: {
     permissionLocation: string;
     permissionLocationWhy: string;

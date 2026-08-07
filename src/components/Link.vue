@@ -18,7 +18,7 @@ const handleClick = () => {
     props.routerDirection ?? 'forward',
     props.routerAction ?? 'push',
   );
-  props.callback && props.callback();
+  props.callback?.();
 };
 </script>
 <template>

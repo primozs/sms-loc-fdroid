@@ -50,7 +50,7 @@ class SQLiteService {
       return db;
     } catch (error: any) {
       const msg = error.message ? error.message : error;
-      throw new Error(`sqliteService.openDatabase: ${msg}`);
+      throw new Error(`sqliteService.openDatabase: ${msg}`, { cause: error });
     }
   }
   async isConnection(readOnly: boolean = false): Promise<boolean> {
@@ -65,7 +65,7 @@ class SQLiteService {
       }
     } catch (error: any) {
       const msg = error.message ? error.message : error;
-      throw new Error(`sqliteService.isConnection: ${msg}`);
+      throw new Error(`sqliteService.isConnection: ${msg}`, { cause: error });
     }
   }
   async closeDatabase(readOnly: boolean = false): Promise<void> {
@@ -78,7 +78,7 @@ class SQLiteService {
       }
     } catch (error: any) {
       const msg = error.message ? error.message : error;
-      throw new Error(`sqliteService.closeDatabase: ${msg}`);
+      throw new Error(`sqliteService.closeDatabase: ${msg}`, { cause: error });
     }
   }
   async saveToStore(): Promise<void> {
@@ -86,7 +86,7 @@ class SQLiteService {
       await this.sqliteConnection.saveToStore(this.dbName);
     } catch (error: any) {
       const msg = error.message ? error.message : error;
-      throw new Error(`sqliteService.saveToStore: ${msg}`);
+      throw new Error(`sqliteService.saveToStore: ${msg}`, { cause: error });
     }
   }
   async saveToLocalDisk(): Promise<void> {
@@ -94,7 +94,7 @@ class SQLiteService {
       await this.sqliteConnection.saveToLocalDisk(this.dbName);
     } catch (err: any) {
       const msg = err.message ? err.message : err;
-      throw new Error(`sqliteService.saveToLocalDisk: ${msg}`);
+      throw new Error(`sqliteService.saveToLocalDisk: ${msg}`, { cause: err });
     }
   }
 }

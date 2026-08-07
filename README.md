@@ -79,8 +79,8 @@ yarn ionic-live-reload
 ### test hardware device connection
 
 ```sh
-adb device
-native-run android --list
+adb devices
+npx native-run android --list
 ```
 
 ## Build release apk or playstore

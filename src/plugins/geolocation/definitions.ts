@@ -187,6 +187,14 @@ export interface PositionOptions {
    * @since 1.0.0
    */
   timeout?: number;
+
+  /**
+   * The maximum age in milliseconds of a possible cached position that is acceptable to return
+   *
+   * @default 0
+   * @since 1.0.0
+   */
+  maximumAge?: number;
 }
 
 export type WatchPositionCallback = (

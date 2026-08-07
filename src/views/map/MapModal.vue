@@ -8,11 +8,15 @@ import {
 } from '@ionic/vue';
 import { useI18n } from 'vue-i18n';
 import { computed } from 'vue';
-import type { MapGeoJSONFeature } from 'maplibre-gl';
 import { IonAccordionGroup } from '@ionic/vue';
 
+/** Minimal feature shape for the POI modal (avoids MapLibre MapGeoJSONFeature depth issues). */
+export type MapModalFeature = {
+  properties: Record<string, unknown> & { id?: string | number };
+};
+
 const props = defineProps<{
-  features: MapGeoJSONFeature[];
+  features: MapModalFeature[];
 }>();
 
 const { t } = useI18n();
@@ -49,7 +53,7 @@ const handleDidDismiss = () => {
       <IonAccordionGroup
         v-if="props.features.length > 0"
         :multiple="false"
-        :value="props.features[0].properties.id"
+        :value="String(props.features[0].properties.id ?? '')"
       >
       </IonAccordionGroup>
     </IonContent>

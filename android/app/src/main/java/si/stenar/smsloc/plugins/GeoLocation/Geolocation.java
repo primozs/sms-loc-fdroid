@@ -31,25 +31,24 @@ public class Geolocation {
     @SuppressWarnings("MissingPermission")
     public void sendLocation(boolean enableHighAccuracy, final LocationResultCallback resultCallback) {
         clearLocationUpdates();
-        LocationManager lm = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+
+        locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+
+        locationListener = new LocationListener() {
+            @Override
+            public void onLocationChanged(@NonNull Location location) {
+                resultCallback.success(location);
+                clearLocationUpdates();
+            }
+        };
 
         if (this.isLocationServicesEnabled()) {
-            lm.getCurrentLocation(
-                LocationManager.GPS_PROVIDER,
-            null,
-                this.context.getMainExecutor(),
-                new Consumer<Location>() {
-                    @Override
-                    public void accept(Location location) {
-                        if (location != null) {
-                            resultCallback.success(location);
-                        } else {
-                            Log.e(CLASS_TAG, "location unavailable");
-                            resultCallback.error("location unavailable");
-                        }
-                        clearLocationUpdates();
-                    }
-                });
+            locationManager.requestLocationUpdates(
+                    LocationManager.GPS_PROVIDER,
+                    1000,
+                    1,
+                    locationListener
+            );
         } else {
             resultCallback.error("location disabled");
         }

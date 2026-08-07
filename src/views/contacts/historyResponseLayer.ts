@@ -51,11 +51,14 @@ export class HistoryResponseLayer {
       this.vectorSource.addFeature(feature);
 
       const size = this.mMap.getSize();
-      this.mMap.getView().fit(this.vectorSource.getExtent(), {
-        size,
-        padding: [100, 100, 100, 100],
-        maxZoom: 12,
-      });
+      const extent = this.vectorSource.getExtent();
+      if (extent) {
+        this.mMap.getView().fit(extent, {
+          size,
+          padding: [100, 100, 100, 100],
+          maxZoom: 12,
+        });
+      }
     }
   }
 

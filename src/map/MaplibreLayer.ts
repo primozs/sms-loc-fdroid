@@ -73,7 +73,6 @@ export const mapLibreLayerCreator = (options: MapLibreLayerOptions) => {
       // cancel the scheduled update & trigger synchronous redraw
       // see https://github.com/mapbox/mapbox-gl-js/issues/7893#issue-408992184
       // NOTE: THIS MIGHT BREAK IF UPDATING THE MAPBOX VERSION
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       // @ts-ignore
       if (mlMap._frame) {
         // @ts-ignore

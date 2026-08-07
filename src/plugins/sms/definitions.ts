@@ -1,4 +1,4 @@
-interface PermissionStatus {}
+type PermissionStatus = Record<string, never>;
 
 export type SMSPermissionType = 'SMS';
 
@@ -21,7 +21,7 @@ export interface Sms {
 
 export type WatchSmsCallback = (position: Sms | null, err?: any) => void;
 
-export interface SmsOptions {}
+export type SmsOptions = Record<string, never>;
 
 export interface SmsPlugin {
   watchSms(

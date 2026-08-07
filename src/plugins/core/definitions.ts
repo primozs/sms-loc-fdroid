@@ -15,7 +15,7 @@ export interface ClearWatchOptions {
 
 export type WatchCallback = (options: { action: string }, err?: any) => void;
 
-export interface Options {}
+export type Options = Record<string, never>;
 
 export interface CorePlugin {
   watchSmsReceiver(

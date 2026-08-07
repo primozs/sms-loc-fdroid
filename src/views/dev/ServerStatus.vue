@@ -32,7 +32,7 @@ const { isError, data } = useQuery({
       };
     } catch (error) {
       logError(error);
-      throw new Error('Server status');
+      throw new Error('Server status', { cause: error });
     }
   },
   networkMode: 'always',

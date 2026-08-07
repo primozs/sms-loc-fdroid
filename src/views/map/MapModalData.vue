@@ -5,13 +5,12 @@ import {
   mainMapkey,
   type MapLibreAwaitedRef,
 } from '@/map/mapKeys';
-import type { MapGeoJSONFeature } from 'maplibre-gl';
 import type { MapBrowserEvent } from 'ol';
-import MapModal from './MapModal.vue';
+import MapModal, { type MapModalFeature } from './MapModal.vue';
 
 const olMap = inject(mainMapkey);
 const mlMap = inject(maplibreMapkey) as MapLibreAwaitedRef;
-const selectedFeaturesRef = ref<MapGeoJSONFeature[]>([]);
+const selectedFeaturesRef = ref<MapModalFeature[]>([]);
 
 onMounted(async () => {
   const clickHandler = (e: MapBrowserEvent<any>) => {
@@ -21,7 +20,7 @@ onMounted(async () => {
       [x + 15, y + 15],
     ];
 
-    let features = mlMap.value.queryRenderedFeatures(bbox, {
+    const features = mlMap.value.queryRenderedFeatures(bbox, {
       layers: [
         'label_webcams',
         'weather-stations-temp',
@@ -50,7 +49,7 @@ onMounted(async () => {
     //   return item;
     // });
 
-    selectedFeaturesRef.value = features;
+    selectedFeaturesRef.value = features as MapModalFeature[];
   };
 
   olMap!.on('click', clickHandler);

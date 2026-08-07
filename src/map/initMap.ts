@@ -35,7 +35,7 @@ export const initMap = (el?: HTMLDivElement | string) => {
     }),
   });
 
-  el && olMap.setTarget(el);
+  if (el) olMap.setTarget(el);
 
   return olMap;
 };
