@@ -22,7 +22,7 @@ export const MAP_BASE_LAYERS: Record<LayerType, LayerTypeItem> = {
   STENAR_LIGHT: {
     title: 'Stenar light',
     key: 'STENAR_LIGHT',
-    url: 'https://tiles.stenar.si/styles/stenar-light/style.json',
+    url: 'https://maptiles.stenar.si/styles/stenar-light/style.json',
     attributions: [
       '<a href="https://www.openstreetmap.org/copyright" target="_blank">© OpenStreetMap contributors</a>',
       '<a href="https://openmaptiles.org/" target="_blank">© OpenMapTiles</a>',
@@ -32,7 +32,7 @@ export const MAP_BASE_LAYERS: Record<LayerType, LayerTypeItem> = {
   STENAR_BLUE: {
     title: 'Stenar blue',
     key: 'STENAR_BLUE',
-    url: 'https://tiles.stenar.si/styles/stenar-blue/style.json',
+    url: 'https://maptiles.stenar.si/styles/stenar-blue/style.json',
     attributions: [
       '<a href="https://www.openstreetmap.org/copyright" target="_blank">© OpenStreetMap contributors</a>',
       '<a href="https://openmaptiles.org/" target="_blank">© OpenMapTiles</a>',
@@ -42,7 +42,7 @@ export const MAP_BASE_LAYERS: Record<LayerType, LayerTypeItem> = {
   STENAR_TOPO: {
     title: 'Stenar topo',
     key: 'STENAR_TOPO',
-    url: 'https://tiles.stenar.si/styles/stenar-topo/style.json',
+    url: 'https://maptiles.stenar.si/styles/stenar-topo/style.json',
     attributions: [
       '<a href="https://www.openstreetmap.org/copyright" target="_blank">© OpenStreetMap contributors</a>',
       '<a href="https://openmaptiles.org/" target="_blank">© OpenMapTiles</a>',

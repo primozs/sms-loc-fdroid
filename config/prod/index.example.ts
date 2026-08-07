@@ -2,7 +2,8 @@
 import packageJson from '../package.json';
 // @ts-ignore
 const ENV_VARIABLES = import.meta.env;
-const MAPS_STYLE = 'https://example.com/styles/some-style/style.json';
+const MAPS_STYLE =
+  'https://maptiles.stenar.si/styles/stenar-light/style.json';
 
 export const config = {
   DEV: ENV_VARIABLES.DEV,
