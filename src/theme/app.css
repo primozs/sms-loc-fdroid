@@ -137,3 +137,29 @@
 .app-warning-title {
   color: var(--ion-color-dark);
 }
+
+/* MapLibre hard-codes white popup chrome; theme with Ionic tokens */
+.maplibregl-popup.smsloc-map-popup .maplibregl-popup-content {
+  background: var(--ion-background-color);
+  color: var(--ion-text-color);
+}
+
+.maplibregl-popup.smsloc-map-popup.maplibregl-popup-anchor-top .maplibregl-popup-tip,
+.maplibregl-popup.smsloc-map-popup.maplibregl-popup-anchor-top-left .maplibregl-popup-tip,
+.maplibregl-popup.smsloc-map-popup.maplibregl-popup-anchor-top-right .maplibregl-popup-tip {
+  border-bottom-color: var(--ion-background-color);
+}
+
+.maplibregl-popup.smsloc-map-popup.maplibregl-popup-anchor-bottom .maplibregl-popup-tip,
+.maplibregl-popup.smsloc-map-popup.maplibregl-popup-anchor-bottom-left .maplibregl-popup-tip,
+.maplibregl-popup.smsloc-map-popup.maplibregl-popup-anchor-bottom-right .maplibregl-popup-tip {
+  border-top-color: var(--ion-background-color);
+}
+
+.maplibregl-popup.smsloc-map-popup.maplibregl-popup-anchor-left .maplibregl-popup-tip {
+  border-right-color: var(--ion-background-color);
+}
+
+.maplibregl-popup.smsloc-map-popup.maplibregl-popup-anchor-right .maplibregl-popup-tip {
+  border-left-color: var(--ion-background-color);
+}
