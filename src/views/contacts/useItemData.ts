@@ -3,9 +3,7 @@ import { type ResponseData } from '@/services/responses';
 import { type RequestData } from '@/services/requests';
 import { useLocation } from '@/services/useLocation';
 import { useTime } from '@/services/useTime';
-import { LineString } from 'ol/geom';
 import type { ContactDisplay } from '@/services/useContactsData';
-import { fromLonLat } from 'ol/proj';
 import { Ref, computed, watchEffect } from 'vue';
 import { useI18n } from 'vue-i18n';
 import * as dayjs from 'dayjs';
@@ -72,17 +70,12 @@ export const useItemData = (
     if (!response.value) return null;
     if (!locStore.lastLocation) return null;
 
-    const myPos = [
+    const myPos: [number, number] = [
       locStore.lastLocation.coords.longitude,
       locStore.lastLocation.coords.latitude,
     ];
 
-    const line = new LineString([
-      fromLonLat(myPos),
-      fromLonLat([response.value.lon, response.value.lat]),
-    ]);
-    const dist = formatLength(line);
-    return dist;
+    return formatLength(myPos, [response.value.lon, response.value.lat]);
   });
 
   const format = computed(() => {

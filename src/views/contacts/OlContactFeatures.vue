@@ -1,89 +1,70 @@
 <script lang="ts" setup>
-import { inject, ref, watchEffect } from 'vue';
+import { inject, onMounted, onUnmounted, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import ErrorCard from '@/components/ErrorCard.vue';
 import SpinnerDisplay from '@/components/SpinnerDisplay.vue';
 import { useContactsData } from '@/services/useContactsData';
 import { ContactsLayer } from './contactsLayer';
-import type { Map } from 'ol';
-import type { Point } from 'ol/geom';
-import { mainMapkey } from '@/map/mapKeys';
-import OlOverlay from '@/map/OlOverlay.vue';
+import { maplibreMapkey, type MapLibreAwaitedRef } from '@/map/mapKeys';
+import { MapPopupSet } from '@/map/MapPopupSet';
 import { useLocation } from '@/services/useLocation';
+import type { ContactDisplay } from '@/services/useContactsData';
 
-type OverlayData = { coordinates: number[]; message: string; key: string };
-
-const map = inject(mainMapkey);
-const overlays = ref<OverlayData[]>([]);
-const contactsLayer = ref<ContactsLayer>(new ContactsLayer(map as Map));
-
+const mlMap = inject(maplibreMapkey) as MapLibreAwaitedRef;
+const { t } = useI18n();
 const { isLoading, isError, data } = useContactsData();
 const locStore = useLocation();
 
-// update zoom
-const updateZoom = ref<{ type: 'zoom-features' | 'zoom-loc'; time: number }>();
-let prevZoomUpdate = 0;
-watchEffect(() => {
-  if (!updateZoom.value) return;
-  const zoom = updateZoom.value.time;
-  const loc = locStore.lastLocation;
+let contactsLayer: ContactsLayer | undefined;
+let popups: MapPopupSet | undefined;
+let didFit = false;
 
-  if (prevZoomUpdate !== zoom) {
+const syncContacts = (contacts: ContactDisplay[] | undefined) => {
+  if (!contactsLayer || !popups) return;
+
+  const { overlays, hasFeatures } = contactsLayer.update(contacts ?? []);
+
+  popups.setItems(
+    overlays.flatMap((item) => {
+      const text = t(`message.${item.message}`).trim();
+      // Skip missing i18n keys (vue-i18n returns the key path)
+      if (!text || text === `message.${item.message}`) return [];
+      return [{ lngLat: item.coordinates, text }];
+    }),
+  );
+
+  if (!didFit) {
+    didFit = true;
     requestAnimationFrame(() => {
-      if (updateZoom.value?.type === 'zoom-features') {
-        contactsLayer.value?.fitToSource();
-        prevZoomUpdate = zoom;
-      }
-
-      if (updateZoom.value?.type === 'zoom-loc') {
-        if (!loc) return;
-        contactsLayer.value.fitToLoc(loc);
-        prevZoomUpdate = zoom;
+      if (hasFeatures) {
+        contactsLayer?.fitToSource();
+      } else if (locStore.lastLocation) {
+        contactsLayer?.fitToLoc(locStore.lastLocation);
       }
     });
   }
+};
+
+onMounted(() => {
+  const map = mlMap.value;
+  contactsLayer = new ContactsLayer(map);
+  popups = new MapPopupSet(map);
+  syncContacts(data.value);
 });
 
-// update data
-watchEffect(() => {
-  const features = contactsLayer.value?.update(data.value);
-  if (features.length > 0) {
-    updateZoom.value = {
-      type: 'zoom-features',
-      time: new Date().getTime(),
-    };
-  } else {
-    updateZoom.value = {
-      type: 'zoom-loc',
-      time: new Date().getTime(),
-    };
-  }
+watch(data, (contacts) => syncContacts(contacts));
 
-  const overlaysData: OverlayData[] = [];
-  for (const feature of features) {
-    const geom = feature.getGeometry();
-    const geomType = geom?.getType();
-
-    if (geomType !== 'Point') continue;
-
-    const message = feature.getProperties()['message'];
-    if (!message) continue;
-
-    const point = geom as Point;
-    const coordinates = point.getCoordinates();
-    overlaysData.push({
-      coordinates,
-      message,
-      key: `${coordinates[0]},${coordinates[1]}`,
-    });
-  }
-  overlays.value = overlaysData;
+onUnmounted(() => {
+  popups?.clear();
+  popups = undefined;
+  contactsLayer?.destroy();
+  contactsLayer = undefined;
 });
 </script>
 
 <template>
   <div v-if="isError" class="z-10 absolute inset-14">
     <ErrorCard
-      v-if="isError"
       title=""
       :content="$t('message.errorFetchingData')"
     ></ErrorCard>
@@ -91,17 +72,4 @@ watchEffect(() => {
   <div v-if="isLoading" class="z-10 absolute inset-0">
     <SpinnerDisplay :isLoading="isLoading"></SpinnerDisplay>
   </div>
-
-  <!-- eslint-disable -->
-  <OlOverlay
-    v-if="overlays.length > 0"
-    v-for="item of overlays"
-    :key="item.key"
-    :position="item.coordinates"
-  >
-    <div class="font-semibold text-xs p-3">
-      <p>{{ $t(`message.${item.message}`) }}</p>
-    </div>
-  </OlOverlay>
-  <!-- eslint-enable -->
 </template>

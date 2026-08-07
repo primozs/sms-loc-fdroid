@@ -1,36 +1,58 @@
 <script lang="ts" setup>
-import { inject, ref, watchEffect } from 'vue';
-import { mainMapkey } from '@/map/mapKeys';
+import { inject, onMounted, onUnmounted, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { maplibreMapkey, type MapLibreAwaitedRef } from '@/map/mapKeys';
 import { MyLocationLayer } from './myLocationLayer';
 import { useLocation } from '@/services/useLocation';
-import OlOverlay from '@/map/OlOverlay.vue';
-import { fromLonLat } from 'ol/proj';
+import { MapPopupSet } from '@/map/MapPopupSet';
+import type { Position } from '@/plugins/geolocation';
 
 const locStore = useLocation();
+const { t } = useI18n();
+const mlMap = inject(maplibreMapkey) as MapLibreAwaitedRef;
 
-const map = inject(mainMapkey);
-const myLocLayer = ref<MyLocationLayer>(new MyLocationLayer(map!));
-const coordinates = ref<number[] | undefined>();
+let myLocLayer: MyLocationLayer | undefined;
+let popup: MapPopupSet | undefined;
 
-watchEffect(() => {
-  if (!locStore.lastLocation) {
-    myLocLayer.value.clear();
-  } else {
-    const { coords } = locStore.lastLocation;
-    coordinates.value = [coords.longitude, coords.latitude];
-    myLocLayer.value.update(coordinates.value);
+const syncLocation = (loc: Position | null | undefined) => {
+  if (!myLocLayer || !popup) return;
+
+  if (!loc) {
+    myLocLayer.clear();
+    popup.clear();
+    return;
   }
+
+  const coords: [number, number] = [loc.coords.longitude, loc.coords.latitude];
+  myLocLayer.update(coords);
+  popup.setItems([
+    {
+      lngLat: coords,
+      text: t('message.myCurrentLocation'),
+    },
+  ]);
+};
+
+onMounted(() => {
+  const map = mlMap.value;
+  myLocLayer = new MyLocationLayer(map);
+  popup = new MapPopupSet(map);
+  syncLocation(locStore.lastLocation);
+});
+
+watch(
+  () => locStore.lastLocation,
+  (loc) => syncLocation(loc),
+);
+
+onUnmounted(() => {
+  popup?.clear();
+  popup = undefined;
+  myLocLayer?.destroy();
+  myLocLayer = undefined;
 });
 </script>
 
 <template>
-  <OlOverlay
-    v-if="coordinates"
-    :position="fromLonLat(coordinates)"
-    :key="`${coordinates[0]},${coordinates[1]}`"
-  >
-    <div class="font-semibold text-xs p-3">
-      <p>{{ $t('message.myCurrentLocation') }}</p>
-    </div>
-  </OlOverlay>
+  <div v-if="false"></div>
 </template>

@@ -35,9 +35,4 @@ src/config.ts
 config/prod/index.ts
 config/dev/index.ts
 !/deploy/docker/bin
-nodejs-project/lib/*
-nodejs-project/node_modules/*
-server/lib/*
-server/node_modules/*
-public/nodejs
 material

@@ -7,7 +7,6 @@ import { messages } from '@/locales/messages';
 import { themePlugin } from './app/themePlugin';
 import { VueQueryPlugin } from '@tanstack/vue-query';
 import { createPinia } from 'pinia';
-import { NodeJS } from 'capacitor-nodejs';
 
 import './theme/tailwind.css';
 
@@ -45,8 +44,6 @@ import {
 import { logError } from '@/services/useLogger';
 import { initErrorLogging } from '@/services/useLogger';
 import { Logger } from './services/logger';
-import { Capacitor } from '@capacitor/core';
-import { config } from './config';
 
 const initApp = (locale: string, sqliteProps: SqliteVuePluginProps) => {
   const i18n = createI18n({
@@ -89,17 +86,6 @@ const main = async () => {
 
   const sqliteProps = await initSqlite();
   Logger.getInstance(sqliteProps.db);
-
-  const options = {
-    env: {
-      PORT: config.SERVER_PORT,
-      OFFLINE_MAP_DOWNLOAD_URL: config.OFFLINE_MAP_DOWNLOAD_URL,
-    },
-  };
-
-  if (Capacitor.isNativePlatform()) {
-    NodeJS.start(options);
-  }
 
   initApp(locale, sqliteProps);
 };

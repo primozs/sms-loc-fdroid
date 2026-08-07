@@ -10,13 +10,27 @@ import { EdgeToEdge } from '@capawesome/capacitor-android-edge-to-edge-support';
 
 const THEME_KEY = 'theme-preference';
 
-const applyNavigationBar = async (theme: string) => {
-  const color = theme === 'light' ? '#f7f7f7' : '#0d0d0d';
-  await NavigationBar.setColor({ color });
+const themeColors = (theme: string) => ({
+  statusBar: theme === 'light' ? '#f7f7f7' : '#1f1f1f',
+  navigationBar: theme === 'light' ? '#f7f7f7' : '#0d0d0d',
+});
+
+const applySystemChrome = async (theme: string) => {
+  if (!Capacitor.isNativePlatform()) return;
+
+  const { statusBar, navigationBar } = themeColors(theme);
+
+  await NavigationBar.setColor({ color: navigationBar });
   await NavigationBar.setStyle({
     style:
       theme === 'light' ? NavigationBarStyle.Light : NavigationBarStyle.Dark,
   });
+  await StatusBar.setStyle({
+    style: theme === 'light' ? Style.Light : Style.Dark,
+  });
+  // Capawesome EdgeToEdge owns WebView insets + bar paint (SystemBars insetsHandling: disable)
+  await EdgeToEdge.setStatusBarColor({ color: statusBar });
+  await EdgeToEdge.setNavigationBarColor({ color: navigationBar });
 };
 
 export const themePlugin = {
@@ -31,34 +45,14 @@ export const themePlugin = {
     const userTheme = storedTheme ?? themePref;
     window.document.firstElementChild?.setAttribute('data-theme', userTheme);
 
-    await applyNavigationBar(userTheme);
-
-    if (Capacitor.isNativePlatform()) {
-      const statusBarColor = userTheme === 'light' ? '#f7f7f7' : '#1f1f1f';
-      StatusBar.setOverlaysWebView({ overlay: false });
-      StatusBar.setStyle({
-        style: userTheme === 'light' ? Style.Light : Style.Dark,
-      });
-      StatusBar.setBackgroundColor({ color: statusBarColor });
-      EdgeToEdge.setBackgroundColor({ color: statusBarColor });
-    }
+    await applySystemChrome(userTheme);
 
     const theme = ref<string>(userTheme);
 
     const toggleTheme = async () => {
       const newTheme = theme.value === 'light' ? 'dark' : 'light';
 
-      await applyNavigationBar(newTheme);
-
-      if (Capacitor.isNativePlatform()) {
-        const statusBarColor = newTheme === 'light' ? '#f7f7f7' : '#1f1f1f';
-        StatusBar.setOverlaysWebView({ overlay: false });
-        StatusBar.setStyle({
-          style: newTheme === 'light' ? Style.Light : Style.Dark,
-        });
-        StatusBar.setBackgroundColor({ color: statusBarColor });
-        EdgeToEdge.setBackgroundColor({ color: statusBarColor });
-      }
+      await applySystemChrome(newTheme);
 
       document.firstElementChild?.setAttribute('data-theme', newTheme);
 

@@ -77,7 +77,7 @@ const router = createRouter({
   routes,
 });
 
-router.beforeEach(async (to, from, next) => {
+router.beforeEach(async (to) => {
   // start application route guard
   if (
     to.redirectedFrom &&
@@ -86,12 +86,9 @@ router.beforeEach(async (to, from, next) => {
   ) {
     const presBeenViewed = await getPresentationHasBeenViewed();
     if (!presBeenViewed) {
-      next({ path: '/presentation' });
-      return;
+      return { path: '/presentation' };
     }
   }
-
-  next();
 });
 
 export default router;

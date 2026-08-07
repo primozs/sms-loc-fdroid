@@ -19,7 +19,6 @@ import SelectLocale from './SelectLocale.vue';
 import { config } from '@/config';
 import Link from '@/components/Link.vue';
 import { useDevMode, useDevSwitcher } from '@/views/dev/useDevMode';
-import OfflineMaps from './OfflineMaps.vue';
 import SelectBaseLayer from './SelectBaseLayer.vue';
 // import DevPanel from '@/views/dev/DevPanel.vue';
 
@@ -58,8 +57,6 @@ const dev = useDevMode();
 
       <IonList :inset="true">
         <!-- <DevPanel /> -->
-
-        <OfflineMaps />
 
         <Link router-link="/logs">
           <IonItem button :detail="false" lines="full">

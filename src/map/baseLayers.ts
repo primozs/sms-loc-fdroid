@@ -1,40 +1,14 @@
 import { Preferences } from '@capacitor/preferences';
 import { defineStore } from 'pinia';
-import { type Ref, inject, ref } from 'vue';
+import { ref } from 'vue';
 
 const SELECTED_BASE_LAYER = 'selected_base_layer';
 
-export const useUseBaseLayers = defineStore('useUseBaseLayers', () => {
-  const selectedLayer = ref<LayerTypeItem>();
-  const theme = inject<{ theme: Ref<string>; toggleTheme: () => void }>(
-    'theme',
-  );
-
-  Preferences.get({
-    key: SELECTED_BASE_LAYER,
-  }).then(({ value }) => {
-    if (!value) {
-      if (theme?.theme.value === 'light') {
-        selectedLayer.value = MAP_BASE_LAYERS.STENAR_LIGHT;
-      } else {
-        selectedLayer.value = MAP_BASE_LAYERS.STENAR_BLUE;
-      }
-      return;
-    }
-    selectedLayer.value = JSON.parse(value);
-  });
-
-  const setSelectedBaseLayer = async (item: LayerTypeItem) => {
-    selectedLayer.value = item;
-
-    await Preferences.set({
-      key: SELECTED_BASE_LAYER,
-      value: JSON.stringify(item),
-    });
-  };
-
-  return { selectedLayer, setSelectedBaseLayer };
-});
+const currentTheme = () =>
+  document.documentElement.getAttribute('data-theme') ??
+  (window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark'
+    : 'light');
 
 export type LayerType = 'STENAR_LIGHT' | 'STENAR_BLUE' | 'STENAR_TOPO';
 
@@ -84,3 +58,32 @@ export const MAP_BASE_LAYERS_LIST: LayerTypeItem[] = [
   MAP_BASE_LAYERS.STENAR_BLUE,
   MAP_BASE_LAYERS.STENAR_TOPO,
 ];
+
+const defaultLayerForTheme = (theme?: string): LayerTypeItem =>
+  theme === 'light' ? MAP_BASE_LAYERS.STENAR_LIGHT : MAP_BASE_LAYERS.STENAR_BLUE;
+
+export const useUseBaseLayers = defineStore('useUseBaseLayers', () => {
+  // Sync default so map can init immediately (Preferences may overwrite).
+  // Don't inject('theme') here — Pinia setup has no component inject context.
+  const selectedLayer = ref<LayerTypeItem>(
+    defaultLayerForTheme(currentTheme()),
+  );
+
+  Preferences.get({
+    key: SELECTED_BASE_LAYER,
+  }).then(({ value }) => {
+    if (!value) return;
+    selectedLayer.value = JSON.parse(value);
+  });
+
+  const setSelectedBaseLayer = async (item: LayerTypeItem) => {
+    selectedLayer.value = item;
+
+    await Preferences.set({
+      key: SELECTED_BASE_LAYER,
+      value: JSON.stringify(item),
+    });
+  };
+
+  return { selectedLayer, setSelectedBaseLayer };
+});

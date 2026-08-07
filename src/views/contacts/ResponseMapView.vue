@@ -9,11 +9,11 @@ import {
   IonBackButton,
 } from '@ionic/vue';
 import OlResponseMapLocation from './OlResponseMapLocation.vue';
-import OlMap from '@/map/OlMap.vue';
+import MlMap from '@/map/MlMap.vue';
 </script>
 
 <template>
-  <IonPage>
+  <IonPage class="map-ion-page">
     <IonHeader :translucent="false">
       <IonToolbar>
         <IonButtons slot="start" class="mr-2">
@@ -23,10 +23,29 @@ import OlMap from '@/map/OlMap.vue';
       </IonToolbar>
     </IonHeader>
 
-    <IonContent :fullscreen="true">
-      <OlMap>
+    <IonContent :scroll-y="false" class="map-page-content" :fullscreen="false">
+      <MlMap>
         <OlResponseMapLocation />
-      </OlMap>
+      </MlMap>
     </IonContent>
   </IonPage>
 </template>
+
+<style scoped>
+.map-ion-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.map-page-content {
+  flex: 1;
+  min-height: 0;
+  --overflow: hidden;
+}
+.map-page-content::part(scroll) {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+</style>

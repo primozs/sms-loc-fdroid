@@ -8,11 +8,9 @@ import {
   IonButtons,
   IonTitle,
 } from '@ionic/vue';
-import 'ol/ol.css';
 import OlContactFeatures from '@/views/contacts/OlContactFeatures.vue';
 import OlMyLocation from './OlMyLocation.vue';
-import OlMap from '@/map/OlMap.vue';
-import MlMapAwaiter from '@/map/MlMapAwaiter.vue';
+import MlMap from '@/map/MlMap.vue';
 import MapModalData from './MapModalData.vue';
 import { useDevMode } from '@/views/dev/useDevMode';
 
@@ -20,7 +18,7 @@ const dev = useDevMode();
 </script>
 
 <template>
-  <IonPage>
+  <IonPage class="map-ion-page">
     <IonHeader :translucent="false">
       <IonToolbar>
         <IonButtons slot="start" class="mr-2">
@@ -30,19 +28,33 @@ const dev = useDevMode();
       </IonToolbar>
     </IonHeader>
 
-    <IonContent :fullscreen="true">
-      <OlMap v-if="dev.isDevMode">
+    <IonContent :scroll-y="false" class="map-page-content" :fullscreen="false">
+      <MlMap>
         <OlContactFeatures />
         <OlMyLocation />
-        <MlMapAwaiter>
-          <MapModalData />
-        </MlMapAwaiter>
-      </OlMap>
-
-      <OlMap v-else>
-        <OlContactFeatures />
-        <OlMyLocation />
-      </OlMap>
+        <MapModalData v-if="dev.isDevMode" />
+      </MlMap>
     </IonContent>
   </IonPage>
 </template>
+
+<style scoped>
+/* IonPage fills the tabs outlet (area above tab bar) */
+.map-ion-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.map-page-content {
+  flex: 1;
+  min-height: 0;
+  --overflow: hidden;
+}
+/* Scroll host becomes the sized parent MapLibre needs (height: 100%) */
+.map-page-content::part(scroll) {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+</style>

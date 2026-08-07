@@ -10,9 +10,12 @@ const config: CapacitorConfig = {
     androidScheme: 'https',
   },
   plugins: {
-    CapacitorNodeJS: {
-      nodeDir: 'nodejs',
-      startMode: 'manual',
+    // Capawesome EdgeToEdge applies WebView insets; Cap 8 SystemBars CSS must stay off
+    SystemBars: {
+      insetsHandling: 'disable',
+    },
+    Keyboard: {
+      resizeOnFullScreen: false,
     },
   },
 };

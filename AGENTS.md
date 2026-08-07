@@ -10,9 +10,8 @@ Offline SMS location sharing for outdoor use (hiking, climbing, paragliding, etc
 - Tailwind CSS 3 + Ionic CSS + `src/theme/variables.css`
 - Pinia + TanStack Vue Query
 - vue-i18n (locales: `en`, `sl`)
-- Maps: MapLibre GL + OpenLayers (+ pmtiles, maplibre-contour)
+- Maps: MapLibre GL
 - Local SQLite via `@capacitor-community/sqlite`
-- Embedded Node server via `capacitor-nodejs` (offline map download/serve)
 - System UI: `@capacitor/status-bar`, `@capawesome/capacitor-navigation-bar`, `@capawesome/capacitor-android-edge-to-edge-support`
 - Lint/format: ESLint + Prettier (not Biome)
 - Unit: Vitest 4 · E2E: Cypress
@@ -35,8 +34,8 @@ yarn fmt.check
 yarn test:unit
 yarn test:e2e
 
-# Sync web + server into Capacitor Android
-yarn ionic-sync          # server-sync + ionic cap sync
+# Sync web into Capacitor Android
+yarn ionic-sync
 yarn ionic-capacitor-open-android
 yarn ionic-capacitor-run-android
 yarn ionic-live-reload   # needs ionic-serve + adb port forward to :8100
@@ -53,7 +52,7 @@ Config: copy `config/dev/index.example.ts` → `config/dev/index.ts` (and prod).
 
 ```
 src/
-  main.ts                 # Bootstrap: Ionic, i18n, Pinia, Vue Query, SQLite, NodeJS
+  main.ts                 # Bootstrap: Ionic, i18n, Pinia, Vue Query, SQLite
   App.vue / useApp.ts     # Root shell
   config.ts               # Runtime config (maps URLs, DB name, version) — often gitignored
   router/                 # Ionic Vue Router (/contacts, /map, /settings, …)
@@ -61,7 +60,7 @@ src/
   components/             # Shared UI
   services/               # SQLite access, contacts/requests/responses, permissions, logger
   plugins/                # Capacitor plugin TS bindings (sms, geolocation, locale, core)
-  map/                    # OL/MapLibre map setup and layers
+  map/                    # MapLibre map setup and layers
   locales/                # i18n messages
   theme/                  # Tailwind + Ionic CSS variables
 android/app/src/main/java/si/stenar/smsloc/
@@ -69,7 +68,6 @@ android/app/src/main/java/si/stenar/smsloc/
   core/                   # SMS receive/respond, location service, permissions bridge
   plugins/                # Sms, GeoLocation, Locale Capacitor plugins
   data/                   # SQLite stores (contacts, requests, responses, logs, GpsData)
-server/                   # Express Node app synced into public/nodejs for Capacitor-NodeJS
 config/                   # Trapeze + env configure scripts (dev/prod)
 deploy/docker/            # Clean-room APK/AAB compile
 ```
@@ -106,13 +104,6 @@ Keep JS and Java parsing of this format in sync when changing the wire format.
 - Native stores under `android/.../data/`; JS access via `src/services/*` + `@capacitor-community/sqlite`
 - Contacts, requests, responses, and logs are the core domain tables
 
-### Embedded server + offline maps
-
-- `server/` is compiled and copied to `public/nodejs` by `yarn server-sync` / `ionic-sync`
-- Serves local map styles/tiles; offline map tarball URL comes from config (`OFFLINE_MAP_DOWNLOAD_URL`)
-- Capacitor config: `CapacitorNodeJS` with `nodeDir: 'nodejs'`, `startMode: 'manual'`
-- Android uses `useLegacyBridge: true` (background location / bridge compatibility)
-
 ### Android SDK
 
 - `minSdkVersion` 29, `compileSdkVersion` / `targetSdkVersion` **36** (`android/variables.gradle`)
@@ -134,7 +125,7 @@ Keep JS and Java parsing of this format in sync when changing the wire format.
 ## Boundaries
 
 - Do not commit secrets, keystores, or `keystores/` passwords
-- Do not commit generated `config/dev/index.ts`, `config/prod/index.ts`, or `public/nodejs`
+- Do not commit generated `config/dev/index.ts` or `config/prod/index.ts`
 - Do not add Google Play Services / GMS-only APIs without an explicit F-Droid-compatible alternative
 - Ask before changing the SMS wire format (`Loc?` / `Loc:` / `GpsData` CSV) — it is a cross-device protocol
 - Ask before bumping Capacitor major, `minSdk`, or `targetSdk`
@@ -143,7 +134,7 @@ Keep JS and Java parsing of this format in sync when changing the wire format.
 ## Common Gotchas
 
 1. **Config files are gitignored** — missing `config/*/index.ts` or `src/config.ts` breaks builds; use examples + `yarn configure:dev|prod`
-2. **Must `ionic-sync` after server or web changes** before expecting them on device
+2. **Must `ionic-sync` after web changes** before expecting them on device
 3. **Native SMS path ≠ JS SMS path** — background replies go through Java `SmsReceiver`; UI send/watch uses the Capacitor Sms plugin
 4. **Battery optimization** — `MainActivity` may prompt to ignore battery optimizations for reliable background location
 5. **Phone numbers** — native code normalizes to E.164 via libphonenumber; contact matching depends on that
@@ -220,7 +211,7 @@ yarn test:unit   # when logic/tests touched
 
 - One logical change per commit; don't mix refactors with features
 - Don't mix formatting-only changes with behavior changes
-- Never commit `node_modules/`, `dist/`, `public/nodejs`, keystores, or build artifacts
+- Never commit `node_modules/`, `dist/`, keystores, or build artifacts
 
 ## Agent workflow
 
@@ -249,4 +240,3 @@ Phases: **DEFINE** → **PLAN** → **BUILD** → **VERIFY** → **REVIEW** → 
 - App overview / dev flow: `README.md`
 - Docker release: `deploy/docker/README.md`
 - Geolocation native notes: `src/plugins/geolocation/readme.md`
-- Embedded server: `server/readme.md`

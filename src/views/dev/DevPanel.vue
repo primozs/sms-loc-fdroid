@@ -4,7 +4,6 @@ import { bugOutline } from 'ionicons/icons';
 import { menuController } from '@ionic/core/components';
 import { onMounted, ref } from 'vue';
 import Link from '@/components/Link.vue';
-import ServerStatus from './ServerStatus.vue';
 import { usePresentation } from '@/views/presentation/usePresentation';
 
 const menu = ref<typeof menuController | undefined>();
@@ -27,8 +26,6 @@ const close = async () => {
 </script>
 
 <template>
-  <ServerStatus />
-
   <Link router-link="/dev" :callback="close">
     <IonItem button :detail="false" lines="full">
       <IonIcon slot="start" :icon="bugOutline"></IonIcon>

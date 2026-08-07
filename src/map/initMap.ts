@@ -1,41 +1,26 @@
-import Map from 'ol/Map.js';
-import View from 'ol/View.js';
-import { fromLonLat } from 'ol/proj';
-import { defaults as defaultControls } from 'ol/control';
-import { defaults as defaultInteractions } from 'ol/interaction';
-import { DragRotate } from 'ol/interaction';
+import { Map as MapLibreMap, type MapOptions } from 'maplibre-gl';
+import { setupMaplibre } from './setupMaplibre';
 
-export const initMap = (el?: HTMLDivElement | string) => {
-  const center: [number, number] = [11, 23];
+export type InitMapOptions = {
+  container: HTMLElement | string;
+  style: string;
+};
 
-  const olMap = new Map({
-    layers: [],
-    interactions: defaultInteractions({
-      altShiftDragRotate: false,
-      doubleClickZoom: false,
-      shiftDragZoom: false,
-    }).extend([
-      new DragRotate({
-        condition: (event) => {
-          const browserEvent = event.originalEvent;
-          return browserEvent.shiftKey;
-        },
-      }),
-    ]),
-    controls: defaultControls({
-      rotate: false,
-      attribution: true,
-    }),
-    view: new View({
-      center: fromLonLat(center),
-      zoom: 0,
-      enableRotation: true,
-      constrainRotation: false,
-      maxZoom: 20,
-    }),
-  });
+/** Minimal MapLibre Map options — sizing via default trackResize. */
+export const initMap = (options: InitMapOptions) => {
+  setupMaplibre();
 
-  if (el) olMap.setTarget(el);
+  const mapOptions: MapOptions = {
+    container: options.container,
+    style: options.style,
+    center: [11, 23],
+    zoom: 0,
+    maxZoom: 20,
+    doubleClickZoom: false,
+    pitchWithRotate: false,
+    attributionControl: false,
+    dragRotate: true,
+  };
 
-  return olMap;
+  return new MapLibreMap(mapOptions);
 };

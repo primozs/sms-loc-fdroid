@@ -1,83 +1,97 @@
-import VectorLayer from 'ol/layer/Vector';
-import VectorSource from 'ol/source/Vector';
-import Style from 'ol/style/Style';
-import { Feature, type Map } from 'ol';
-import { Point } from 'ol/geom';
-import { fromLonLat } from 'ol/proj';
-import type { Coordinate } from 'ol/coordinate';
-import { colors } from '../../map/colors';
-import Icon from 'ol/style/Icon';
+import type { MapLibreMap } from '@/map/MaplibreLayer';
+import { addMlLayer, addMlSource } from '@/map/MaplibreLayer';
+import { colors } from '@/map/colors';
 import { ResponseStore, type ResponseData } from '@/services/responses';
+import type { GeoJSONSource } from 'maplibre-gl';
+import type { FeatureCollection } from 'geojson';
 
+const SOURCE_ID = 'history-response';
+const LAYER_ID = 'history-response-pin';
+
+const emptyFc = (): FeatureCollection => ({
+  type: 'FeatureCollection',
+  features: [],
+});
+
+/** Parent mounts this only after map `load`. */
 export class HistoryResponseLayer {
-  private vectorSource: VectorSource;
-  private vectorLayer: VectorLayer<VectorSource>;
+  private map: MapLibreMap;
   private mResponse: ResponseData | null = null;
-  private mMap: Map;
 
-  constructor(map: Map) {
-    this.mMap = map;
-    this.vectorSource = new VectorSource<any>({
-      features: [],
+  constructor(map: MapLibreMap) {
+    this.map = map;
+    this.map.on('style.load', this.onStyleLoad);
+    this.ensureLayers();
+  }
+
+  private onStyleLoad = () => {
+    this.ensureLayers();
+    if (this.mResponse) {
+      this.drawPoint(this.mResponse.lon, this.mResponse.lat);
+    }
+  };
+
+  private ensureLayers() {
+    addMlSource(this.map, SOURCE_ID, {
+      type: 'geojson',
+      data: emptyFc(),
     });
 
-    this.vectorLayer = new VectorLayer({
-      source: this.vectorSource,
+    addMlLayer(this.map, {
+      id: LAYER_ID,
+      type: 'circle',
+      source: SOURCE_ID,
+      paint: {
+        'circle-radius': 8,
+        'circle-color': colors.red['600'],
+        'circle-stroke-width': 2,
+        'circle-stroke-color': '#ffffff',
+      },
+    });
+  }
+
+  private drawPoint(lon: number, lat: number) {
+    const source = this.map.getSource(SOURCE_ID) as GeoJSONSource | undefined;
+    source?.setData({
+      type: 'FeatureCollection',
+      features: [
+        {
+          type: 'Feature',
+          geometry: { type: 'Point', coordinates: [lon, lat] },
+          properties: {},
+        },
+      ],
     });
 
-    map.addLayer(this.vectorLayer);
-    this.vectorLayer.setZIndex(100);
+    this.map.fitBounds(
+      [
+        [lon, lat],
+        [lon, lat],
+      ],
+      { padding: 100, maxZoom: 12 },
+    );
   }
 
   async drawResponseId(responseId: number | undefined) {
     if (responseId === undefined) {
-      this.vectorSource.clear();
+      const source = this.map.getSource(SOURCE_ID) as GeoJSONSource | undefined;
+      source?.setData(emptyFc());
       return;
     }
 
     if (!this.mResponse || this.mResponse.id !== responseId) {
       const response =
         await ResponseStore.getInstance().getResponseById(responseId);
-
       this.mResponse = response;
     }
 
     if (this.mResponse) {
-      this.vectorSource.clear();
-      const feature = this.createFeature([
-        this.mResponse.lon,
-        this.mResponse.lat,
-      ]);
-      this.vectorSource.addFeature(feature);
-
-      const size = this.mMap.getSize();
-      const extent = this.vectorSource.getExtent();
-      if (extent) {
-        this.mMap.getView().fit(extent, {
-          size,
-          padding: [100, 100, 100, 100],
-          maxZoom: 12,
-        });
-      }
+      this.ensureLayers();
+      this.drawPoint(this.mResponse.lon, this.mResponse.lat);
     }
   }
 
-  private createFeature(coordinate: Coordinate) {
-    const point = new Point(fromLonLat(coordinate));
-    const feature = new Feature({
-      geometry: point,
-    });
-    feature.setStyle(
-      new Style({
-        image: new Icon({
-          color: colors['red']['600'],
-          crossOrigin: 'anonymous',
-          src: '/icons/location-16-filled.svg',
-          scale: 2,
-          anchor: [0.5, 1],
-        }),
-      }),
-    );
-    return feature;
+  public destroy() {
+    this.map.off('style.load', this.onStyleLoad);
   }
 }
