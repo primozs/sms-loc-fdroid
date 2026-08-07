@@ -141,7 +141,7 @@ const handleRefresh = (event: RefresherCustomEvent) => {
 
     <IonHeader v-if="isError">
       <IonToolbar color="danger">
-        <IonTitle class="text-gray-900">
+        <IonTitle class="app-warning-title">
           {{ $t('message.errorFetchingData') }}
         </IonTitle>
       </IonToolbar>
@@ -151,7 +151,7 @@ const handleRefresh = (event: RefresherCustomEvent) => {
       <IonRefresher
         slot="fixed"
         @ionRefresh="handleRefresh($event)"
-        class="z-10 bg-white dark:bg-black"
+        class="app-refresher"
       >
         <IonRefresherContent></IonRefresherContent>
       </IonRefresher>
@@ -162,7 +162,7 @@ const handleRefresh = (event: RefresherCustomEvent) => {
           <ContactDetailInfo :contact="contact" />
           <ContactDetailLastResponse :contact="contact" />
           <section>
-            <div class="px-3.5 mt-2">
+            <div class="app-segment-pad">
               <IonSegment v-model="segment">
                 <IonSegmentButton value="history">
                   <IonLabel>{{ t('message.history') }}</IonLabel>
@@ -179,7 +179,7 @@ const handleRefresh = (event: RefresherCustomEvent) => {
         <div
           v-if="segment === 'history'"
           v-bind="containerProps"
-          class="h-full ion-content-scroll-host"
+          class="app-fill-scroll ion-content-scroll-host"
         >
           <div v-bind="wrapperProps">
             <HistoryListItem
@@ -224,17 +224,17 @@ const handleRefresh = (event: RefresherCustomEvent) => {
 
         <IonGrid
           v-if="segment === 'statistics'"
-          class="p-3 ion-content-scroll-host"
+          class="ion-padding ion-content-scroll-host"
         >
           <IonRow>
             <IonCol>
-              <span class="font-medium">{{ t('message.statRequestSent') }}</span
+              <span class="app-meta-label">{{ t('message.statRequestSent') }}</span
               >: {{ stats.noRequestSent }}
             </IonCol>
           </IonRow>
           <IonRow>
             <IonCol>
-              <span class="font-medium">{{
+              <span class="app-meta-label">{{
                 t('message.statRequestReceived')
               }}</span
               >: {{ stats.noRequestReceived }}
@@ -243,7 +243,7 @@ const handleRefresh = (event: RefresherCustomEvent) => {
 
           <IonRow>
             <IonCol>
-              <span class="font-medium">{{
+              <span class="app-meta-label">{{
                 t('message.statResponsesSent')
               }}</span
               >: {{ stats.noResponsesSent }}
@@ -251,7 +251,7 @@ const handleRefresh = (event: RefresherCustomEvent) => {
           </IonRow>
           <IonRow>
             <IonCol>
-              <span class="font-medium">{{
+              <span class="app-meta-label">{{
                 t('message.statResponsesReceived')
               }}</span
               >: {{ stats.noResponsesReceived }}

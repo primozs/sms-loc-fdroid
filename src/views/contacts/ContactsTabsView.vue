@@ -25,7 +25,7 @@ const { t } = useI18n();
 
       <IonTabBar
         slot="bottom"
-        class="pb-1 pt-2 border-t border-gray-200 dark:border-gray-950"
+        class="app-tab-bar"
       >
         <IonTabButton tab="contacts" href="/contacts/list">
           <IonIcon :icon="peopleCircleOutline" />

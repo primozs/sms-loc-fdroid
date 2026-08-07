@@ -132,7 +132,7 @@ onUnmounted(() => {
   pointer-events: none;
   z-index: 1;
 }
-.map-overlays :deep(.z-10) {
+.map-overlays :deep(.app-overlay) {
   pointer-events: auto;
 }
 </style>

@@ -23,45 +23,45 @@ const {
 
 <template>
   <IonListHeader v-if="response">
-    <h2 class="text-lg font-medium !mt-0 !mb-0">
+    <h2 class="app-detail-title">
       {{ t('message.lastKnownLocation') }}
     </h2>
   </IonListHeader>
 
-  <IonGrid class="p-3" v-if="response">
+  <IonGrid class="ion-padding" v-if="response">
     <IonRow>
       <IonCol>
-        <span class="font-medium">{{ t('message.time') }}</span
+        <span class="app-meta-label">{{ t('message.time') }}</span
         >: {{ timeFormated }}
       </IonCol>
       <IonCol>
-        <span class="font-medium">{{ t('message.elapsed') }}</span
+        <span class="app-meta-label">{{ t('message.elapsed') }}</span
         >: {{ timeElapsed }}
       </IonCol>
     </IonRow>
     <IonRow>
       <IonCol>
-        <span class="font-medium">{{ t('message.distance') }}</span
+        <span class="app-meta-label">{{ t('message.distance') }}</span
         >: {{ distance }}
       </IonCol>
       <IonCol>
-        <span class="font-medium">{{ t('message.elevation') }}</span
+        <span class="app-meta-label">{{ t('message.elevation') }}</span
         >: {{ elevation }}
       </IonCol>
     </IonRow>
     <IonRow>
       <IonCol>
-        <span class="font-medium">{{ t('message.battery') }}</span
+        <span class="app-meta-label">{{ t('message.battery') }}</span
         >: {{ battery }}
       </IonCol>
       <IonCol>
-        <span class="font-medium">{{ t('message.speed') }}</span
+        <span class="app-meta-label">{{ t('message.speed') }}</span
         >: {{ speed }}
       </IonCol>
     </IonRow>
     <IonRow>
       <IonCol>
-        <span class="font-medium">{{ t('message.location') }}</span
+        <span class="app-meta-label">{{ t('message.location') }}</span
         >:
         <Link :router-link="`/contacts/list/map/${response?.id}`">{{
           locationFormated

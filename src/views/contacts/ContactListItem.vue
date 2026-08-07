@@ -51,28 +51,21 @@ const handleLongPress = () => {
     :button="true"
     :detail="false"
     lines="full"
+    class="contact-item"
   >
-    <IonAvatar slot="start">
-      <div
-        v-if="message"
-        :class="[
-          `
-          absolute top-3 start-3 z-10
-          w-3 h-3 rounded-full bg-[var(--ion-color-primary)]
-        `,
-        ]"
-      ></div>
+    <IonAvatar slot="start" class="contact-avatar">
+      <div v-if="message" class="msg-dot"></div>
       <img
         v-if="contact.image"
         :src="contact.image"
         :alt="contact.name"
-        class="w-10 h-10 max-w-none object-none object-center"
+        class="avatar-img"
       />
       <img
         v-else
         src="/assets/icons/avatar.svg"
         :alt="contact.name"
-        class="grayscale"
+        class="avatar-fallback"
       />
     </IonAvatar>
     <IonLabel>
@@ -82,57 +75,109 @@ const handleLongPress = () => {
         {{ t('message.noLocationData') }}
       </IonNote>
 
-      <IonNote v-if="message" class="text-sm">
+      <IonNote v-if="message" class="note-sm">
         {{ t(`message.${message}`) }}
       </IonNote>
       <br v-if="message" />
 
-      <IonText v-if="response" class="text-sm">
-        <span class="font-medium">{{ t('message.distance') }}</span
+      <IonText v-if="response" class="meta-sm">
+        <span class="meta-label">{{ t('message.distance') }}</span
         >: {{ distance }}
-        <span class="font-medium">{{ t('message.elevation') }}</span
+        <span class="meta-label">{{ t('message.elevation') }}</span
         >: {{ elevation }}
       </IonText>
     </IonLabel>
 
-    <div
-      slot="end"
-      class="absolute top-2.5 text-xs flex items-center leading-3 end-3 gap-x-1"
-    >
-      <IonNote v-if="response" color="medium" class="text-xs">
+    <div slot="end" class="end-top">
+      <IonNote v-if="response" color="medium" class="note-xs">
         {{
           olderThen4Hours ? timeFormated : timeElapsed + ' ' + t('message.ago')
         }}
       </IonNote>
     </div>
-    <div
-      slot="end"
-      class="absolute bottom-3.5 text-base flex items-center leading-3 end-3 gap-x-1"
-    >
+    <div slot="end" class="end-bottom">
       <IonIcon
         :icon="locationOutline"
-        :class="[
-          {
-            hidden: status === 'none',
-            'text-gray-500 dark:text-gray-600':
-              status === 'gray' || status === 'none',
-            'text-green-700 dark:text-green-500': status === 'green',
-            'text-orange-500 dark:text-orange-500': status === 'orange',
-          },
-        ]"
+        class="status-icon"
+        :class="`status-${status}`"
       ></IonIcon>
     </div>
   </IonItem>
 </template>
 
 <style scoped>
+.contact-item {
+  position: relative;
+}
+.contact-avatar {
+  position: relative;
+}
+.msg-dot {
+  position: absolute;
+  top: 0.75rem;
+  inset-inline-start: 0.75rem;
+  z-index: 10;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 9999px;
+  background: var(--ion-color-primary);
+}
+.avatar-img {
+  width: 2.5rem;
+  height: 2.5rem;
+  max-width: none;
+  object-fit: none;
+  object-position: center;
+}
+.avatar-fallback {
+  filter: grayscale(1);
+}
+.note-sm,
+.meta-sm {
+  font-size: 0.875rem;
+}
+.meta-label {
+  font-weight: 500;
+}
+.end-top,
+.end-bottom {
+  position: absolute;
+  inset-inline-end: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  line-height: 0.75rem;
+}
+.end-top {
+  top: 0.625rem;
+  font-size: 0.75rem;
+}
+.end-bottom {
+  bottom: 0.875rem;
+  font-size: 1rem;
+}
+.note-xs {
+  font-size: 0.75rem;
+}
+.status-icon.status-none {
+  visibility: hidden;
+}
+.status-icon.status-gray,
+.status-icon.status-none {
+  color: var(--ion-color-medium);
+}
+.status-icon.status-green {
+  color: var(--ion-color-success-shade);
+}
+.status-icon.status-orange {
+  color: var(--ion-color-warning-shade);
+}
 ion-label strong {
   display: block;
   max-width: calc(100% - 60px);
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
 ion-label ion-note {
   font-size: 0.9rem;
 }

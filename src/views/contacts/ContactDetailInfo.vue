@@ -7,19 +7,19 @@ defineProps<{ contact: ContactDisplay | null }>();
 </script>
 
 <template>
-  <div class="flex gap-5 m-4">
+  <div class="app-info-row">
     <IonAvatar>
       <img
         v-if="contact?.image"
         :src="contact.image"
         :alt="contact.name"
-        class="max-w-none object-none object-center"
+        class="app-avatar-img"
       />
       <img
         v-else
         src="/assets/icons/avatar.svg"
         :alt="contact?.name"
-        class="grayscale"
+        class="app-avatar-fallback"
       />
     </IonAvatar>
     <IonLabel>

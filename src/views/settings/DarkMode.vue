@@ -30,7 +30,7 @@ const handleToggle = () => {
         :aria-label="$t('message.darkMode')"
         :checked="theme?.theme.value === 'dark'"
         @ionChange="() => handleToggle()"
-        class="py-3"
+        class="app-toggle-pad"
       >
       </IonToggle>
     </div>

@@ -11,6 +11,7 @@ import {
   IonIcon,
   IonButtons,
   IonButton,
+  IonMenuToggle,
 } from '@ionic/vue';
 import {
   informationCircleOutline,
@@ -23,7 +24,6 @@ import {
 } from 'ionicons/icons';
 import { menuController } from '@ionic/core/components';
 import { onMounted, ref } from 'vue';
-import Link from '@/components/Link.vue';
 
 const props = defineProps<{ contentId: string }>();
 const menu = ref<typeof menuController | undefined>();
@@ -55,65 +55,113 @@ const close = async () => {
       </IonToolbar>
     </IonHeader>
     <IonContent :fullscreen="true">
-      <IonList class="flex flex-col h-full">
-        <Link router-link="/contacts/list" :callback="close">
-          <IonItem button :detail="false" lines="full">
-            <IonIcon slot="start" :icon="peopleCircleOutline"></IonIcon>
-            <IonLabel>
-              {{ $t('message.contacts') }}
-            </IonLabel>
-          </IonItem>
-        </Link>
+      <div class="menu-body">
+        <IonList>
+          <IonMenuToggle auto-hide>
+            <IonItem
+              router-link="/contacts/list"
+              router-direction="root"
+              button
+              :detail="false"
+              lines="full"
+            >
+              <IonIcon slot="start" :icon="peopleCircleOutline"></IonIcon>
+              <IonLabel>
+                {{ $t('message.contacts') }}
+              </IonLabel>
+            </IonItem>
+          </IonMenuToggle>
 
-        <Link router-link="/contacts/map" :callback="close">
-          <IonItem button :detail="false" lines="full">
-            <IonIcon slot="start" :icon="mapOutline"></IonIcon>
-            <IonLabel>
-              {{ $t('message.map') }}
-            </IonLabel>
-          </IonItem>
-        </Link>
+          <IonMenuToggle auto-hide>
+            <IonItem
+              router-link="/contacts/map"
+              router-direction="root"
+              button
+              :detail="false"
+              lines="full"
+            >
+              <IonIcon slot="start" :icon="mapOutline"></IonIcon>
+              <IonLabel>
+                {{ $t('message.map') }}
+              </IonLabel>
+            </IonItem>
+          </IonMenuToggle>
 
-        <Link router-link="/contacts/settings" :callback="close">
-          <IonItem button :detail="false" lines="full">
-            <IonIcon slot="start" :icon="optionsOutline"></IonIcon>
-            <IonLabel>
-              {{ $t('message.settings') }}
-            </IonLabel>
-          </IonItem>
-        </Link>
+          <IonMenuToggle auto-hide>
+            <IonItem
+              router-link="/contacts/settings"
+              router-direction="root"
+              button
+              :detail="false"
+              lines="full"
+            >
+              <IonIcon slot="start" :icon="optionsOutline"></IonIcon>
+              <IonLabel>
+                {{ $t('message.settings') }}
+              </IonLabel>
+            </IonItem>
+          </IonMenuToggle>
+        </IonList>
 
-        <Link
-          router-link="/about"
-          :callback="close"
-          class="border-t border-gray-200 dark:border-gray-900 mt-auto"
-        >
-          <IonItem button :detail="false" lines="full">
-            <IonIcon slot="start" :icon="helpCircleOutline"></IonIcon>
-            <IonLabel>
-              {{ $t('message.about') }}
-            </IonLabel>
-          </IonItem>
-        </Link>
+        <IonList class="menu-footer">
+          <IonMenuToggle auto-hide>
+            <IonItem
+              router-link="/about"
+              router-direction="forward"
+              button
+              :detail="false"
+              lines="full"
+            >
+              <IonIcon slot="start" :icon="helpCircleOutline"></IonIcon>
+              <IonLabel>
+                {{ $t('message.about') }}
+              </IonLabel>
+            </IonItem>
+          </IonMenuToggle>
 
-        <Link router-link="/support" :callback="close">
-          <IonItem button :detail="false" lines="full">
-            <IonIcon slot="start" :icon="informationCircleOutline"></IonIcon>
-            <IonLabel>
-              {{ $t('message.support') }}
-            </IonLabel>
-          </IonItem>
-        </Link>
+          <IonMenuToggle auto-hide>
+            <IonItem
+              router-link="/support"
+              router-direction="forward"
+              button
+              :detail="false"
+              lines="full"
+            >
+              <IonIcon slot="start" :icon="informationCircleOutline"></IonIcon>
+              <IonLabel>
+                {{ $t('message.support') }}
+              </IonLabel>
+            </IonItem>
+          </IonMenuToggle>
 
-        <Link router-link="/terms-of-use" :callback="close">
-          <IonItem button :detail="false" lines="full">
-            <IonIcon slot="start" :icon="bodyOutline"></IonIcon>
-            <IonLabel>
-              {{ $t('message.privacyPolicy') }}
-            </IonLabel>
-          </IonItem>
-        </Link>
-      </IonList>
+          <IonMenuToggle auto-hide>
+            <IonItem
+              router-link="/terms-of-use"
+              router-direction="forward"
+              button
+              :detail="false"
+              lines="full"
+            >
+              <IonIcon slot="start" :icon="bodyOutline"></IonIcon>
+              <IonLabel>
+                {{ $t('message.privacyPolicy') }}
+              </IonLabel>
+            </IonItem>
+          </IonMenuToggle>
+        </IonList>
+      </div>
     </IonContent>
   </IonMenu>
 </template>
+
+<style scoped>
+.menu-body {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.menu-footer {
+  margin-top: auto;
+  border-top: 1px solid var(--ion-border-color);
+}
+</style>

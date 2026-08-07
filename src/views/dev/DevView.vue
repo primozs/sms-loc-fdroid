@@ -18,7 +18,7 @@ import {
   <IonPage>
     <IonHeader :translucent="false">
       <IonToolbar>
-        <IonButtons slot="start" class="mr-2">
+        <IonButtons slot="start" class="app-menu-btn-gap">
           <IonBackButton></IonBackButton>
         </IonButtons>
         <IonTitle>DEV</IonTitle>

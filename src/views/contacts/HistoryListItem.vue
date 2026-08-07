@@ -81,22 +81,21 @@ const handleClick = (response: ResponseData) => {
 </script>
 
 <template>
-  <IonItem lines="none" class="h-32 select-none border-transparent">
+  <IonItem lines="none" class="history-item">
     <div
       v-if="request"
-      :class="['flex w-full', { 'justify-end': request?.type === 'sent' }]"
+      class="bubble-row"
+      :class="{ 'bubble-row--end': request?.type === 'sent' }"
     >
       <div
-        :class="[
-          'bg-slate-100 dark:bg-gray-600 rounded-2xl p-4 my-2',
-          {
-            'rounded-tr-none': request?.type === 'sent',
-            'rounded-tl-none': request?.type === 'received',
-          },
-        ]"
+        class="bubble"
+        :class="{
+          'bubble--sent': request?.type === 'sent',
+          'bubble--received': request?.type === 'received',
+        }"
       >
         <IonLabel>
-          <h3 class="font-medium">
+          <h3 class="meta-label">
             {{
               request?.type === 'sent'
                 ? t('message.requestSent')
@@ -104,13 +103,13 @@ const handleClick = (response: ResponseData) => {
             }}
           </h3>
 
-          <p class="flex gap-4">
+          <p class="meta-row">
             <span>
-              <span class="font-medium"> {{ t('message.time') }} </span>:
+              <span class="meta-label"> {{ t('message.time') }} </span>:
               {{ timeFormated }}
             </span>
             <span>
-              <span class="font-medium">{{ t('message.elapsed') }}</span
+              <span class="meta-label">{{ t('message.elapsed') }}</span
               >: {{ timeElapsed }}
             </span>
           </p>
@@ -121,50 +120,44 @@ const handleClick = (response: ResponseData) => {
     <div
       v-if="response"
       @click="handleClick(response)"
-      :class="[
-        'flex w-full',
-        {
-          'justify-end': response?.type === 'sent',
-        },
-      ]"
+      class="bubble-row"
+      :class="{ 'bubble-row--end': response?.type === 'sent' }"
     >
       <div
         v-if="response"
-        :class="[
-          'bg-slate-100 dark:bg-gray-600 rounded-2xl p-4 my-2',
-          {
-            'rounded-tr-none': response?.type === 'sent',
-            'rounded-tl-none': response?.type === 'received',
-          },
-        ]"
+        class="bubble"
+        :class="{
+          'bubble--sent': response?.type === 'sent',
+          'bubble--received': response?.type === 'received',
+        }"
       >
         <IonLabel>
-          <h3 class="font-medium">
+          <h3 class="meta-label">
             {{ t('message.time') }}: {{ timeFormated }}
             {{ t('message.elapsed') }}:
             {{ timeElapsed }}
           </h3>
 
-          <h3 v-if="message" class="text-sm">
+          <h3 v-if="message" class="msg-sm">
             {{ t(`message.${message}`) }}
           </h3>
 
-          <p class="flex gap-4">
+          <p class="meta-row">
             <span v-if="elevation">
-              <span class="font-medium"> {{ t('message.elevation') }} </span>:
+              <span class="meta-label"> {{ t('message.elevation') }} </span>:
               {{ elevation }}
             </span>
             <span v-if="speed">
-              <span class="font-medium">{{ t('message.speed') }}</span
+              <span class="meta-label">{{ t('message.speed') }}</span
               >: {{ speed }}
             </span>
             <span v-if="battery">
-              <span class="font-medium">{{ t('message.battery') }}</span
+              <span class="meta-label">{{ t('message.battery') }}</span
               >: {{ battery }}
             </span>
           </p>
           <p>
-            <span class="font-medium">{{ t('message.location') }}</span
+            <span class="meta-label">{{ t('message.location') }}</span
             >: {{ locationFormated }}
           </p>
         </IonLabel>
@@ -172,3 +165,40 @@ const handleClick = (response: ResponseData) => {
     </div>
   </IonItem>
 </template>
+
+<style scoped>
+.history-item {
+  height: 8rem;
+  user-select: none;
+  --border-color: transparent;
+}
+.bubble-row {
+  display: flex;
+  width: 100%;
+}
+.bubble-row--end {
+  justify-content: flex-end;
+}
+.bubble {
+  background: var(--ion-color-step-100, #f1f5f9);
+  border-radius: 1rem;
+  padding: 1rem;
+  margin: 0.5rem 0;
+}
+.bubble--sent {
+  border-top-right-radius: 0;
+}
+.bubble--received {
+  border-top-left-radius: 0;
+}
+.meta-label {
+  font-weight: 500;
+}
+.meta-row {
+  display: flex;
+  gap: 1rem;
+}
+.msg-sm {
+  font-size: 0.875rem;
+}
+</style>

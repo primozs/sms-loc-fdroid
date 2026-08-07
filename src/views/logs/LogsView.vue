@@ -103,7 +103,7 @@ const handleDeleteItem = async (id: number | undefined) => {
   <IonPage>
     <IonHeader :translucent="false">
       <IonToolbar>
-        <IonButtons slot="start" class="mr-2">
+        <IonButtons slot="start" class="app-menu-btn-gap">
           <IonBackButton></IonBackButton>
         </IonButtons>
         <IonTitle>{{ $t('message.logs') }}</IonTitle>
@@ -117,7 +117,7 @@ const handleDeleteItem = async (id: number | undefined) => {
 
     <IonHeader v-if="isError">
       <IonToolbar color="danger">
-        <IonTitle class="text-gray-900">
+        <IonTitle class="app-warning-title">
           {{ $t('message.errorFetchingData') }}
         </IonTitle>
       </IonToolbar>
@@ -129,23 +129,23 @@ const handleDeleteItem = async (id: number | undefined) => {
       <IonRefresher
         slot="fixed"
         @ionRefresh="handleRefresh($event)"
-        class="z-10 bg-white dark:bg-black"
+        class="app-refresher"
       >
         <IonRefresherContent></IonRefresherContent>
       </IonRefresher>
 
-      <section class="overflow-y-auto h-[calc(100%-00px)]">
+      <section class="app-fill-scroll">
         <div
           v-if="data.length > 0"
           v-bind="containerProps"
-          class="h-full ion-content-scroll-host"
+          class="app-fill-scroll ion-content-scroll-host"
         >
           <div v-bind="wrapperProps">
             <IonItem
               lines="full"
               v-for="item in list"
               :key="item.index"
-              class="h-[83px] select-none"
+              class="app-log-item"
               @click="setSelectedLogData(item.data)"
             >
               <IonLabel>
@@ -189,7 +189,7 @@ const handleDeleteItem = async (id: number | undefined) => {
           </h4>
           <h5>{{ selectedLogData.message }}</h5>
 
-          <p class="text-xs h-full w-full overflow-y-auto ion-text-wrap">
+          <p class="app-log-body ion-text-wrap">
             {{ selectedLogData?.data }}
           </p>
         </IonContent>

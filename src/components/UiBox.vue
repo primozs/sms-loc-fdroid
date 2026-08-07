@@ -7,18 +7,18 @@ const props = withDefaults(defineProps<{ showIcon?: boolean }>(), {
 </script>
 
 <template>
-  <div class="flex">
-    <div class="flex flex-col">
-      <IonNote class="text-sm truncate">
+  <div class="ui-box">
+    <div class="ui-box__col">
+      <IonNote class="ui-box__title">
         <slot name="title"></slot>
       </IonNote>
-      <div class="flex gap-1 items-center">
-        <div v-if="props.showIcon" class="flex justify-center items-center">
+      <div class="ui-box__value-row">
+        <div v-if="props.showIcon" class="ui-box__icon">
           <slot name="icon"></slot>
         </div>
-        <IonText class="text-xl font-semibold">
+        <IonText class="ui-box__value">
           <slot name="value"></slot>{{ ' ' }}
-          <span class="text-xs">
+          <span class="ui-box__unit">
             <slot name="unit"></slot>
           </span>
         </IonText>
@@ -26,3 +26,36 @@ const props = withDefaults(defineProps<{ showIcon?: boolean }>(), {
     </div>
   </div>
 </template>
+
+<style scoped>
+.ui-box {
+  display: flex;
+}
+.ui-box__col {
+  display: flex;
+  flex-direction: column;
+}
+.ui-box__title {
+  font-size: 0.875rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ui-box__value-row {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+}
+.ui-box__icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.ui-box__value {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+.ui-box__unit {
+  font-size: 0.75rem;
+}
+</style>

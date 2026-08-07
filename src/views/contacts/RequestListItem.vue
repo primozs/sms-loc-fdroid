@@ -54,7 +54,7 @@ const timeElapsed = computed(() => {
       slot="start"
     />
     <IonLabel>
-      <h3 class="font-medium">
+      <h3 class="app-meta-label">
         {{
           request.type === 'sent'
             ? t('message.requestSent')
@@ -62,13 +62,13 @@ const timeElapsed = computed(() => {
         }}
       </h3>
 
-      <p class="flex gap-4">
+      <p class="app-meta-row">
         <span>
-          <span class="font-medium"> {{ t('message.time') }} </span>:
+          <span class="app-meta-label"> {{ t('message.time') }} </span>:
           {{ timeFormated }}
         </span>
         <span>
-          <span class="font-medium">{{ t('message.elapsed') }}</span
+          <span class="app-meta-label">{{ t('message.elapsed') }}</span
           >: {{ timeElapsed }}
         </span>
       </p>

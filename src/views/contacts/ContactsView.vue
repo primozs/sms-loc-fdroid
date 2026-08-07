@@ -32,7 +32,7 @@ usePrefetch({
   <IonPage>
     <IonHeader :translucent="false">
       <IonToolbar>
-        <IonButtons slot="start" class="mr-2">
+        <IonButtons slot="start" class="app-menu-btn-gap">
           <IonMenuButton />
         </IonButtons>
         <IonTitle>{{ $t('message.contacts') }}</IonTitle>
@@ -41,7 +41,7 @@ usePrefetch({
 
     <IonHeader v-if="!locService.locServiceEnabled">
       <IonToolbar color="warning">
-        <IonTitle class="text-gray-900">{{
+        <IonTitle class="app-warning-title">{{
           t('message.locationServicesCheckTitle')
         }}</IonTitle>
       </IonToolbar>
@@ -49,7 +49,7 @@ usePrefetch({
 
     <IonHeader v-if="isError">
       <IonToolbar color="danger">
-        <IonTitle class="text-gray-900">{{
+        <IonTitle class="app-warning-title">{{
           t('message.errorFetchingData')
         }}</IonTitle>
       </IonToolbar>
@@ -67,9 +67,9 @@ usePrefetch({
       </IonList>
       <div
         v-if="data.length === 0"
-        class="flex h-full justify-center items-center"
+        class="app-empty-center"
       >
-        <IonNote class="ion-padding text-center select-none">{{
+        <IonNote class="ion-padding ion-text-center">{{
           $t('message.noContacts')
         }}</IonNote>
       </div>

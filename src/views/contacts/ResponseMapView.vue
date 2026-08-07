@@ -16,7 +16,7 @@ import MlMap from '@/map/MlMap.vue';
   <IonPage class="map-ion-page">
     <IonHeader :translucent="false">
       <IonToolbar>
-        <IonButtons slot="start" class="mr-2">
+        <IonButtons slot="start" class="app-menu-btn-gap">
           <IonBackButton />
         </IonButtons>
         <IonTitle>{{ $t('message.location') }}</IonTitle>

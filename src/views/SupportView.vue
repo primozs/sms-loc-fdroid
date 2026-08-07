@@ -46,7 +46,7 @@ const content = computed(() => {
       </IonToolbar>
     </IonHeader>
 
-    <IonContent class="items-center">
+    <IonContent>
       <AppLogoAndTitle />
 
       <div class="ion-padding text-paragraphs" v-html="content"></div>

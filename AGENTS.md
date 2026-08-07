@@ -7,7 +7,7 @@ Offline SMS location sharing for outdoor use (hiking, climbing, paragliding, etc
 - Vue 3 + TypeScript + Vite 8
 - Ionic Vue 8 (UI + router)
 - Capacitor 8 (Android only in this repo)
-- Tailwind CSS 3 + Ionic CSS + `src/theme/variables.css`
+- Ionic CSS + `src/theme/variables.css` (class dark palette)
 - Pinia + TanStack Vue Query
 - vue-i18n (locales: `en`, `sl`)
 - Maps: MapLibre GL
@@ -62,7 +62,7 @@ src/
   plugins/                # Capacitor plugin TS bindings (sms, geolocation, locale, core)
   map/                    # MapLibre map setup and layers
   locales/                # i18n messages
-  theme/                  # Tailwind + Ionic CSS variables
+  theme/                  # Ionic CSS variables (light + ion-palette-dark)
 android/app/src/main/java/si/stenar/smsloc/
   MainActivity.java       # Registers native plugins
   core/                   # SMS receive/respond, location service, permissions bridge

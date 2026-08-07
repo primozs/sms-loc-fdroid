@@ -23,14 +23,8 @@ const errorMsg = t('message.error');
     :alt="props.alt"
     :width="props.width"
     :height="props.height"
-    :class="[
-      'img',
-      {
-        'h-auto w-full max-w-full object-cover object-center': true, // responsive
-        'bg-gray-100 dark:bg-neutral-900': true, // loading bg
-      },
-      props.class && props.class,
-    ]"
+    class="img"
+    :class="props.class"
     :on-error="() => (error = true)"
     :data-msg-onerror="errorMsg"
   />
@@ -38,11 +32,13 @@ const errorMsg = t('message.error');
 
 <style scoped>
 .img {
-  --img-err-bg-color: #e5e7eb;
-}
-
-[data-theme='dark'] .img {
-  --img-err-bg-color: rgb(55 65 81 / 1);
+  height: auto;
+  width: 100%;
+  max-width: 100%;
+  object-fit: cover;
+  object-position: center;
+  background-color: var(--ion-color-step-100, #e5e7eb);
+  --img-err-bg-color: var(--ion-color-step-100, #e5e7eb);
 }
 
 img:after {

@@ -17,7 +17,6 @@ import { readerOutline } from 'ionicons/icons';
 import DarkMode from './DarkMode.vue';
 import SelectLocale from './SelectLocale.vue';
 import { config } from '@/config';
-import Link from '@/components/Link.vue';
 import { useDevMode, useDevSwitcher } from '@/views/dev/useDevMode';
 import SelectBaseLayer from './SelectBaseLayer.vue';
 // import DevPanel from '@/views/dev/DevPanel.vue';
@@ -30,7 +29,7 @@ const dev = useDevMode();
   <IonPage>
     <IonHeader :translucent="false">
       <IonToolbar>
-        <IonButtons slot="start" class="mr-2">
+        <IonButtons slot="start" class="app-menu-btn-gap">
           <IonMenuButton />
         </IonButtons>
         <IonTitle @click="devClickHandler">
@@ -50,7 +49,7 @@ const dev = useDevMode();
       </IonList>
 
       <IonList :inset="true" v-if="dev.isDevMode">
-        <IonListHeader class="text-lg leading-6 font-semibold">
+        <IonListHeader class="app-list-header">
           <IonLabel>DEVELOPMENT</IonLabel>
         </IonListHeader>
       </IonList>
@@ -58,17 +57,20 @@ const dev = useDevMode();
       <IonList :inset="true">
         <!-- <DevPanel /> -->
 
-        <Link router-link="/logs">
-          <IonItem button :detail="false" lines="full">
-            <IonIcon slot="start" :icon="readerOutline"></IonIcon>
-            <IonLabel>
-              {{ $t('message.logs') }}
-              <p>
-                {{ $t('message.version') }}: {{ config.APPLICATION_VERSION }}
-              </p>
-            </IonLabel>
-          </IonItem>
-        </Link>
+        <IonItem
+          router-link="/logs"
+          button
+          :detail="false"
+          lines="full"
+        >
+          <IonIcon slot="start" :icon="readerOutline"></IonIcon>
+          <IonLabel>
+            {{ $t('message.logs') }}
+            <p>
+              {{ $t('message.version') }}: {{ config.APPLICATION_VERSION }}
+            </p>
+          </IonLabel>
+        </IonItem>
       </IonList>
     </IonContent>
   </IonPage>

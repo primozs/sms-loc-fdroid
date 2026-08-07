@@ -1,0 +1,139 @@
+/* Shared layout helpers (replaces former Tailwind utilities) */
+
+.app-meta-label {
+  font-weight: 500;
+}
+
+.app-meta-row {
+  display: flex;
+  gap: 1rem;
+}
+
+.app-text-sm {
+  font-size: 0.875rem;
+}
+
+.app-text-xs {
+  font-size: 0.75rem;
+}
+
+.app-list-header {
+  font-size: 1.125rem;
+  line-height: 1.5rem;
+  font-weight: 600;
+}
+
+.app-empty-center {
+  display: flex;
+  height: 100%;
+  justify-content: center;
+  align-items: center;
+}
+
+.app-overlay {
+  position: absolute;
+  z-index: 10;
+}
+
+.app-overlay--full {
+  inset: 0;
+}
+
+.app-overlay--inset {
+  inset: 3.5rem;
+}
+
+.app-refresher {
+  z-index: 10;
+  background: var(--ion-background-color);
+}
+
+.app-segment-pad {
+  padding-left: 0.875rem;
+  padding-right: 0.875rem;
+  margin-top: 0.5rem;
+}
+
+.app-info-row {
+  display: flex;
+  gap: 1.25rem;
+  margin: 1rem;
+}
+
+.app-avatar-img {
+  max-width: none;
+  object-fit: none;
+  object-position: center;
+}
+
+.app-avatar-fallback {
+  filter: grayscale(1);
+}
+
+.app-detail-title {
+  font-size: 1.125rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+.app-fill-scroll {
+  height: 100%;
+}
+
+.app-log-item {
+  height: 83px;
+  user-select: none;
+}
+
+.app-log-body {
+  font-size: 0.75rem;
+  height: 100%;
+  width: 100%;
+  overflow-y: auto;
+}
+
+.app-tab-bar {
+  padding-bottom: 0.25rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--ion-border-color);
+}
+
+.app-toggle-pad {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
+.app-about-body {
+  padding: 0 1.25rem 1.25rem;
+}
+
+.app-slide-scroll {
+  overflow-y: auto;
+  max-height: 90%;
+  text-align: left;
+}
+
+.app-slide-scroll > p {
+  padding: 0;
+}
+
+.app-scroll-hint {
+  font-size: 0.875rem;
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+.app-center-row {
+  display: flex;
+  justify-content: center;
+  margin: 1rem;
+}
+
+.app-menu-btn-gap {
+  margin-right: 0.5rem;
+}
+
+.app-warning-title {
+  color: var(--ion-color-dark);
+}

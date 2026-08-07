@@ -9,11 +9,21 @@ import { Capacitor } from '@capacitor/core';
 import { EdgeToEdge } from '@capawesome/capacitor-android-edge-to-edge-support';
 
 const THEME_KEY = 'theme-preference';
+const DARK_CLASS = 'ion-palette-dark';
 
 const themeColors = (theme: string) => ({
   statusBar: theme === 'light' ? '#f7f7f7' : '#1f1f1f',
   navigationBar: theme === 'light' ? '#f7f7f7' : '#0d0d0d',
 });
+
+const applyPaletteClass = (theme: string) => {
+  const root = document.documentElement;
+  if (theme === 'dark') {
+    root.classList.add(DARK_CLASS);
+  } else {
+    root.classList.remove(DARK_CLASS);
+  }
+};
 
 const applySystemChrome = async (theme: string) => {
   if (!Capacitor.isNativePlatform()) return;
@@ -43,8 +53,8 @@ export const themePlugin = {
       ? 'dark'
       : 'light';
     const userTheme = storedTheme ?? themePref;
-    window.document.firstElementChild?.setAttribute('data-theme', userTheme);
 
+    applyPaletteClass(userTheme);
     await applySystemChrome(userTheme);
 
     const theme = ref<string>(userTheme);
@@ -52,9 +62,8 @@ export const themePlugin = {
     const toggleTheme = async () => {
       const newTheme = theme.value === 'light' ? 'dark' : 'light';
 
+      applyPaletteClass(newTheme);
       await applySystemChrome(newTheme);
-
-      document.firstElementChild?.setAttribute('data-theme', newTheme);
 
       await Preferences.set({
         key: THEME_KEY,

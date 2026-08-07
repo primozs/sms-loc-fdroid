@@ -46,10 +46,10 @@ const content = computed(() => {
       </IonToolbar>
     </IonHeader>
 
-    <IonContent :fullscreen="true" class="items-center">
+    <IonContent :fullscreen="true">
       <AppLogoAndTitle />
 
-      <div class="px-5 pt-0 pb-5 text-paragraphs" v-html="content"></div>
+      <div class="app-about-body text-paragraphs" v-html="content"></div>
     </IonContent>
   </IonPage>
 </template>

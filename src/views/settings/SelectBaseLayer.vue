@@ -33,7 +33,7 @@ const selected = computed(() => {
 </script>
 
 <template>
-  <IonListHeader class="text-lg leading-6 font-semibold">
+  <IonListHeader class="app-list-header">
     <IonLabel>{{ $t('message.baseLayers') }}</IonLabel>
   </IonListHeader>
   <IonRadioGroup :value="selected?.key" @ionChange="handleUpdate">
@@ -50,11 +50,11 @@ const selected = computed(() => {
 </template>
 
 <style>
-:root[data-theme='light'] ion-radio {
+ion-radio {
   --border-color: rgba(0, 0, 0, 0.23);
 }
 
-:root[data-theme='dark'] ion-radio {
+html.ion-palette-dark ion-radio {
   --border-color: rgba(255, 255, 255, 0.23);
 }
 

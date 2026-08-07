@@ -74,31 +74,31 @@ const handleClick = (response: ResponseData) => {
 <template>
   <IonItem @click="handleClick(response)">
     <IonLabel>
-      <h3 class="font-medium">
+      <h3 class="app-meta-label">
         {{ t('message.time') }}: {{ timeFormated }} {{ t('message.elapsed') }}:
         {{ timeElapsed }}
       </h3>
 
-      <h3 v-if="message" class="text-sm">
+      <h3 v-if="message" class="app-text-sm">
         {{ t(`message.${message}`) }}
       </h3>
 
-      <p class="flex gap-4">
+      <p class="app-meta-row">
         <span v-if="elevation">
-          <span class="font-medium"> {{ t('message.elevation') }} </span>:
+          <span class="app-meta-label"> {{ t('message.elevation') }} </span>:
           {{ elevation }}
         </span>
         <span v-if="speed">
-          <span class="font-medium">{{ t('message.speed') }}</span
+          <span class="app-meta-label">{{ t('message.speed') }}</span
           >: {{ speed }}
         </span>
         <span v-if="battery">
-          <span class="font-medium">{{ t('message.battery') }}</span
+          <span class="app-meta-label">{{ t('message.battery') }}</span
           >: {{ battery }}
         </span>
       </p>
       <p>
-        <span class="font-medium">{{ t('message.location') }}</span
+        <span class="app-meta-label">{{ t('message.location') }}</span
         >: {{ locationFormated }}
       </p>
     </IonLabel>

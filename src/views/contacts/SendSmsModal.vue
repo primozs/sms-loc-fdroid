@@ -156,7 +156,7 @@ const handleDismiss = () => {
 
     <IonHeader v-if="isError">
       <IonToolbar color="danger">
-        <IonTitle class="text-gray-900">{{
+        <IonTitle class="app-warning-title">{{
           t('message.sendMessageError')
         }}</IonTitle>
       </IonToolbar>

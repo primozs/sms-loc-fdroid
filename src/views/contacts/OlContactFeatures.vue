@@ -63,13 +63,13 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div v-if="isError" class="z-10 absolute inset-14">
+  <div v-if="isError" class="app-overlay app-overlay--inset">
     <ErrorCard
       title=""
       :content="$t('message.errorFetchingData')"
     ></ErrorCard>
   </div>
-  <div v-if="isLoading" class="z-10 absolute inset-0">
+  <div v-if="isLoading" class="app-overlay app-overlay--full">
     <SpinnerDisplay :isLoading="isLoading"></SpinnerDisplay>
   </div>
 </template>

@@ -43,7 +43,7 @@ const handleContinue = async () => {
         class="swiper hover:delay-1000"
         @click="handlePageClickNext"
       >
-        <div class="swiper-wrapper relative">
+        <div class="swiper-wrapper">
           <div class="swiper-slide">
             <img
               src="/assets/icons/android-chrome-512x512.png"
@@ -90,10 +90,10 @@ const handleContinue = async () => {
           </div>
 
           <div
-            class="swiper-slide overflow-y-auto max-h-[90%] !text-left [&>p]:!p-0"
+            class="swiper-slide app-slide-scroll"
           >
             <h2>Privacy Policy</h2>
-            <p class="text-sm absolute top-0 right-0">(Scroll to continue)</p>
+            <p class="app-scroll-hint">(Scroll to continue)</p>
             <p>
               No user data is collected, stored by the developer (stenar, pgc
               d.o.o.) or shared or sold to any third parties outside of the
@@ -141,7 +141,7 @@ const handleContinue = async () => {
               <li>"Loc:lat,lon,alt,time,speed,battery,message"</li>
             </ul>
 
-            <div class="flex justify-center m-4">
+            <div class="app-center-row">
               <IonButton fill="clear" @click="handleContinue()">
                 Continue
                 <IonIcon slot="end" :icon="arrowForwardOutline" />

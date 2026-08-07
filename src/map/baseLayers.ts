@@ -5,10 +5,9 @@ import { ref } from 'vue';
 const SELECTED_BASE_LAYER = 'selected_base_layer';
 
 const currentTheme = () =>
-  document.documentElement.getAttribute('data-theme') ??
-  (window.matchMedia('(prefers-color-scheme: dark)').matches
+  document.documentElement.classList.contains('ion-palette-dark')
     ? 'dark'
-    : 'light');
+    : 'light';
 
 export type LayerType = 'STENAR_LIGHT' | 'STENAR_BLUE' | 'STENAR_TOPO';
 

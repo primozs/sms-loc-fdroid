@@ -8,14 +8,10 @@ import { themePlugin } from './app/themePlugin';
 import { VueQueryPlugin } from '@tanstack/vue-query';
 import { createPinia } from 'pinia';
 
-import './theme/tailwind.css';
-
 import '@ionic/vue/css/core.css';
-
 import '@ionic/vue/css/normalize.css';
 import '@ionic/vue/css/structure.css';
 import '@ionic/vue/css/typography.css';
-
 import '@ionic/vue/css/padding.css';
 import '@ionic/vue/css/float-elements.css';
 import '@ionic/vue/css/text-alignment.css';
@@ -24,17 +20,13 @@ import '@ionic/vue/css/flex-utils.css';
 import '@ionic/vue/css/display.css';
 
 /**
- * Ionic Dark Mode
- * -----------------------------------------------------
- * For more info, please see:
+ * Ionic Dark Mode (CSS class + toggle)
  * https://ionicframework.com/docs/theming/dark-mode
  */
-
-/* @import '@ionic/vue/css/palettes/dark.always.css'; */
-/* @import '@ionic/vue/css/palettes/dark.class.css'; */
-import '@ionic/vue/css/palettes/dark.system.css';
+import '@ionic/vue/css/palettes/dark.class.css';
 
 import './theme/variables.css';
+import './theme/app.css';
 import { Preferences } from '@capacitor/preferences';
 import {
   initSqlite,

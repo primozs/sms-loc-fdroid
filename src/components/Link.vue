@@ -22,7 +22,17 @@ const handleClick = () => {
 };
 </script>
 <template>
-  <a :href="props.routerLink" :class="props.class" @click.prevent="handleClick"
+  <a
+    :href="props.routerLink"
+    :class="['app-link', props.class]"
+    @click.prevent="handleClick"
     ><slot
   /></a>
 </template>
+
+<style scoped>
+.app-link {
+  color: var(--ion-color-primary);
+  text-decoration: none;
+}
+</style>
