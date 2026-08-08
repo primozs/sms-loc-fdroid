@@ -1,0 +1,1 @@
+F-Droid: ohrani Capacitor node_modules za Gradle; odstrani le binarne datoteke za skener.

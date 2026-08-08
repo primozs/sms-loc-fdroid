@@ -5,6 +5,9 @@
 # Host toolchain lives under $HOME (outside the VCS checkout) so fdroid's binary
 # scanner does not trip on Swift static libs. jniLibs are built here and listed
 # under scanignore in the metadata (built from source + official Swift Android SDK).
+#
+# Capacitor Gradle includes plugins from ../node_modules/.../android — keep those
+# trees; only strip scanner-flagged blobs that the Android build does not need.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -53,13 +56,19 @@ yarn configure:prod -y
 ./native/OfflineMapServer/scripts/package-android-jni.sh
 yarn ionic-sync
 
-# Keep the scanned source tree free of host toolchains / package caches.
-echo "==> cleanup build intermediates outside jniLibs"
+# Keep Capacitor android/ projects in node_modules; drop non-Gradle blobs that
+# trip fdroid's binary scanner (from a prior CI scan of this tree).
+echo "==> cleanup scanner blobs (keep node_modules android sources)"
 rm -rf \
-  node_modules \
   native/OfflineMapServer/.build \
   .fdroid-swift \
-  "$ROOT"/.swiftpm \
-  /tmp/TemporaryDirectory.* 2>/dev/null || true
+  "$ROOT"/.swiftpm
+rm -f \
+  node_modules/@capacitor/cli/assets/*.tar.gz \
+  node_modules/@trapezedev/gradle-parse/capacitor-gradle-parse.jar \
+  node_modules/@trapezedev/gradle-parse/lib/*.jar \
+  node_modules/sql.js/dist/*.wasm \
+  node_modules/@one-ini/wasm/*.wasm \
+  node_modules/jszip/.jekyll-metadata
 
 echo "==> fdroid-prebuild done"

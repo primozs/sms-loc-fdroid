@@ -41,7 +41,8 @@ Pipeline:
 1. `./scripts/fdroid-prebuild.sh` — Ubuntu 24.04 Swift host toolchain under
    `$HOME/.cache/smsloc-fdroid-swift` + Swift Android SDK + NDK r27d, then
    `yarn install`, `configure:prod`, `package-android-jni.sh`, `ionic-sync`,
-   and cleanup of `node_modules` / SPM `.build` (keeps scanner clean)
+   then drop SPM `.build` and unused jar/wasm/tar.gz blobs (keep
+   `node_modules/*/android` for Gradle)
 2. `cd android && ./gradlew assembleRelease` — **unsigned** APK under
    `android/app/build/outputs/apk/release/`
 
@@ -67,8 +68,9 @@ Offline map pack is an explicit user download.
 
 - Do not commit `google-services.json` or `jniLibs/**/*.so`
 - GMS plugin is only applied if that JSON exists (keep it absent)
-- Prebuild installs Swift under `$HOME` (not the VCS tree) and removes
-  `node_modules` / SPM `.build` before the binary scan
+- Prebuild installs Swift under `$HOME` (not the VCS tree), removes SPM
+  `.build`, and strips only unused jar/wasm/tar.gz under `node_modules`
+- Keep Capacitor plugin android sources in `node_modules` for Gradle
 - fdroiddata uses `scanignore: android/app/src/main/jniLibs` for libs built
   in prebuild (OfflineMapServer + Swift Android runtime)
 

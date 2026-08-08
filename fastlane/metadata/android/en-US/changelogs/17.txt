@@ -1,0 +1,1 @@
+F-Droid: keep Capacitor node_modules for Gradle; strip only scanner binary blobs.

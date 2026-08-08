@@ -15,9 +15,9 @@ RepoType: git
 Repo: https://github.com/primozs/sms-loc-fdroid.git
 
 Builds:
-  - versionName: 0.0.16
-    versionCode: 16
-    commit: v0.0.16
+  - versionName: 0.0.17
+    versionCode: 17
+    commit: v0.0.17
     subdir: android
     sudo:
       - apt-get update
@@ -43,10 +43,12 @@ MaintainerNotes: |-
   android/app/src/main/jniLibs is scanignored: OfflineMapServerCore/JNI are
   built from native/OfflineMapServer; remaining .so are the Swift Android
   runtime / NDK libc++ pulled by that build (see package-android-jni.sh).
+  node_modules must remain after prebuild (capacitor.settings.gradle); only
+  unused jar/wasm/tar.gz blobs are removed for the binary scanner.
   Expect large APK (~arm64 + ~87MB Swift runtime).
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
 UpdateCheckData: android/app/build.gradle|versionCode\s+(\d+)|.|versionName\s+"([^"]+)"
-CurrentVersion: 0.0.16
-CurrentVersionCode: 16
+CurrentVersion: 0.0.17
+CurrentVersionCode: 17
