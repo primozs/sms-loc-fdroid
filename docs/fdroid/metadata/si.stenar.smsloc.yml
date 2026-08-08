@@ -15,9 +15,9 @@ RepoType: git
 Repo: https://github.com/primozs/sms-loc-fdroid.git
 
 Builds:
-  - versionName: 0.0.15
-    versionCode: 15
-    commit: v0.0.15
+  - versionName: 0.0.16
+    versionCode: 16
+    commit: v0.0.16
     subdir: android
     sudo:
       - apt-get update
@@ -33,22 +33,20 @@ Builds:
     prebuild:
       - cd ..
       - ./scripts/fdroid-prebuild.sh
-    scandelete:
-      - ../node_modules
-      - ../native/OfflineMapServer/.build
-      - ../.fdroid-swift
+    scanignore:
+      - android/app/src/main/jniLibs
 
 MaintainerNotes: |-
   Capacitor/Ionic Vue app. Offline maps use a Swift (Vapor) static server
-  cross-compiled with the official Swift Android SDK 6.3.3 + NDK r27d;
-  see native/OfflineMapServer/README.md, docs/fdroid.md and
-  scripts/fdroid-prebuild.sh (Ubuntu 24.04 host toolchain tarball — swiftly
-  does not support Debian Trixie on the F-Droid buildserver). Host needs libncurses6, build-essential/libc6-dev (Swift Package
-  manifest link), and related runtime libs. jniLibs are produced in prebuild and
-  must not be committed. Expect large APK (~arm64 + ~87MB Swift runtime).
+  cross-compiled in prebuild via scripts/fdroid-prebuild.sh (Ubuntu 24.04 host
+  toolchain under $HOME + official Swift Android SDK 6.3.3 + NDK r27d).
+  android/app/src/main/jniLibs is scanignored: OfflineMapServerCore/JNI are
+  built from native/OfflineMapServer; remaining .so are the Swift Android
+  runtime / NDK libc++ pulled by that build (see package-android-jni.sh).
+  Expect large APK (~arm64 + ~87MB Swift runtime).
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
 UpdateCheckData: android/app/build.gradle|versionCode\s+(\d+)|.|versionName\s+"([^"]+)"
-CurrentVersion: 0.0.15
-CurrentVersionCode: 15
+CurrentVersion: 0.0.16
+CurrentVersionCode: 16

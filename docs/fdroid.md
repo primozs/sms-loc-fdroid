@@ -38,9 +38,10 @@ Then:
 
 Pipeline:
 
-1. `./scripts/fdroid-prebuild.sh` — Swiftly + Swift Android SDK + NDK r27d,
-   then `yarn install`, `configure:prod`, `package-android-jni.sh`,
-   `ionic-sync`
+1. `./scripts/fdroid-prebuild.sh` — Ubuntu 24.04 Swift host toolchain under
+   `$HOME/.cache/smsloc-fdroid-swift` + Swift Android SDK + NDK r27d, then
+   `yarn install`, `configure:prod`, `package-android-jni.sh`, `ionic-sync`,
+   and cleanup of `node_modules` / SPM `.build` (keeps scanner clean)
 2. `cd android && ./gradlew assembleRelease` — **unsigned** APK under
    `android/app/build/outputs/apk/release/`
 
@@ -59,15 +60,17 @@ Autoupdate in metadata uses `UpdateCheckMode: Tags`.
 
 ## AntiFeatures
 
-Online map styles default to `maptiles.stenar.si` → declare **TetheredNet**.
-Core SMS location sharing works without that host; offline map pack is an
-explicit user download.
+None declared: online map styles are optional; core SMS location works offline.
+Offline map pack is an explicit user download.
 
 ## Scanner notes
 
 - Do not commit `google-services.json` or `jniLibs/**/*.so`
 - GMS plugin is only applied if that JSON exists (keep it absent)
-- No `capacitor-nodejs` — offline maps use the Swift server
+- Prebuild installs Swift under `$HOME` (not the VCS tree) and removes
+  `node_modules` / SPM `.build` before the binary scan
+- fdroiddata uses `scanignore: android/app/src/main/jniLibs` for libs built
+  in prebuild (OfflineMapServer + Swift Android runtime)
 
 ## Submit / verify
 

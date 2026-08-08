@@ -1,0 +1,1 @@
+F-Droid: keep Swift host toolchain outside the source tree; clean node_modules after prebuild.

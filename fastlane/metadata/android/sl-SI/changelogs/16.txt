@@ -1,0 +1,1 @@
+F-Droid: Swift orodje zunaj izvorne drevesne strukture; čiščenje node_modules po prebuild.

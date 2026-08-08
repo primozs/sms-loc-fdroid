@@ -2,8 +2,9 @@
 # F-Droid / clean-CI prebuild: Swift Android toolchain + web/native sync.
 # Invoked from fdroiddata metadata with cwd = android/ (script cds to repo root).
 #
-# Uses the official Ubuntu 24.04 host toolchain tarball (not swiftly) because
-# F-Droid's Debian Trixie buildserver is not a swiftly-recognized platform.
+# Host toolchain lives under $HOME (outside the VCS checkout) so fdroid's binary
+# scanner does not trip on Swift static libs. jniLibs are built here and listed
+# under scanignore in the metadata (built from source + official Swift Android SDK).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -12,16 +13,17 @@ cd "$ROOT"
 SWIFT_VER="${SWIFT_VER:-6.3.3}"
 HOST_ID="${SWIFT_HOST_ID:-ubuntu2404}"
 HOST_NAME="${SWIFT_HOST_NAME:-ubuntu24.04}"
-TOOLCHAIN_DIR="$ROOT/.fdroid-swift/swift-${SWIFT_VER}-RELEASE-${HOST_NAME}"
+CACHE_ROOT="${SMSLOC_SWIFT_CACHE:-$HOME/.cache/smsloc-fdroid-swift}"
+TOOLCHAIN_DIR="$CACHE_ROOT/swift-${SWIFT_VER}-RELEASE-${HOST_NAME}"
 SDK_URL="https://download.swift.org/swift-${SWIFT_VER}-release/android-sdk/swift-${SWIFT_VER}-RELEASE/swift-${SWIFT_VER}-RELEASE_android.artifactbundle.tar.gz"
 SDK_CHECKSUM="d160cc3206dd1886dae3fef2337af5e25ec034692cd0ec225721c56cc69da7f5"
 
 if [[ ! -x "$TOOLCHAIN_DIR/usr/bin/swift" ]]; then
-  echo "==> install Swift ${SWIFT_VER} host toolchain (${HOST_NAME})"
-  mkdir -p "$ROOT/.fdroid-swift"
-  curl -fsSL -o "$ROOT/.fdroid-swift/swift.tar.gz" \
+  echo "==> install Swift ${SWIFT_VER} host toolchain (${HOST_NAME}) into $CACHE_ROOT"
+  mkdir -p "$CACHE_ROOT"
+  curl -fsSL -o "$CACHE_ROOT/swift.tar.gz" \
     "https://download.swift.org/swift-${SWIFT_VER}-release/${HOST_ID}/swift-${SWIFT_VER}-RELEASE/swift-${SWIFT_VER}-RELEASE-${HOST_NAME}.tar.gz"
-  tar -xzf "$ROOT/.fdroid-swift/swift.tar.gz" -C "$ROOT/.fdroid-swift"
+  tar -xzf "$CACHE_ROOT/swift.tar.gz" -C "$CACHE_ROOT"
 fi
 export PATH="$TOOLCHAIN_DIR/usr/bin:$PATH"
 swift --version
@@ -50,5 +52,14 @@ yarn install --frozen-lockfile
 yarn configure:prod -y
 ./native/OfflineMapServer/scripts/package-android-jni.sh
 yarn ionic-sync
+
+# Keep the scanned source tree free of host toolchains / package caches.
+echo "==> cleanup build intermediates outside jniLibs"
+rm -rf \
+  node_modules \
+  native/OfflineMapServer/.build \
+  .fdroid-swift \
+  "$ROOT"/.swiftpm \
+  /tmp/TemporaryDirectory.* 2>/dev/null || true
 
 echo "==> fdroid-prebuild done"
