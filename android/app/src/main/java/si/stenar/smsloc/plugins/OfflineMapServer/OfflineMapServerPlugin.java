@@ -18,6 +18,8 @@ import java.nio.charset.StandardCharsets;
 public class OfflineMapServerPlugin extends Plugin {
   /** App-files root that contains `map/` after pack extract. */
   static final String OFFLINE_MAP_DIR = "offline-map";
+  /** Separate root for Dev fixture — never write into the product pack tree. */
+  static final String OFFLINE_MAP_FIXTURE_DIR = "offline-map-fixture";
   static final String PACK_STYLE_REL = "map/styles/planet-small/style.json";
   public static final String EVENT_PROGRESS = "offlineMapProgress";
 
@@ -26,6 +28,10 @@ public class OfflineMapServerPlugin extends Plugin {
 
   private File offlineMapRoot() {
     return new File(getContext().getFilesDir(), OFFLINE_MAP_DIR);
+  }
+
+  private File offlineMapFixtureRoot() {
+    return new File(getContext().getFilesDir(), OFFLINE_MAP_FIXTURE_DIR);
   }
 
   static boolean isPackInstalled(File root) {
@@ -45,7 +51,7 @@ public class OfflineMapServerPlugin extends Plugin {
     String rootDir = call.getString("rootDir", "");
     boolean fixture = Boolean.TRUE.equals(call.getBoolean("fixture", false));
     if (rootDir == null || rootDir.isEmpty()) {
-      File root = offlineMapRoot();
+      File root = fixture ? offlineMapFixtureRoot() : offlineMapRoot();
       if (fixture) {
         try {
           ensureFixture(root);
@@ -147,7 +153,7 @@ public class OfflineMapServerPlugin extends Plugin {
     if (!styleDir.exists() && !styleDir.mkdirs()) {
       throw new IOException("mkdir " + styleDir);
     }
-    // Always refresh PoC fixture so Stage bumps are not stuck on an old style.json.
+    // Refresh Dev fixture each start so style bumps are not stuck on disk.
     writeUtf8(
         new File(styleDir, "style.json"),
         "{\"version\":8,\"name\":\"offline-fixture\",\"sources\":{\"fixture\":{\"type\":\"geojson\",\"data\":\"data.geojson\"}},\"layers\":[{\"id\":\"background\",\"type\":\"background\",\"paint\":{\"background-color\":\"#ddeeff\"}},{\"id\":\"fixture-fill\",\"type\":\"fill\",\"source\":\"fixture\",\"paint\":{\"fill-color\":\"#228833\",\"fill-opacity\":0.65}},{\"id\":\"fixture-outline\",\"type\":\"line\",\"source\":\"fixture\",\"paint\":{\"line-color\":\"#0a4d1c\",\"line-width\":2}}]}");

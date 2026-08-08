@@ -47,7 +47,7 @@ const smokeFetch = async (url: string) => {
 
 const start = async () => {
   try {
-    // fixture:true → Dev PoC tree under filesDir/offline-map (does not mean pack installed).
+    // fixture:true → filesDir/offline-map-fixture (separate from product pack root).
     const ret = await OfflineMapServer.start({
       rootDir: '',
       host: '127.0.0.1',
@@ -100,7 +100,7 @@ refreshAvailable();
 <template>
   <IonItem lines="full">
     <IonLabel class="ion-text-wrap">
-      <h2>OfflineMapServer (Swift PoC)</h2>
+      <h2>OfflineMapServer (dev)</h2>
       <IonText color="medium">
         <p>{{ status }}</p>
         <p v-if="baseUrl">{{ baseUrl }}</p>

@@ -15,11 +15,7 @@ export {
   OFFLINE_MAP_DIR,
   OFFLINE_PACK_STYLE_PATH,
   isOfflineMapPackTree,
-  offlinePackStyleUrl,
 } from './packLayout';
 export { ensureOfflineMapServer } from './ensureServer';
-export {
-  applyLocalMapsStyleIfReady,
-  nextStyleOverride,
-} from './applyLocalStyle';
+export { nextStyleOverride, setOfflineStyleOverride } from './applyLocalStyle';
 export { bootstrapOfflineMaps } from './bootstrap';

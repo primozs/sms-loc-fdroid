@@ -13,7 +13,7 @@ export type EnsureOfflineMapServerResult = {
 
 /**
  * If a real map pack is on disk, start the Swift static server (idempotent).
- * Does not write the Dev fixture. Style override is Task 2 (`applyLocalMapsStyleIfReady`).
+ * Does not write the Dev fixture. Style override is handled by bootstrap / network watch.
  */
 export const ensureOfflineMapServer =
   async (): Promise<EnsureOfflineMapServerResult> => {

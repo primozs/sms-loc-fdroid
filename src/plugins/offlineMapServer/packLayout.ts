@@ -7,6 +7,3 @@ export const isOfflineMapPackTree = (exists: (relPath: string) => boolean) =>
   exists(OFFLINE_PACK_STYLE_PATH) &&
   exists('map/tiles') &&
   exists('map/fonts');
-
-export const offlinePackStyleUrl = (baseUrl: string): string =>
-  `${baseUrl.replace(/\/$/, '')}/${OFFLINE_PACK_STYLE_PATH}`;

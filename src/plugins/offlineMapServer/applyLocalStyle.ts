@@ -15,15 +15,11 @@ export const nextStyleOverride = (
   return current;
 };
 
-export const applyStyleOverride = (useLocal: boolean) => {
+/** Apply or clear the product offline pack style override. */
+export const setOfflineStyleOverride = (useLocal: boolean) => {
   const layers = useUseBaseLayers();
   const next = nextStyleOverride(layers.styleUrlOverride, useLocal);
   if (next !== layers.styleUrlOverride) {
     layers.setStyleUrlOverride(next);
   }
-};
-
-/** Pack ready + prefer local (e.g. airplane mode). */
-export const applyLocalMapsStyleIfReady = (packReady: boolean) => {
-  applyStyleOverride(packReady);
 };

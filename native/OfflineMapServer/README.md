@@ -105,12 +105,17 @@ Product plan: [`docs/plans/offline-maps/PLAN-swift-product.md`](../../docs/plans
 ## On-device pack layout
 
 ```
-filesDir/offline-map/          ← OfflineMapServer rootDir
+filesDir/offline-map/          ← product rootDir (install / getPackStatus)
   map/
     styles/planet-small/style.json
     tiles/
     fonts/
   map.tar.gz                   ← temporary during download
+
+filesDir/offline-map-fixture/  ← Dev panel start({ fixture: true }) only
+  styles/fixture/style.json
+  styles/fixture/data.geojson
 ```
 
-URL: `http://127.0.0.1:4000/map/styles/planet-small/style.json` (`config.LOCAL_MAPS_STYLE`).
+Product URL: `http://127.0.0.1:4000/map/styles/planet-small/style.json` (`config.LOCAL_MAPS_STYLE`).  
+Dev fixture URL: `http://127.0.0.1:4000/styles/fixture/style.json`.

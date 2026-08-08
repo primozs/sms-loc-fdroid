@@ -2,7 +2,7 @@ package si.stenar.smsloc.plugins.OfflineMapServer;
 
 /**
  * JNI bindings to Swift OfflineMapServerCore (libOfflineMapServerCore.so).
- * Stage 1 PoC — library may be absent until jniLibs are packaged.
+ * Absent until jniLibs are packaged via package-android-jni.sh.
  */
 final class OfflineMapServerNative {
   private static boolean loaded = false;
