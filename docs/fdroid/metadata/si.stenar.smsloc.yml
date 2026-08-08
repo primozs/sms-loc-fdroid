@@ -11,6 +11,8 @@ SourceCode: https://github.com/primozs/sms-loc-fdroid
 IssueTracker: https://github.com/primozs/sms-loc-fdroid/issues
 Bitcoin: bc1q9fjcpcgm5cj4295f88uvld9g8vssgq3wy33rn3
 
+AutoName: SMSLocFD
+
 RepoType: git
 Repo: https://github.com/primozs/sms-loc-fdroid.git
 
@@ -26,6 +28,8 @@ Builds:
       - apt-get install -y nodejs
       - corepack enable
       - corepack prepare yarn@1.22.22 --activate
+    gradle:
+      - yes
     prebuild:
       - cd ..
       - curl -fsSL https://download.swift.org/swiftly/linux/install/latest -o swiftly-install.sh
@@ -38,8 +42,6 @@ Builds:
       - yarn configure:prod -y
       - ./native/OfflineMapServer/scripts/package-android-jni.sh
       - yarn ionic-sync
-    gradle:
-      - yes
     scandelete:
       - ../node_modules
       - ../native/OfflineMapServer/.build
@@ -53,7 +55,6 @@ MaintainerNotes: |-
   without it. Expect large APK (~arm64 + ~87MB Swift runtime).
   Swift/swiftly install runs in prebuild (build user home), not sudo.
 
-AutoName: SMSLocFD
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
 UpdateCheckData: android/app/build.gradle|versionCode\s+(\d+)|.|versionName\s+"([^"]+)"
