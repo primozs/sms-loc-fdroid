@@ -1,0 +1,1 @@
+F-Droid: install Swift via Ubuntu 24.04 toolchain tarball (Debian Trixie unsupported by swiftly).

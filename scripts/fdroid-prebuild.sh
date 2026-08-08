@@ -1,38 +1,30 @@
 #!/usr/bin/env bash
 # F-Droid / clean-CI prebuild: Swift Android toolchain + web/native sync.
 # Invoked from fdroiddata metadata with cwd = android/ (script cds to repo root).
+#
+# Uses the official Ubuntu 24.04 host toolchain tarball (not swiftly) because
+# F-Droid's Debian Trixie buildserver is not a swiftly-recognized platform.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-SWIFTLY_VER="${SWIFTLY_VER:-1.1.2}"
 SWIFT_VER="${SWIFT_VER:-6.3.3}"
+HOST_ID="${SWIFT_HOST_ID:-ubuntu2404}"
+HOST_NAME="${SWIFT_HOST_NAME:-ubuntu24.04}"
+TOOLCHAIN_DIR="$ROOT/.fdroid-swift/swift-${SWIFT_VER}-RELEASE-${HOST_NAME}"
 SDK_URL="https://download.swift.org/swift-${SWIFT_VER}-release/android-sdk/swift-${SWIFT_VER}-RELEASE/swift-${SWIFT_VER}-RELEASE_android.artifactbundle.tar.gz"
 SDK_CHECKSUM="d160cc3206dd1886dae3fef2337af5e25ec034692cd0ec225721c56cc69da7f5"
-ARCH="$(uname -m)"
-case "$ARCH" in
-  x86_64|aarch64) ;;
-  arm64) ARCH=aarch64 ;;
-  *) echo "unsupported arch: $ARCH" >&2; exit 1 ;;
-esac
 
-if ! command -v swift >/dev/null 2>&1 || ! swift --version 2>/dev/null | grep -q "$SWIFT_VER"; then
-  echo "==> install swiftly ${SWIFTLY_VER} + Swift ${SWIFT_VER}"
-  curl -fsSL -o swiftly.tar.gz \
-    "https://download.swift.org/swiftly/linux/swiftly-${SWIFTLY_VER}-${ARCH}.tar.gz"
-  tar -zxf swiftly.tar.gz
-  ./swiftly init --assume-yes --skip-install
-  # shellcheck disable=SC1090
-  . "${SWIFTLY_HOME_DIR:-$HOME/.local/share/swiftly}/env.sh"
-  hash -r || true
-  swiftly install "$SWIFT_VER"
-  swiftly use "$SWIFT_VER"
-else
-  # shellcheck disable=SC1090
-  [ -f "${SWIFTLY_HOME_DIR:-$HOME/.local/share/swiftly}/env.sh" ] && \
-    . "${SWIFTLY_HOME_DIR:-$HOME/.local/share/swiftly}/env.sh"
+if [[ ! -x "$TOOLCHAIN_DIR/usr/bin/swift" ]]; then
+  echo "==> install Swift ${SWIFT_VER} host toolchain (${HOST_NAME})"
+  mkdir -p "$ROOT/.fdroid-swift"
+  curl -fsSL -o "$ROOT/.fdroid-swift/swift.tar.gz" \
+    "https://download.swift.org/swift-${SWIFT_VER}-release/${HOST_ID}/swift-${SWIFT_VER}-RELEASE/swift-${SWIFT_VER}-RELEASE-${HOST_NAME}.tar.gz"
+  tar -xzf "$ROOT/.fdroid-swift/swift.tar.gz" -C "$ROOT/.fdroid-swift"
 fi
+export PATH="$TOOLCHAIN_DIR/usr/bin:$PATH"
+swift --version
 
 if ! swift sdk list 2>/dev/null | grep -q "swift-${SWIFT_VER}-RELEASE_android"; then
   echo "==> install Swift Android SDK ${SWIFT_VER}"

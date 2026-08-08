@@ -40,3 +40,4 @@ config/dev/index.ts
 .swiftpm/
 !/deploy/docker/bin
 material
+/.fdroid-swift/

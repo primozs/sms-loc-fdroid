@@ -15,9 +15,9 @@ RepoType: git
 Repo: https://github.com/primozs/sms-loc-fdroid.git
 
 Builds:
-  - versionName: 0.0.13
-    versionCode: 13
-    commit: v0.0.13
+  - versionName: 0.0.14
+    versionCode: 14
+    commit: v0.0.14
     subdir: android
     sudo:
       - apt-get update
@@ -34,17 +34,19 @@ Builds:
     scandelete:
       - ../node_modules
       - ../native/OfflineMapServer/.build
+      - ../.fdroid-swift
 
 MaintainerNotes: |-
   Capacitor/Ionic Vue app. Offline maps use a Swift (Vapor) static server
   cross-compiled with the official Swift Android SDK 6.3.3 + NDK r27d;
   see native/OfflineMapServer/README.md, docs/fdroid.md and
-  scripts/fdroid-prebuild.sh. jniLibs are produced in prebuild and must not
-  be committed. Expect large APK (~arm64 + ~87MB Swift runtime).
+  scripts/fdroid-prebuild.sh (Ubuntu 24.04 host toolchain tarball — swiftly
+  does not support Debian Trixie on the F-Droid buildserver). jniLibs are
+  produced in prebuild and must not be committed. Expect large APK (~arm64 +
+  ~87MB Swift runtime).
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
-UpdateCheckData: 
-  android/app/build.gradle|versionCode\s+(\d+)|.|versionName\s+"([^"]+)"
-CurrentVersion: 0.0.13
-CurrentVersionCode: 13
+UpdateCheckData: android/app/build.gradle|versionCode\s+(\d+)|.|versionName\s+"([^"]+)"
+CurrentVersion: 0.0.14
+CurrentVersionCode: 14

@@ -1,0 +1,1 @@
+F-Droid: namestitev Swift prek Ubuntu 24.04 toolchain tarballa.
