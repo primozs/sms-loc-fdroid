@@ -21,9 +21,9 @@ Builds:
     subdir: android
     sudo:
       - apt-get update
-      - apt-get install -y curl ca-certificates xz-utils python3 gnupg unzip
-        libncurses6 libncursesw6 libcurl4 libxml2 libsqlite3-0 zlib1g libedit2
-        libgcc-s1 libstdc++6 binutils
+      - apt-get install -y curl ca-certificates xz-utils python3 gnupg unzip libncurses6
+        libncursesw6 libcurl4 libxml2 libsqlite3-0 zlib1g libedit2 libgcc-s1 libstdc++6
+        binutils
       - curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
       - apt-get install -y nodejs
       - corepack enable
