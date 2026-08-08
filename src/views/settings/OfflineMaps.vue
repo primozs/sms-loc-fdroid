@@ -4,7 +4,7 @@ import {
   IonIcon,
   IonButton,
   IonProgressBar,
-  IonText,
+  IonLabel,
 } from '@ionic/vue';
 import { checkmarkCircleOutline, downloadOutline } from 'ionicons/icons';
 import { onMounted, onUnmounted, ref } from 'vue';
@@ -36,7 +36,7 @@ const formatBytes = (n: number) => {
 };
 
 const formatProgress = (p: OfflineMapProgress | undefined) => {
-  if (!p || p.transferred === undefined) return '~300 MB';
+  if (!p || p.transferred === undefined) return '~ 300 MB';
   const percentN = Math.round((p.percent ?? 0) * 100);
   if (percentN >= 100) return t('message.installing');
   const total = p.total > 0 ? formatBytes(p.total) : '?';
@@ -118,23 +118,15 @@ onUnmounted(() => {
       :color="mapsInstalled ? 'success' : ''"
       :icon="mapsInstalled ? checkmarkCircleOutline : downloadOutline"
     ></IonIcon>
-    <div class="flex flex-col gap-y-1.5 w-full py-3">
-      <div class="flex flex-col h-8 relative">
-        <IonText class="text-xs leading-5">
-          {{ t('message.offlineMaps') }}
-        </IonText>
-        <IonText class="text-[9px] leading-3 transform-gpu">
-          {{ formatProgress(installProgress) }}
-        </IonText>
-      </div>
-      <div class="mr-3">
-        <IonProgressBar
-          :value="installProgress?.percent"
-          :color="downloading ? 'primary' : 'medium'"
-        />
-      </div>
-    </div>
-
+    <IonLabel class="offline-maps-label">
+      <h2>{{ t('message.offlineMaps') }}</h2>
+      <p>{{ formatProgress(installProgress) }}</p>
+      <IonProgressBar
+        class="offline-maps-bar"
+        :value="installProgress?.percent"
+        :color="downloading ? 'primary' : 'medium'"
+      />
+    </IonLabel>
     <IonButton
       slot="end"
       @click="handleClick"
@@ -151,3 +143,20 @@ onUnmounted(() => {
     </IonButton>
   </IonItem>
 </template>
+
+<style scoped>
+.offline-maps-label h2 {
+  margin: 0 0 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 400;
+}
+
+.offline-maps-label p {
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+}
+
+.offline-maps-bar {
+  margin-top: 0.25rem;
+}
+</style>
