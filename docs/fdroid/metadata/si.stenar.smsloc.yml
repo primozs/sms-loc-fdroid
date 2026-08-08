@@ -30,6 +30,7 @@ Builds:
       - corepack prepare yarn@1.22.22 --activate
     gradle:
       - yes
+    output: app/build/outputs/apk/release/*-release-unsigned.apk
     prebuild:
       - cd ..
       - ./scripts/fdroid-prebuild.sh
