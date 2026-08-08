@@ -1,0 +1,1 @@
+Share GPS location with whitelisted contacts via SMS offline

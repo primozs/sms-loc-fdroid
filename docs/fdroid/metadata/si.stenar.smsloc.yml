@@ -1,0 +1,61 @@
+AntiFeatures:
+  - TetheredNet
+Categories:
+  - Navigation
+License: GPL-3.0-or-later
+AuthorName: Primoz Susa
+AuthorEmail: primoz@susa.cloud
+AuthorWebSite: https://stenar.si
+WebSite: https://github.com/primozs/sms-loc-fdroid
+SourceCode: https://github.com/primozs/sms-loc-fdroid
+IssueTracker: https://github.com/primozs/sms-loc-fdroid/issues
+Bitcoin: bc1q9fjcpcgm5cj4295f88uvld9g8vssgq3wy33rn3
+
+RepoType: git
+Repo: https://github.com/primozs/sms-loc-fdroid.git
+
+Builds:
+  - versionName: 0.0.12
+    versionCode: 12
+    commit: v0.0.12
+    subdir: android
+    sudo:
+      - apt-get update
+      - apt-get install -y curl ca-certificates xz-utils python3 gnupg
+      - curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+      - apt-get install -y nodejs
+      - corepack enable
+      - corepack prepare yarn@1.22.22 --activate
+    prebuild:
+      - cd ..
+      - curl -fsSL https://download.swift.org/swiftly/linux/install/latest -o swiftly-install.sh
+      - bash swiftly-install.sh -y
+      - . "$HOME/.local/share/swiftly/env.sh"
+      - swiftly install 6.3.3
+      - swiftly use 6.3.3
+      - swift sdk install https://download.swift.org/swift-6.3.3-release/android-sdk/swift-6.3.3-RELEASE/swift-6.3.3-RELEASE_android.artifactbundle.tar.gz --checksum d160cc3206dd1886dae3fef2337af5e25ec034692cd0ec225721c56cc69da7f5
+      - yarn install --frozen-lockfile
+      - yarn configure:prod -y
+      - ./native/OfflineMapServer/scripts/package-android-jni.sh
+      - yarn ionic-sync
+    gradle:
+      - yes
+    scandelete:
+      - ../node_modules
+      - ../native/OfflineMapServer/.build
+
+MaintainerNotes: |-
+  Capacitor/Ionic Vue app. Offline maps use a Swift (Vapor) static server
+  cross-compiled with the official Swift Android SDK 6.3.3 + NDK r27d bundled
+  in that SDK; see native/OfflineMapServer/README.md and docs/fdroid.md.
+  jniLibs are produced in prebuild and must not be committed.
+  Online map styles use maptiles.stenar.si (TetheredNet); SMS location works
+  without it. Expect large APK (~arm64 + ~87MB Swift runtime).
+  Swift/swiftly install runs in prebuild (build user home), not sudo.
+
+AutoName: SMSLocFD
+AutoUpdateMode: Version
+UpdateCheckMode: Tags
+UpdateCheckData: android/app/build.gradle|versionCode\s+(\d+)|.|versionName\s+"([^"]+)"
+CurrentVersion: 0.0.12
+CurrentVersionCode: 12

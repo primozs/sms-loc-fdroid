@@ -7,7 +7,6 @@ platforms:
     appName: SMSLocFD
     versionName: $PACKAGE_VERSION
     versionCode: $BUILD_NUMBER
-    versionNameSuffix: production
     packageName: si.stenar.smsloc
 
 project:

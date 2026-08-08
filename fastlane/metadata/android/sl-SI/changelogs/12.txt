@@ -1,0 +1,1 @@
+Prva izdaja pripravljena za F-Droid: GPL-3.0-or-later, čist versionName, Swift strežnik za offline zemljevid, Capacitor 8 / targetSdk 36.

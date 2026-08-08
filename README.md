@@ -1,5 +1,12 @@
 # SMSLoc
 
+## License
+
+SMSLoc is free software: you can redistribute it and/or modify it under the
+terms of the [GNU General Public License](LICENSE) as published by the Free
+Software Foundation, either version 3 of the License, or (at your option) any
+later version (`GPL-3.0-or-later`).
+
 ## About
 
 Locate your friend and be found via SMS in areas with no internet or poor connectivity.
@@ -86,6 +93,7 @@ npx native-run android --list
 ## Build release apk or playstore
 
 - [docker compile instructions](/deploy/docker/README.md)
+- [F-Droid unsigned build](docs/fdroid.md)
 
 - [generate release article](https://ionicframework.com/docs/deployment/play-store)
 - [sign release apk article](https://developer.android.com/studio/publish/app-signing)

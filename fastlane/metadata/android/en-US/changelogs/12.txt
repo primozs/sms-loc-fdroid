@@ -1,0 +1,1 @@
+First F-Droid-ready release: GPL-3.0-or-later, clean release versionName (no staging suffix), Swift offline map server, Capacitor 8 / targetSdk 36.

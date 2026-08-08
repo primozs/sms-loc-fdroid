@@ -1,0 +1,14 @@
+SMSLoc lets you request and share precise GPS location over SMS with a whitelist of contacts — no internet required.
+
+Built for outdoor use when hiking, climbing, canyoning, or paragliding. Whitelisted friends can send a short SMS request (Loc?) and receive your coordinates even when the app is in the background, as long as SMS and location permissions are granted and battery optimizations are not killing the reply service.
+
+Features:
+• Whitelist contacts who may request your location
+• Hands-free SMS replies with latitude, longitude, altitude, accuracy, speed, and battery
+• Optional short help messages sent with your location
+• Map view for contacts’ last known positions
+• Optional offline map pack download for areas with no network
+
+Privacy: location is sent only to numbers you whitelist, over SMS you already pay for. No Google Play Services, no ads, no analytics SDKs.
+
+Permissions: SMS (receive requests / send replies), precise and background location (to answer while outdoors), contacts (pick whitelist entries), network (optional online map styles and offline pack download).

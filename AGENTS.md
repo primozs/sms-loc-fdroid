@@ -157,6 +157,7 @@ Keep JS and Java parsing of this format in sync when changing the wire format.
 6. **Phone numbers** — native code normalizes to E.164 via libphonenumber; contact matching depends on that
 7. **Live reload** — serve on :8100, `adb` port-forward, then `yarn ionic-live-reload`
 8. **Docker release** — signing password file `keystores/password`; see `deploy/docker/README.md`
+9. **F-Droid** — unsigned build: `yarn fdroid-build` / [`docs/fdroid.md`](docs/fdroid.md); metadata draft in `docs/fdroid/metadata/`
 
 ## Git protocol
 

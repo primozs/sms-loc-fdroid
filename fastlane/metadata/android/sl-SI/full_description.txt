@@ -1,0 +1,14 @@
+SMSLoc omogoča zahtevo in deljenje natančne GPS lokacije prek SMS z belo listo stikov — internet ni potreben.
+
+Namenjen je uporabi na prostem (pohodništvo, plezanje, kanjoning, jadralno padalstvo). Dovoljeni stiki lahko pošljejo kratko SMS zahtevo (Loc?) in prejmejo koordinate tudi, ko je aplikacija v ozadju, če so dovoljena dovoljenja za SMS in lokacijo ter optimizacija baterije ne ustavi odgovora.
+
+Značilnosti:
+• Bela lista stikov, ki smejo zahtevati tvojo lokacijo
+• Samodejni SMS odgovori z lat/lon, nadmorsko višino, natančnostjo, hitrostjo in baterijo
+• Izbirna kratka sporočila pomoči skupaj z lokacijo
+• Zemljevid zadnjih znanih položajev
+• Izbirni prenos paketa zemljevida za uporabo brez omrežja
+
+Zasebnost: lokacija gre samo na številke z bele liste, prek SMS. Brez Google Play Services, oglasov in analitike.
+
+Dovoljenja: SMS, natančna in ozadna lokacija, stiki, omrežje (izbirni spletni slogi zemljevida in prenos paketa).
