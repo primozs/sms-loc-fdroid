@@ -1,0 +1,21 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "name": "offline-fixture" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [14.4, 46.0],
+            [14.65, 46.0],
+            [14.65, 46.15],
+            [14.4, 46.15],
+            [14.4, 46.0]
+          ]
+        ]
+      }
+    }
+  ]
+}

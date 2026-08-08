@@ -19,6 +19,7 @@ import SelectLocale from './SelectLocale.vue';
 import { config } from '@/config';
 import { useDevMode, useDevSwitcher } from '@/views/dev/useDevMode';
 import SelectBaseLayer from './SelectBaseLayer.vue';
+import OfflineMaps from './OfflineMaps.vue';
 // import DevPanel from '@/views/dev/DevPanel.vue';
 
 const { devClickHandler } = useDevSwitcher();
@@ -46,6 +47,10 @@ const dev = useDevMode();
 
       <IonList :inset="true">
         <SelectBaseLayer />
+      </IonList>
+
+      <IonList :inset="true">
+        <OfflineMaps />
       </IonList>
 
       <IonList :inset="true" v-if="dev.isDevMode">

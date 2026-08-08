@@ -11,6 +11,7 @@ Offline SMS location sharing for outdoor use (hiking, climbing, paragliding, etc
 - Pinia + TanStack Vue Query
 - vue-i18n (locales: `en`, `sl`)
 - Maps: MapLibre GL
+- Offline maps: Swift Vapor static file server (`native/OfflineMapServer`) via Capacitor/JNI — **not** `capacitor-nodejs`
 - Local SQLite via `@capacitor-community/sqlite`
 - System UI: `@capacitor/status-bar`, `@capawesome/capacitor-navigation-bar`, `@capawesome/capacitor-android-edge-to-edge-support`
 - Lint/format: ESLint + Prettier (not Biome)
@@ -33,6 +34,9 @@ yarn fmt.check
 # Unit / e2e
 yarn test:unit
 yarn test:e2e
+
+# Offline map Swift natives (gitignored jniLibs; needed before device run)
+./native/OfflineMapServer/scripts/package-android-jni.sh
 
 # Sync web into Capacitor Android
 yarn ionic-sync
@@ -59,14 +63,15 @@ src/
   views/                  # Pages: contacts, map, settings, logs, presentation, dev
   components/             # Shared UI
   services/               # SQLite access, contacts/requests/responses, permissions, logger
-  plugins/                # Capacitor plugin TS bindings (sms, geolocation, locale, core)
+  plugins/                # Capacitor plugin TS bindings (sms, geolocation, locale, core, offlineMapServer)
   map/                    # MapLibre map setup and layers
   locales/                # i18n messages
   theme/                  # Ionic CSS variables (light + ion-palette-dark)
+native/OfflineMapServer/  # Swift Vapor static server + JNI package script
 android/app/src/main/java/si/stenar/smsloc/
   MainActivity.java       # Registers native plugins
   core/                   # SMS receive/respond, location service, permissions bridge
-  plugins/                # Sms, GeoLocation, Locale Capacitor plugins
+  plugins/                # Sms, GeoLocation, Locale, OfflineMapServer Capacitor plugins
   data/                   # SQLite stores (contacts, requests, responses, logs, GpsData)
 config/                   # Trapeze + env configure scripts (dev/prod)
 deploy/docker/            # Clean-room APK/AAB compile
@@ -80,7 +85,16 @@ deploy/docker/            # Clean-room APK/AAB compile
 - Hands-free SMS location replies run in **native** code (`core/SmsReceiver`, `LocationRetrieverService`) so responses work when the UI is backgrounded or killed.
 - Capacitor plugins bridge permissions, SMS watch/send, geolocation, and locale into JS.
 
-Registered native plugins (`MainActivity`): `LocalePlugin`, `SmsPlugin`, `GeoLocationPlugin`, `CorePlugin`.
+Registered native plugins (`MainActivity`): `LocalePlugin`, `SmsPlugin`, `GeoLocationPlugin`, `CorePlugin`, `OfflineMapServerPlugin`.
+
+### Offline maps (Swift)
+
+- Static file tree under `filesDir/offline-map/map/` (`styles/planet-small/style.json` + `tiles` + `fonts`).
+- Settings downloads `OFFLINE_MAP_DOWNLOAD_URL` (`map.tar.gz`); Java extracts; Swift serves `127.0.0.1` only.
+- MapLibre uses `LOCAL_MAPS_STYLE` when offline + pack installed; otherwise stenar base layers.
+- Package natives: `./native/OfflineMapServer/scripts/package-android-jni.sh` → gitignored `jniLibs/arm64-v8a` (~**87 MB**, mostly `lib_FoundationICU`).
+- Do **not** restore `capacitor-nodejs` for static files. No client PMTiles.
+- Plans: `docs/offline-map-swift-poc.md`, `docs/plans/offline-maps/PLAN-swift-product.md`.
 
 ### SMS protocol
 
@@ -126,7 +140,9 @@ Keep JS and Java parsing of this format in sync when changing the wire format.
 
 - Do not commit secrets, keystores, or `keystores/` passwords
 - Do not commit generated `config/dev/index.ts` or `config/prod/index.ts`
+- Do not commit `android/app/src/main/jniLibs/` (Swift runtime — regenerate via package script)
 - Do not add Google Play Services / GMS-only APIs without an explicit F-Droid-compatible alternative
+- Do not restore `capacitor-nodejs` solely for offline map static files
 - Ask before changing the SMS wire format (`Loc?` / `Loc:` / `GpsData` CSV) — it is a cross-device protocol
 - Ask before bumping Capacitor major, `minSdk`, or `targetSdk`
 - Treat git as read-only unless the user explicitly asks to commit, push, or open a PR
@@ -135,11 +151,12 @@ Keep JS and Java parsing of this format in sync when changing the wire format.
 
 1. **Config files are gitignored** — missing `config/*/index.ts` or `src/config.ts` breaks builds; use examples + `yarn configure:dev|prod`
 2. **Must `ionic-sync` after web changes** before expecting them on device
-3. **Native SMS path ≠ JS SMS path** — background replies go through Java `SmsReceiver`; UI send/watch uses the Capacitor Sms plugin
-4. **Battery optimization** — `MainActivity` may prompt to ignore battery optimizations for reliable background location
-5. **Phone numbers** — native code normalizes to E.164 via libphonenumber; contact matching depends on that
-6. **Live reload** — serve on :8100, `adb` port-forward, then `yarn ionic-live-reload`
-7. **Docker release** — signing password file `keystores/password`; see `deploy/docker/README.md`
+3. **OfflineMapServer `.so` missing** — run `package-android-jni.sh` (Swift 6.3.3 + Android SDK); adds ~87 MB to APK
+4. **Native SMS path ≠ JS SMS path** — background replies go through Java `SmsReceiver`; UI send/watch uses the Capacitor Sms plugin
+5. **Battery optimization** — `MainActivity` may prompt to ignore battery optimizations for reliable background location
+6. **Phone numbers** — native code normalizes to E.164 via libphonenumber; contact matching depends on that
+7. **Live reload** — serve on :8100, `adb` port-forward, then `yarn ionic-live-reload`
+8. **Docker release** — signing password file `keystores/password`; see `deploy/docker/README.md`
 
 ## Git protocol
 
@@ -240,3 +257,5 @@ Phases: **DEFINE** → **PLAN** → **BUILD** → **VERIFY** → **REVIEW** → 
 - App overview / dev flow: `README.md`
 - Docker release: `deploy/docker/README.md`
 - Geolocation native notes: `src/plugins/geolocation/readme.md`
+- Offline map Swift PoC: `docs/offline-map-swift-poc.md`
+- Offline map product plan: `docs/plans/offline-maps/PLAN-swift-product.md`

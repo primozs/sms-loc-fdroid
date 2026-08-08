@@ -1,0 +1,35 @@
+{
+  "version": 8,
+  "name": "offline-fixture",
+  "sources": {
+    "fixture": {
+      "type": "geojson",
+      "data": "data.geojson"
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": { "background-color": "#ddeeff" }
+    },
+    {
+      "id": "fixture-fill",
+      "type": "fill",
+      "source": "fixture",
+      "paint": {
+        "fill-color": "#228833",
+        "fill-opacity": 0.65
+      }
+    },
+    {
+      "id": "fixture-outline",
+      "type": "line",
+      "source": "fixture",
+      "paint": {
+        "line-color": "#0a4d1c",
+        "line-width": 2
+      }
+    }
+  ]
+}

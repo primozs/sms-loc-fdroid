@@ -34,5 +34,9 @@ npm-debug.log*
 src/config.ts
 config/prod/index.ts
 config/dev/index.ts
+# Swift offline-map PoC binaries (build via native/OfflineMapServer/scripts)
+/android/app/src/main/jniLibs/**/*.so
+/native/OfflineMapServer/.build/
+.swiftpm/
 !/deploy/docker/bin
 material

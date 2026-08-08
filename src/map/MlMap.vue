@@ -42,10 +42,14 @@ const applyStyle = (map: MapLibreMap, url: string) => {
   return true;
 };
 
-const setBaseLayer = (baseLayer: LayerTypeItem) => {
+const activeStyleUrl = () =>
+  layersSetting.styleUrlOverride ?? layersSetting.selectedLayer.url;
+
+const setBaseLayer = (baseLayer: LayerTypeItem, styleUrl?: string) => {
   const map = mlMap.value;
   if (!map) return;
-  if (!applyStyle(map, baseLayer.url)) return;
+  const url = styleUrl ?? baseLayer.url;
+  if (!applyStyle(map, url)) return;
   mapSetStyleEffect(map, () => {
     setAttributions(map, baseLayer.attributions);
   });
@@ -55,10 +59,11 @@ const createMap = (el: HTMLDivElement) => {
   const baseLayer = layersSetting.selectedLayer;
   if (!baseLayer || mlMap.value) return;
 
-  currentStyleUrl = baseLayer.url;
+  const styleUrl = activeStyleUrl();
+  currentStyleUrl = styleUrl;
   const map = initMap({
     container: el,
-    style: baseLayer.url,
+    style: styleUrl,
     center: props.initialCenter,
     zoom: props.initialZoom,
   });
@@ -85,11 +90,23 @@ watch(
 );
 
 watch(
-  () => layersSetting.selectedLayer,
-  (selected, prev) => {
+  () =>
+    [
+      layersSetting.selectedLayer,
+      layersSetting.styleUrlOverride,
+    ] as const,
+  ([selected, override], prev) => {
     if (!selected || !mlMap.value || !mapLoaded) return;
-    if (!prev || prev.key === selected.key) return;
-    setBaseLayer(selected);
+    const prevSelected = prev?.[0];
+    const prevOverride = prev?.[1];
+    if (
+      prevSelected &&
+      prevSelected.key === selected.key &&
+      prevOverride === override
+    ) {
+      return;
+    }
+    setBaseLayer(selected, override ?? selected.url);
   },
 );
 

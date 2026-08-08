@@ -10,6 +10,7 @@ import {
   areAllPermisionsGranted,
 } from '@/services/usePermissions';
 import { runPermissionSetupLoop } from '@/services/permissionSetupLoop';
+import { bootstrapOfflineMaps } from '@/plugins/offlineMapServer';
 
 export const useApp = () => {
   const ionRouter = useIonRouter();
@@ -34,6 +35,8 @@ export const useApp = () => {
       if (viewed) {
         await checkLocationAndPermissions();
       }
+      // Pack may appear after Settings install while backgrounded.
+      void bootstrapOfflineMaps();
     });
 
     App.addListener('backButton', async () => {
@@ -43,6 +46,9 @@ export const useApp = () => {
     });
 
     if (Capacitor.getPlatform() === 'web') return;
+
+    void bootstrapOfflineMaps();
+
     watchId.value = await Core.watchSmsReceiver({}, () => {
       queryClient.invalidateQueries({
         queryKey: [`/contacts`],

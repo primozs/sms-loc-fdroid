@@ -7,11 +7,9 @@ import {
   IonBackButton,
   IonTitle,
   IonButtons,
-  // IonList,
-  // IonAccordionGroup,
-  // IonAccordion,
+  IonList,
 } from '@ionic/vue';
-// import TestPlugin from './TestPlugin.vue';
+import OfflineMapServerPanel from './OfflineMapServerPanel.vue';
 </script>
 
 <template>
@@ -25,18 +23,10 @@ import {
       </IonToolbar>
     </IonHeader>
 
-    <IonContent :scroll-y="false">
-      <!-- <TestPlugin /> -->
-
-      <!-- <IonAccordionGroup :multiple="false" :value="station.id"> -->
-      <!--   <IonAccordion :value="station.id"> -->
-      <!--     <WeatherStationItem :station="station" /> -->
-      <!--   </IonAccordion> -->
-      <!-- </IonAccordionGroup> -->
-
-      <!-- <IonList>
-        <WeatherStationItem :station="station" />
-      </IonList> -->
+    <IonContent :scroll-y="true">
+      <IonList>
+        <OfflineMapServerPanel />
+      </IonList>
     </IonContent>
   </IonPage>
 </template>

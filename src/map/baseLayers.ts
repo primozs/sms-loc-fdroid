@@ -67,6 +67,8 @@ export const useUseBaseLayers = defineStore('useUseBaseLayers', () => {
   const selectedLayer = ref<LayerTypeItem>(
     defaultLayerForTheme(currentTheme()),
   );
+  /** When set (offline pack / Dev fixture), MapLibre uses this URL instead of selectedLayer. */
+  const styleUrlOverride = ref<string | null>(null);
 
   Preferences.get({
     key: SELECTED_BASE_LAYER,
@@ -84,5 +86,14 @@ export const useUseBaseLayers = defineStore('useUseBaseLayers', () => {
     });
   };
 
-  return { selectedLayer, setSelectedBaseLayer };
+  const setStyleUrlOverride = (url: string | null) => {
+    styleUrlOverride.value = url;
+  };
+
+  return {
+    selectedLayer,
+    setSelectedBaseLayer,
+    styleUrlOverride,
+    setStyleUrlOverride,
+  };
 });
