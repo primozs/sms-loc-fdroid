@@ -1,0 +1,1 @@
+F-Droid: knjižnice za Swift host runtime (libncurses ipd.).

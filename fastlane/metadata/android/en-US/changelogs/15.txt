@@ -1,0 +1,1 @@
+F-Droid: install libncurses and other Swift host runtime libs on the buildserver.

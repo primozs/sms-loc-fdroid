@@ -15,13 +15,15 @@ RepoType: git
 Repo: https://github.com/primozs/sms-loc-fdroid.git
 
 Builds:
-  - versionName: 0.0.14
-    versionCode: 14
-    commit: v0.0.14
+  - versionName: 0.0.15
+    versionCode: 15
+    commit: v0.0.15
     subdir: android
     sudo:
       - apt-get update
       - apt-get install -y curl ca-certificates xz-utils python3 gnupg unzip
+        libncurses6 libncursesw6 libcurl4 libxml2 libsqlite3-0 zlib1g libedit2
+        libgcc-s1 libstdc++6 binutils
       - curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
       - apt-get install -y nodejs
       - corepack enable
@@ -41,12 +43,12 @@ MaintainerNotes: |-
   cross-compiled with the official Swift Android SDK 6.3.3 + NDK r27d;
   see native/OfflineMapServer/README.md, docs/fdroid.md and
   scripts/fdroid-prebuild.sh (Ubuntu 24.04 host toolchain tarball — swiftly
-  does not support Debian Trixie on the F-Droid buildserver). jniLibs are
-  produced in prebuild and must not be committed. Expect large APK (~arm64 +
-  ~87MB Swift runtime).
+  does not support Debian Trixie on the F-Droid buildserver). Host needs
+  libncurses6 and related runtime libs. jniLibs are produced in prebuild and
+  must not be committed. Expect large APK (~arm64 + ~87MB Swift runtime).
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
 UpdateCheckData: android/app/build.gradle|versionCode\s+(\d+)|.|versionName\s+"([^"]+)"
-CurrentVersion: 0.0.14
-CurrentVersionCode: 14
+CurrentVersion: 0.0.15
+CurrentVersionCode: 15
