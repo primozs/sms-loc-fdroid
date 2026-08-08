@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8' ?>
 <resources>
-    <string name="app_name">SMSLocFD (DEV)</string>
+    <string name="app_name">SMSLocFD</string>
     <string name="title_activity_main" translatable="false">SMSLoc</string>
     <string name="package_name" translatable="false">si.stenar.smsloc</string>
     <string name="custom_url_scheme" translatable="false">si.stenar.smsloc</string>

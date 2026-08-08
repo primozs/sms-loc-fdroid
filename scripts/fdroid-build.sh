@@ -6,17 +6,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-echo "==> yarn install"
-yarn install --frozen-lockfile
-
-echo "==> configure:prod (copies config; keeps versionCode from android/app/build.gradle)"
-yarn configure:prod -y
-
-echo "==> package Swift OfflineMapServer jniLibs (arm64-v8a)"
-./native/OfflineMapServer/scripts/package-android-jni.sh
-
-echo "==> ionic/capacitor sync (web assets + native plugins)"
-yarn ionic-sync
+echo "==> prebuild (Swift toolchain + yarn + jniLibs + ionic-sync)"
+./scripts/fdroid-prebuild.sh
 
 echo "==> assembleRelease (unsigned)"
 (

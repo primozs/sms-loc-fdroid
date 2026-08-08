@@ -1,0 +1,1 @@
+Remove mistaken TetheredNet AntiFeature; fix release app name; F-Droid prebuild script for Swift Android SDK.

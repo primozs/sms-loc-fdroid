@@ -1,5 +1,3 @@
-AntiFeatures:
-  - TetheredNet
 Categories:
   - Navigation
 License: GPL-3.0-or-later
@@ -17,13 +15,13 @@ RepoType: git
 Repo: https://github.com/primozs/sms-loc-fdroid.git
 
 Builds:
-  - versionName: 0.0.12
-    versionCode: 12
-    commit: v0.0.12
+  - versionName: 0.0.13
+    versionCode: 13
+    commit: v0.0.13
     subdir: android
     sudo:
       - apt-get update
-      - apt-get install -y curl ca-certificates xz-utils python3 gnupg
+      - apt-get install -y curl ca-certificates xz-utils python3 gnupg unzip
       - curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
       - apt-get install -y nodejs
       - corepack enable
@@ -32,31 +30,21 @@ Builds:
       - yes
     prebuild:
       - cd ..
-      - curl -fsSL https://download.swift.org/swiftly/linux/install/latest -o swiftly-install.sh
-      - bash swiftly-install.sh -y
-      - . "$HOME/.local/share/swiftly/env.sh"
-      - swiftly install 6.3.3
-      - swiftly use 6.3.3
-      - swift sdk install https://download.swift.org/swift-6.3.3-release/android-sdk/swift-6.3.3-RELEASE/swift-6.3.3-RELEASE_android.artifactbundle.tar.gz --checksum d160cc3206dd1886dae3fef2337af5e25ec034692cd0ec225721c56cc69da7f5
-      - yarn install --frozen-lockfile
-      - yarn configure:prod -y
-      - ./native/OfflineMapServer/scripts/package-android-jni.sh
-      - yarn ionic-sync
+      - ./scripts/fdroid-prebuild.sh
     scandelete:
       - ../node_modules
       - ../native/OfflineMapServer/.build
 
 MaintainerNotes: |-
   Capacitor/Ionic Vue app. Offline maps use a Swift (Vapor) static server
-  cross-compiled with the official Swift Android SDK 6.3.3 + NDK r27d bundled
-  in that SDK; see native/OfflineMapServer/README.md and docs/fdroid.md.
-  jniLibs are produced in prebuild and must not be committed.
-  Online map styles use maptiles.stenar.si (TetheredNet); SMS location works
-  without it. Expect large APK (~arm64 + ~87MB Swift runtime).
-  Swift/swiftly install runs in prebuild (build user home), not sudo.
+  cross-compiled with the official Swift Android SDK 6.3.3 + NDK r27d;
+  see native/OfflineMapServer/README.md, docs/fdroid.md and
+  scripts/fdroid-prebuild.sh. jniLibs are produced in prebuild and must not
+  be committed. Expect large APK (~arm64 + ~87MB Swift runtime).
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
-UpdateCheckData: android/app/build.gradle|versionCode\s+(\d+)|.|versionName\s+"([^"]+)"
-CurrentVersion: 0.0.12
-CurrentVersionCode: 12
+UpdateCheckData: 
+  android/app/build.gradle|versionCode\s+(\d+)|.|versionName\s+"([^"]+)"
+CurrentVersion: 0.0.13
+CurrentVersionCode: 13

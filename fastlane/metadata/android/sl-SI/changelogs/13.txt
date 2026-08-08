@@ -1,0 +1,1 @@
+Odstranjen napačen TetheredNet; popravljeno ime izdaje; skripta za F-Droid Swift prebuild.

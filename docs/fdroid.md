@@ -38,17 +38,13 @@ Then:
 
 Pipeline:
 
-1. `yarn install --frozen-lockfile`
-2. `yarn configure:prod -y` — seeds `config/prod/index.ts` from
-   `index.example.ts` if missing; copies to `src/config.ts`; sets
-   `versionName` from `package.json` and keeps `versionCode` from
-   `android/app/build.gradle`
-3. `./native/OfflineMapServer/scripts/package-android-jni.sh` — builds Swift
-   `OfflineMapServerCore` + JNI into gitignored
-   `android/app/src/main/jniLibs/arm64-v8a/`
-4. `yarn ionic-sync` — Vite/Ionic web build + Capacitor Android sync
-5. `cd android && ./gradlew assembleRelease` — **unsigned** APK under
+1. `./scripts/fdroid-prebuild.sh` — Swiftly + Swift Android SDK + NDK r27d,
+   then `yarn install`, `configure:prod`, `package-android-jni.sh`,
+   `ionic-sync`
+2. `cd android && ./gradlew assembleRelease` — **unsigned** APK under
    `android/app/build/outputs/apk/release/`
+
+The fdroiddata recipe calls the same `fdroid-prebuild.sh` from `prebuild`.
 
 ## Release tags
 
