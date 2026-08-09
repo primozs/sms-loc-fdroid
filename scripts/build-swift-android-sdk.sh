@@ -97,8 +97,15 @@ need xz
 need git
 ensure_cmake
 ensure_patchelf
+# finagolfin get-packages uses `python` (Debian/F-Droid often only ship python3).
+if ! command -v python >/dev/null && command -v python3 >/dev/null; then
+  mkdir -p "$CACHE_ROOT/tools/bin"
+  ln -sfn "$(command -v python3)" "$CACHE_ROOT/tools/bin/python"
+  export PATH="$CACHE_ROOT/tools/bin:$PATH"
+fi
 need cmake
 need patchelf
+need python
 
 echo "using $(command -v cmake) ($(cmake --version | head -1))"
 echo "using $(command -v patchelf)"
@@ -159,6 +166,13 @@ cp -a "$VENDOR/." "$WORK/vendor/"
 # Sources + termux deps land in WORK
 if [[ ! -d "$WORK/swift" ]]; then
   echo "==> fetch Termux build deps + Swift sources"
+  # finagolfin's get-packages script shells out to `python` (not python3).
+  if ! command -v python >/dev/null && command -v python3 >/dev/null; then
+    mkdir -p "$CACHE_ROOT/tools/bin"
+    ln -sfn "$(command -v python3)" "$CACHE_ROOT/tools/bin/python"
+    export PATH="$CACHE_ROOT/tools/bin:$PATH"
+  fi
+  need python
   cp "$VENDOR/get-packages-and-swift-source.swift" "$WORK/"
   SWIFT_TAG="$SWIFT_TAG" ANDROID_ARCH="$ANDROID_ARCH" \
     "$TOOLCHAIN_BIN/swift" get-packages-and-swift-source.swift

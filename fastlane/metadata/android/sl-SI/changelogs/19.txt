@@ -1,0 +1,1 @@
+F-Droid: zagotovitev python za pridobivanje Swift SDK; vrstni red polja timeout.
