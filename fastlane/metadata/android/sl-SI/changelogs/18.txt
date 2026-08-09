@@ -1,0 +1,1 @@
+F-Droid: obnovitev Swift Android SDK (stdlib/Dispatch/Foundation) iz izvorne kode v prebuild.

@@ -1,0 +1,28 @@
+diff --git a/swift/utils/build-script-impl b/swift/utils/build-script-impl
+index 16e05052609..7ab8cebfab8 100755
+--- a/swift/utils/build-script-impl
++++ b/swift/utils/build-script-impl
+@@ -2622,6 +2622,7 @@ for host in "${ALL_HOSTS[@]}"; do
+                     echo "Cleaning the libdispatch build directory"
+                     call rm -rf "${LIBDISPATCH_BUILD_DIR}"
+                   fi
++                  call ln -sf "${SWIFT_BUILD_PATH}/lib/swift" "${ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib"
+ 
+                   cmake_options=(
+                     -DENABLE_SWIFT=YES
+diff --git a/swift-testing/Sources/Testing/CMakeLists.txt b/swift-testing/Sources/Testing/CMakeLists.tx
+index e40cb1b..ff2f920 100644
+--- a/swift-testing/Sources/Testing/CMakeLists.txt
++++ b/swift-testing/Sources/Testing/CMakeLists.txt
+@@ -110,7 +110,10 @@ target_link_libraries(Testing PRIVATE
+ if(NOT APPLE)
+   if(NOT CMAKE_SYSTEM_NAME STREQUAL WASI)
+     target_link_libraries(Testing PUBLIC
+-      dispatch)
++      dispatch android-execinfo)
++    list(GET CMAKE_FIND_ROOT_PATH 0 BT_DIR)
++    target_include_directories(Testing PUBLIC ${BT_DIR}/usr/include)
++    target_link_directories(Testing PUBLIC ${BT_DIR}/usr/lib)
+   endif()
+   target_link_libraries(Testing PUBLIC
+     Foundation)

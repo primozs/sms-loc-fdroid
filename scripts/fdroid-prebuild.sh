@@ -1,54 +1,71 @@
 #!/usr/bin/env bash
-# F-Droid / clean-CI prebuild: Swift Android toolchain + web/native sync.
+# F-Droid / clean-CI prebuild: rebuild Swift Android runtime from source, then
+# package OfflineMapServer jniLibs + sync the web app into android/.
+#
 # Invoked from fdroiddata metadata with cwd = android/ (script cds to repo root).
 #
-# Host toolchain lives under $HOME (outside the VCS checkout) so fdroid's binary
-# scanner does not trip on Swift static libs. jniLibs are built here and listed
-# under scanignore in the metadata (built from source + official Swift Android SDK).
+# Host Swift toolchain + from-source Android SDK live under $HOME (outside the
+# VCS checkout) so fdroid's binary scanner does not trip on build tools.
+# Target .so files under jniLibs are produced here and listed under scanignore.
 #
-# Capacitor Gradle includes plugins from ../node_modules/.../android — keep those
-# trees; only strip scanner-flagged blobs that the Android build does not need.
+# Do NOT pull a published Docker/GHCR SDK image here — F-Droid must rebuild.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 SWIFT_VER="${SWIFT_VER:-6.3.3}"
-HOST_ID="${SWIFT_HOST_ID:-ubuntu2404}"
-HOST_NAME="${SWIFT_HOST_NAME:-ubuntu24.04}"
 CACHE_ROOT="${SMSLOC_SWIFT_CACHE:-$HOME/.cache/smsloc-fdroid-swift}"
-TOOLCHAIN_DIR="$CACHE_ROOT/swift-${SWIFT_VER}-RELEASE-${HOST_NAME}"
-SDK_URL="https://download.swift.org/swift-${SWIFT_VER}-release/android-sdk/swift-${SWIFT_VER}-RELEASE/swift-${SWIFT_VER}-RELEASE_android.artifactbundle.tar.gz"
-SDK_CHECKSUM="d160cc3206dd1886dae3fef2337af5e25ec034692cd0ec225721c56cc69da7f5"
+BUNDLE_NAME="swift-${SWIFT_VER}-RELEASE-android-24-0.1.artifactbundle"
+BUNDLE_OUT="${SMSLOC_SWIFT_SDK_BUNDLE:-$CACHE_ROOT/$BUNDLE_NAME}"
+SDK_ID="swift-${SWIFT_VER}-RELEASE_android"
 
+export PATH="${HOME}/.local/bin:/usr/local/bin:$PATH"
+export SMSLOC_SWIFT_CACHE="$CACHE_ROOT"
+
+echo "==> rebuild Swift Android SDK from source (stdlib/Dispatch/Foundation)"
+./scripts/build-swift-android-sdk.sh
+[[ -d "$BUNDLE_OUT/swift-android" ]] \
+  || { echo "missing SDK bundle at $BUNDLE_OUT" >&2; exit 1; }
+
+# Host compiler PATH (build script installed it under CACHE_ROOT).
+TOOLCHAIN_DIR="$CACHE_ROOT/swift-${SWIFT_VER}-RELEASE-ubuntu24.04"
 if [[ ! -x "$TOOLCHAIN_DIR/usr/bin/swift" ]]; then
-  echo "==> install Swift ${SWIFT_VER} host toolchain (${HOST_NAME}) into $CACHE_ROOT"
-  mkdir -p "$CACHE_ROOT"
-  curl -fsSL -o "$CACHE_ROOT/swift.tar.gz" \
-    "https://download.swift.org/swift-${SWIFT_VER}-release/${HOST_ID}/swift-${SWIFT_VER}-RELEASE/swift-${SWIFT_VER}-RELEASE-${HOST_NAME}.tar.gz"
-  tar -xzf "$CACHE_ROOT/swift.tar.gz" -C "$CACHE_ROOT"
+  # allow alternate host id layouts
+  shopt -s nullglob
+  for d in "$CACHE_ROOT"/swift-${SWIFT_VER}-RELEASE-*/usr/bin/swift; do
+    TOOLCHAIN_DIR="$(cd "$(dirname "$d")/../.." && pwd)"
+    break
+  done
+  shopt -u nullglob
 fi
 export PATH="$TOOLCHAIN_DIR/usr/bin:$PATH"
 swift --version
 
-if ! swift sdk list 2>/dev/null | grep -q "swift-${SWIFT_VER}-RELEASE_android"; then
-  echo "==> install Swift Android SDK ${SWIFT_VER}"
-  swift sdk install "$SDK_URL" --checksum "$SDK_CHECKSUM"
+echo "==> register SDK with swiftpm ($SDK_ID)"
+# Same artifact id as the official download; remove any prior install first.
+if swift sdk list 2>/dev/null | grep -q "$SDK_ID"; then
+  swift sdk remove "$SDK_ID" || true
 fi
+swift sdk install "$BUNDLE_OUT"
 
-SDK_ROOT="${HOME}/.swiftpm/swift-sdks/swift-${SWIFT_VER}-RELEASE_android.artifactbundle/swift-android"
-if [[ ! -d "$SDK_ROOT/android-ndk-r27d" ]]; then
-  echo "==> install NDK r27d into Swift Android SDK"
-  (
-    cd "$SDK_ROOT"
-    curl -fSL -o ndk.zip \
-      "https://dl.google.com/android/repository/android-ndk-r27d-linux.zip"
-    unzip -qo ndk.zip
-    export ANDROID_NDK_HOME="$PWD/android-ndk-r27d"
-    ./scripts/setup-android-sdk.sh
-  )
+export ANDROID_NDK_HOME="${ANDROID_NDK_HOME:-$CACHE_ROOT/android-ndk-r27d}"
+[[ -d "$ANDROID_NDK_HOME/toolchains" ]] \
+  || { echo "missing NDK at $ANDROID_NDK_HOME" >&2; exit 1; }
+# Prefer the just-installed copy under ~/.swiftpm for setup + packaging.
+SDK_ROOT=""
+for d in "$HOME/.swiftpm/swift-sdks"/*/swift-android; do
+  if [[ -d "$d" ]]; then SDK_ROOT="$d"; break; fi
+done
+if [[ -z "$SDK_ROOT" ]]; then
+  SDK_ROOT="$BUNDLE_OUT/swift-android"
 fi
-export ANDROID_NDK_HOME="${ANDROID_NDK_HOME:-$SDK_ROOT/android-ndk-r27d}"
+export SMSLOC_SWIFT_SDK_BUNDLE="$(dirname "$SDK_ROOT")"
+if [[ -x "$SDK_ROOT/scripts/setup-android-sdk.sh" \
+      && ! -e "$SDK_ROOT/ndk-sysroot/usr/lib/swift/android/aarch64/swiftrt.o" ]]; then
+  echo "==> setup-android-sdk.sh"
+  ( cd "$SDK_ROOT" && ANDROID_NDK_HOME="$ANDROID_NDK_HOME" ./scripts/setup-android-sdk.sh )
+fi
 
 echo "==> yarn + configure + jniLibs + ionic-sync"
 yarn install --frozen-lockfile

@@ -2,6 +2,26 @@
 
 This docker image when build, will compile mobile apk in a clean environment.
 
+## Swift Android SDK image (from source, optional)
+
+Intermediate image that runs
+[`scripts/build-swift-android-sdk.sh`](../../scripts/build-swift-android-sdk.sh)
+so local/CI (and other apps) can reuse a rebuilt aarch64 SDK without waiting
+~30 minutes each time. **F-Droid must not use this image** — see
+[`docs/fdroid.md`](../../docs/fdroid.md).
+
+```sh
+docker build -f deploy/docker/swift-android-sdk/Dockerfile \
+  -t ghcr.io/primozs/sms-loc-fdroid/swift-android-sdk:6.3.3-aarch64-api24 .
+
+# Extract the artifactbundle tarball:
+docker create --name sdk ghcr.io/primozs/sms-loc-fdroid/swift-android-sdk:6.3.3-aarch64-api24
+docker cp sdk:/opt/swift-android-sdk.artifactbundle.tar.gz .
+docker rm sdk
+```
+
+GitHub Actions workflow: `.github/workflows/swift-android-sdk.yml` (GHCR push).
+
 ## to build the container image
 
 ```sh

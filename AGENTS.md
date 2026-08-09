@@ -36,6 +36,8 @@ yarn test:unit
 yarn test:e2e
 
 # Offline map Swift natives (gitignored jniLibs; needed before device run)
+# F-Droid rebuilds the Android Swift runtime from source first:
+#   ./scripts/build-swift-android-sdk.sh   # or full: ./scripts/fdroid-prebuild.sh
 ./native/OfflineMapServer/scripts/package-android-jni.sh
 
 # Sync web into Capacitor Android
@@ -92,7 +94,8 @@ Registered native plugins (`MainActivity`): `LocalePlugin`, `SmsPlugin`, `GeoLoc
 - Static file tree under `filesDir/offline-map/map/` (`styles/planet-small/style.json` + `tiles` + `fonts`).
 - Settings downloads `OFFLINE_MAP_DOWNLOAD_URL` (`map.tar.gz`); Java extracts; Swift serves `127.0.0.1` only.
 - MapLibre uses `LOCAL_MAPS_STYLE` when offline + pack installed; otherwise stenar base layers.
-- Package natives: `./native/OfflineMapServer/scripts/package-android-jni.sh` → gitignored `jniLibs/arm64-v8a` (~**87 MB**, mostly `lib_FoundationICU`).
+- Package natives: `./native/OfflineMapServer/scripts/package-android-jni.sh` → gitignored `jniLibs/arm64-v8a` (~**100 MB** unstripped from-source runtime, mostly `lib_FoundationICU`).
+- F-Droid: `scripts/fdroid-prebuild.sh` rebuilds the Swift Android SDK from source (`scripts/build-swift-android-sdk.sh`); do not install the download.swift.org prebuilt SDK in that path. Optional GHCR image is for local/CI only.
 - Do **not** restore `capacitor-nodejs` for static files. No client PMTiles.
 - Plans: `docs/offline-map-swift-poc.md`, `docs/plans/offline-maps/PLAN-swift-product.md`.
 

@@ -10,16 +10,49 @@ ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
 PKG="$ROOT/native/OfflineMapServer"
 OUT="$ROOT/android/app/src/main/jniLibs/arm64-v8a"
 SDK_TRIPLE="aarch64-unknown-linux-android28"
-NDK_HOME="${ANDROID_NDK_HOME:-$HOME/.swiftpm/swift-sdks/swift-6.3.3-RELEASE_android.artifactbundle/swift-android/android-ndk-r27d}"
-SWIFT_RT="${SWIFT_ANDROID_RUNTIME:-$HOME/.swiftpm/swift-sdks/swift-6.3.3-RELEASE_android.artifactbundle/swift-android/swift-resources/usr/lib/swift-aarch64/android}"
+# Prefer from-source F-Droid/cache SDK, then official artifactbundle layout.
+_default_sdk_root() {
+  local d
+  for d in \
+    "${SMSLOC_SWIFT_SDK_BUNDLE:-}" \
+    "$HOME/.cache/smsloc-fdroid-swift/swift-6.3.3-RELEASE-android-24-0.1.artifactbundle" \
+    "$HOME/.swiftpm/swift-sdks/swift-6.3.3-RELEASE-android-24-0.1.artifactbundle" \
+    "$HOME/.swiftpm/swift-sdks/swift-6.3.3-RELEASE_android.artifactbundle"
+  do
+    [[ -n "$d" && -d "$d/swift-android" ]] && { echo "$d/swift-android"; return; }
+  done
+  echo ""
+}
+_SDK_ANDROID="$(_default_sdk_root)"
+NDK_HOME="${ANDROID_NDK_HOME:-}"
+if [[ -z "$NDK_HOME" || ! -d "$NDK_HOME/toolchains" ]]; then
+  if [[ -n "$_SDK_ANDROID" && -d "$_SDK_ANDROID/android-ndk-r27d/toolchains" ]]; then
+    NDK_HOME="$_SDK_ANDROID/android-ndk-r27d"
+  else
+    NDK_HOME="${HOME}/.cache/smsloc-fdroid-swift/android-ndk-r27d"
+  fi
+fi
+SWIFT_RT="${SWIFT_ANDROID_RUNTIME:-}"
+if [[ -z "$SWIFT_RT" || ! -d "$SWIFT_RT" ]]; then
+  if [[ -n "$_SDK_ANDROID" ]]; then
+    SWIFT_RT="$_SDK_ANDROID/swift-resources/usr/lib/swift-aarch64/android"
+  fi
+fi
 
-if [[ ! -d "$NDK_HOME" ]]; then
+if [[ ! -d "$NDK_HOME/toolchains" ]]; then
   echo "Set ANDROID_NDK_HOME to NDK r27d (see native/OfflineMapServer/README.md)" >&2
   exit 1
 fi
 if [[ ! -d "$SWIFT_RT" ]]; then
-  echo "Missing Swift Android runtime at $SWIFT_RT" >&2
+  echo "Missing Swift Android runtime at ${SWIFT_RT:-<unset>}" >&2
   exit 1
+fi
+# Official-layout SDKs need ndk-sysroot + clang resource links (setup-android-sdk.sh).
+if [[ -n "$_SDK_ANDROID" && -x "$_SDK_ANDROID/scripts/setup-android-sdk.sh" ]]; then
+  if [[ ! -e "$_SDK_ANDROID/ndk-sysroot/usr/lib/swift/android/aarch64/swiftrt.o" ]]; then
+    echo "==> setup-android-sdk.sh (ndk-sysroot + clang)"
+    ANDROID_NDK_HOME="$NDK_HOME" "$_SDK_ANDROID/scripts/setup-android-sdk.sh"
+  fi
 fi
 
 PREBUILT="$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64"
@@ -75,8 +108,10 @@ resolve_deps() {
 }
 
 strip_all() {
+  # Only strip our products. llvm-strip breaks 16KB ELF load congruence on
+  # from-source Swift Android runtime libs (official prebuilts survive strip).
   local so
-  for so in "$OUT"/*.so; do
+  for so in "$OUT"/libOfflineMapServerCore.so "$OUT"/libOfflineMapServerJni.so; do
     [[ -f "$so" ]] || continue
     "$STRIP" --strip-unneeded "$so" 2>/dev/null \
       || "$STRIP" -S "$so" 2>/dev/null \

@@ -2,7 +2,7 @@
   "name": "sms-loc",
   "description": "SMSLocFD",
   "private": true,
-  "version": "0.0.17",
+  "version": "0.0.18",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -29,6 +29,7 @@
     "docker:compile": "./deploy/docker/docker-compile.sh",
     "docker:generate:keystore": "./deploy/docker/docker-generate-keystore.sh",
     "docker:interactive": "./deploy/docker/docker-interactive.sh",
+    "docker:swift-android-sdk": "docker build -f deploy/docker/swift-android-sdk/Dockerfile -t ghcr.io/primozs/sms-loc-fdroid/swift-android-sdk:6.3.3-aarch64-api24 .",
     "configure:dev": "./config/configure.dev.sh",
     "configure:prod": "./config/configure.prod.sh",
     "fdroid-build": "./scripts/fdroid-build.sh",

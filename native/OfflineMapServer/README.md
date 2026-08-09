@@ -33,24 +33,30 @@ curl -s http://127.0.0.1:4000/styles/fixture/style.json
 
 ## Android cross-compile
 
-One-time toolchain (host):
+**F-Droid / from-source (preferred for shipping):** rebuild the Android Swift
+runtime, then package JNI libs:
 
 ```sh
-swiftly install 6.3.3 && swiftly use 6.3.3
-swift sdk install \
-  https://download.swift.org/swift-6.3.3-release/android-sdk/swift-6.3.3-RELEASE/swift-6.3.3-RELEASE_android.artifactbundle.tar.gz \
-  --checksum d160cc3206dd1886dae3fef2337af5e25ec034692cd0ec225721c56cc69da7f5
-# NDK r27d + setup-android-sdk.sh — see Swift.org Android getting started
+./scripts/build-swift-android-sdk.sh   # ~25–40m first time
+swift sdk install ~/.cache/smsloc-fdroid-swift/swift-6.3.3-RELEASE-android-24-0.1.artifactbundle
+./native/OfflineMapServer/scripts/package-android-jni.sh
 ```
 
-Build:
+See [`docs/fdroid.md`](../../docs/fdroid.md). Vendored build helpers live under
+[`swift-android-sdk/`](swift-android-sdk/).
+
+**Local fast path:** official prebuilt Android SDK from download.swift.org still
+works for day-to-day device builds (`swift sdk install …_android.artifactbundle`
++ NDK r27d + `setup-android-sdk.sh`). Do not use that shortcut in the F-Droid
+recipe.
+
+Build the server binary alone (after any SDK is installed):
 
 ```sh
 cd native/OfflineMapServer
 swift build -c release \
   --swift-sdk aarch64-unknown-linux-android28 \
-  --static-swift-stdlib
-file .build/aarch64-unknown-linux-android28/release/OfflineMapServer
+  --product OfflineMapServerCore
 ```
 
 ## Stage 1 (app embed)
@@ -65,7 +71,7 @@ file .build/aarch64-unknown-linux-android28/release/OfflineMapServer
 # then yarn ionic-sync / run android
 ```
 
-The script copies only **transitive `NEEDED`** libs from the Swift Android runtime (not all `lib*.so`), then `llvm-strip`s. The JNI shim is linked with `-Wl,-z,max-page-size=16384` for Android 16 KB page-size compatibility. Output is gitignored under `android/app/src/main/jniLibs/`.
+The script copies only **transitive `NEEDED`** libs from the Swift Android runtime (not all `lib*.so`). It strips only `libOfflineMapServer{Core,Jni}.so` (`llvm-strip` breaks 16 KB ELF congruence on from-source runtime libs). The JNI shim is linked with `-Wl,-z,max-page-size=16384`. Output is gitignored under `android/app/src/main/jniLibs/`.
 
 Until `jniLibs` are filled, `OfflineMapServer.isAvailable()` returns false with a clear load error.
 

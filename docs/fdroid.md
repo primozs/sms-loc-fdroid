@@ -24,10 +24,10 @@ Prerequisites on the host:
 
 1. Node.js + Yarn (Classic) matching `package.json` / `yarn.lock`
 2. Android SDK (this repo: compile/target SDK from `android/variables.gradle`)
-3. Swift **6.3.3** + Android Swift SDK artifact (see
-   [`native/OfflineMapServer/README.md`](../native/OfflineMapServer/README.md))
-4. NDK **r27d** path expected by
-   `native/OfflineMapServer/scripts/package-android-jni.sh`
+3. Network access to download Swift **6.3.3** host toolchain, NDK **r27d**, and
+   Swift sources (first run). Optional: system `ninja-build`, `git`, `perl`,
+   `patch`. CMake ≥3.26 and `patchelf` are auto-fetched into
+   `$HOME/.cache/smsloc-fdroid-swift/tools` when missing.
 
 Then:
 
@@ -38,15 +38,27 @@ Then:
 
 Pipeline:
 
-1. `./scripts/fdroid-prebuild.sh` — Ubuntu 24.04 Swift host toolchain under
-   `$HOME/.cache/smsloc-fdroid-swift` + Swift Android SDK + NDK r27d, then
-   `yarn install`, `configure:prod`, `package-android-jni.sh`, `ionic-sync`,
-   then drop SPM `.build` and unused jar/wasm/tar.gz blobs (keep
-   `node_modules/*/android` for Gradle)
+1. `./scripts/fdroid-prebuild.sh`
+   - `scripts/build-swift-android-sdk.sh` — rebuild Android stdlib / Dispatch /
+     Foundation (**from source**, aarch64) into an artifactbundle under
+     `$HOME/.cache/smsloc-fdroid-swift` (~25–40 min first time)
+   - `swift sdk install` that local bundle (not the download.swift.org prebuilt)
+   - `yarn install`, `configure:prod`, `package-android-jni.sh`, `ionic-sync`
+   - drop SPM `.build` and unused jar/wasm/tar.gz blobs (keep
+     `node_modules/*/android` for Gradle)
 2. `cd android && ./gradlew assembleRelease` — **unsigned** APK under
    `android/app/build/outputs/apk/release/`
 
 The fdroiddata recipe calls the same `fdroid-prebuild.sh` from `prebuild`.
+Set `timeout` high enough for the SDK rebuild (draft metadata uses 14400 s).
+
+### Fast path for developers (not F-Droid)
+
+A Docker image that runs the same from-source SDK build can be published to
+GHCR for local/CI reuse (see
+[`deploy/docker/swift-android-sdk/Dockerfile`](../deploy/docker/swift-android-sdk/Dockerfile)
+and `.github/workflows/swift-android-sdk.yml`). **F-Droid must not pull this
+image** — reviewers expect the recipe to compile target libs from source.
 
 ## Release tags
 
@@ -71,17 +83,32 @@ Offline map pack is an explicit user download.
 - Prebuild installs Swift under `$HOME` (not the VCS tree), removes SPM
   `.build`, and strips only unused jar/wasm/tar.gz under `node_modules`
 - Keep Capacitor plugin android sources in `node_modules` for Gradle
-- fdroiddata uses `scanignore: android/app/src/main/jniLibs` for libs built
-  in prebuild (OfflineMapServer + Swift Android runtime)
+- fdroiddata uses `scanignore: android/app/src/main/jniLibs` for libs **built
+  in prebuild** (OfflineMapServer + from-source Swift Android runtime)
+
+## Reply notes (review: build the Swift SDK)
+
+For [fdroiddata!45187](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/45187)
+/ similar review comments:
+
+- We no longer install the prebuilt
+  `swift-*-RELEASE_android.artifactbundle` from download.swift.org into the
+  F-Droid recipe.
+- `scripts/fdroid-prebuild.sh` rebuilds the Android target stdlib / Dispatch /
+  Foundation via `scripts/build-swift-android-sdk.sh` (vendored helpers from
+  [finagolfin/swift-android-sdk](https://github.com/finagolfin/swift-android-sdk)).
+- Host Swift compiler + NDK remain downloaded **build tools**; APK `.so`s come
+  from that rebuild + `package-android-jni.sh`.
+- A GHCR Docker image may exist for other apps / local speed — **not** used by
+  the F-Droid `prebuild`.
+- Expect ~25–40 min SDK rebuild and ~100 MB `jniLibs` (mostly Foundation ICU).
 
 ## Submit / verify
 
 1. Fork [fdroiddata](https://gitlab.com/fdroid/fdroiddata), branch `si.stenar.smsloc`
 2. Copy `docs/fdroid/metadata/si.stenar.smsloc.yml` → `metadata/si.stenar.smsloc.yml`
-3. Set `Builds[0].commit` to the release tag or commit SHA
+3. Set `Builds[0].commit` to the release tag or commit SHA that contains the
+   from-source prebuild (retag if needed after landing these scripts)
 4. `fdroid lint si.stenar.smsloc` and build in the buildserver container (see
    [Quick Start](https://f-droid.org/docs/Submitting_to_F-Droid_Quick_Start_Guide/))
-5. Open MR: `New App: si.stenar.smsloc`
-
-Expect review focus on the Swift Android SDK install in `sudo`/`prebuild`
-(uncommon toolchain; packagers may adjust the recipe).
+5. Open / update MR: `New App: si.stenar.smsloc`

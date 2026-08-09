@@ -1,0 +1,1 @@
+F-Droid: rebuild Swift Android SDK (stdlib/Dispatch/Foundation) from source in prebuild.

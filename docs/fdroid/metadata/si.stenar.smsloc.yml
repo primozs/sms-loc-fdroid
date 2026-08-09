@@ -15,21 +15,23 @@ RepoType: git
 Repo: https://github.com/primozs/sms-loc-fdroid.git
 
 Builds:
-  - versionName: 0.0.17
-    versionCode: 17
-    commit: v0.0.17
+  - versionName: 0.0.18
+    versionCode: 18
+    commit: v0.0.18
     subdir: android
     sudo:
       - apt-get update
       - apt-get install -y curl ca-certificates xz-utils python3 gnupg unzip libncurses6
         libncursesw6 libcurl4 libxml2 libsqlite3-0 zlib1g libedit2 libgcc-s1 libstdc++6
-        binutils build-essential gcc g++ libc6-dev
+        binutils build-essential gcc g++ libc6-dev ninja-build git perl patch
       - curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
       - apt-get install -y nodejs
       - corepack enable
       - corepack prepare yarn@1.22.22 --activate
     gradle:
       - yes
+    # Swift Android SDK rebuild (~25–40m) + OfflineMapServer + Gradle
+    timeout: 14400
     output: app/build/outputs/apk/release/*-release-unsigned.apk
     prebuild:
       - cd ..
@@ -39,17 +41,21 @@ Builds:
 
 MaintainerNotes: |-
   Capacitor/Ionic Vue app. Offline maps use a Swift (Vapor) static server
-  cross-compiled in prebuild via scripts/fdroid-prebuild.sh (Ubuntu 24.04 host
-  toolchain under $HOME + official Swift Android SDK 6.3.3 + NDK r27d).
-  android/app/src/main/jniLibs is scanignored: OfflineMapServerCore/JNI are
-  built from native/OfflineMapServer; remaining .so are the Swift Android
-  runtime / NDK libc++ pulled by that build (see package-android-jni.sh).
+  cross-compiled in prebuild via scripts/fdroid-prebuild.sh.
+  That script rebuilds the Swift Android stdlib / Dispatch / Foundation for
+  aarch64 from swift-*-RELEASE sources (scripts/build-swift-android-sdk.sh,
+  vendored finagolfin/swift-android-sdk patches). Host Swift 6.3.3 and NDK
+  r27d are downloaded build tools only — target .so in the APK are from source.
+  CMake ≥3.26 and patchelf are fetched into $HOME/.cache if distro packages
+  are too old. Do not substitute a prebuilt GHCR/Docker SDK image in F-Droid.
+  android/app/src/main/jniLibs is scanignored: OfflineMapServerCore/JNI plus
+  the from-source Swift runtime / NDK libc++ pulled by package-android-jni.sh.
   node_modules must remain after prebuild (capacitor.settings.gradle); only
   unused jar/wasm/tar.gz blobs are removed for the binary scanner.
-  Expect large APK (~arm64 + ~87MB Swift runtime).
+  Expect large APK (~arm64 + ~100MB Swift runtime) and a long prebuild.
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
 UpdateCheckData: android/app/build.gradle|versionCode\s+(\d+)|.|versionName\s+"([^"]+)"
-CurrentVersion: 0.0.17
-CurrentVersionCode: 17
+CurrentVersion: 0.0.18
+CurrentVersionCode: 18
