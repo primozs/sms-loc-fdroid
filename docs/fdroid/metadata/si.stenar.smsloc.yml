@@ -25,10 +25,10 @@ Builds:
       - apt-get install -y curl ca-certificates xz-utils python3 python-is-python3
         gnupg unzip libncurses6 libncursesw6 libcurl4 libxml2 libsqlite3-0 zlib1g
         zlib1g-dev libedit2 libgcc-s1 libstdc++6 binutils build-essential gcc g++
-        libc6-dev ninja-build git perl patch nodejs npm
+        libc6-dev ninja-build git perl patch
       - echo "deb https://deb.debian.org/debian forky main" > /etc/apt/sources.list.d/forky.list
       - apt-get update
-      - apt-get install -y -t forky swiftlang
+      - apt-get install -y -t forky swiftlang nodejs npm
       - corepack enable
       - corepack prepare yarn@1.22.22 --activate
     gradle:
@@ -43,10 +43,9 @@ Builds:
 MaintainerNotes: |-
   Capacitor/Ionic Vue app. Offline maps use a Swift (Vapor) static server
   cross-compiled in prebuild via scripts/fdroid-prebuild.sh.
-  Host tools from Debian: nodejs/npm (trixie; yarn --ignore-engines for a few
-  packages that declare engines ≥22) and swiftlang 6.2.3 (forky pin —
-  trixie ships 6.0.3 which is below Package.swift tools-version 6.2).
-  Target Android stdlib / Dispatch / Foundation are rebuilt from
+  Host tools from Debian forky pin: nodejs/npm (Capacitor 8 needs ≥22; trixie
+  is 20.x) and swiftlang 6.2.3 (trixie is 6.0.3; Package.swift needs ≥6.2).
+  yarn --ignore-engines kept as belt-and-suspenders. Target Android stdlib / Dispatch / Foundation are rebuilt from
   swift-6.2.3-RELEASE sources (scripts/build-swift-android-sdk.sh). NDK r27d
   remains a downloaded build tool (also supplies clang/lld for the Android
   stdlib link — Debian clang cannot resolve -lgcc for that target). No
