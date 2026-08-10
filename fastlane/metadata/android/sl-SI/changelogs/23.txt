@@ -1,0 +1,1 @@
+F-Droid: yarn --ignore-engines, da Debian Node 20 lahko namesti spletne odvisnosti.

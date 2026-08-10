@@ -73,7 +73,7 @@ if [[ -x "$SDK_ROOT/scripts/setup-android-sdk.sh" \
 fi
 
 echo "==> yarn + configure + jniLibs + ionic-sync"
-yarn install --frozen-lockfile
+yarn install --frozen-lockfile --ignore-engines
 yarn configure:prod -y
 ./native/OfflineMapServer/scripts/package-android-jni.sh
 yarn ionic-sync

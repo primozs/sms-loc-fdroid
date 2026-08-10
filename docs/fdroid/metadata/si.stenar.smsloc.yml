@@ -15,9 +15,9 @@ RepoType: git
 Repo: https://github.com/primozs/sms-loc-fdroid.git
 
 Builds:
-  - versionName: 0.0.22
-    versionCode: 22
-    commit: v0.0.22
+  - versionName: 0.0.23
+    versionCode: 23
+    commit: v0.0.23
     timeout: 14400
     subdir: android
     sudo:
@@ -43,7 +43,8 @@ Builds:
 MaintainerNotes: |-
   Capacitor/Ionic Vue app. Offline maps use a Swift (Vapor) static server
   cross-compiled in prebuild via scripts/fdroid-prebuild.sh.
-  Host tools from Debian: nodejs/npm (trixie) and swiftlang 6.2.3 (forky pin —
+  Host tools from Debian: nodejs/npm (trixie; yarn --ignore-engines for a few
+  packages that declare engines ≥22) and swiftlang 6.2.3 (forky pin —
   trixie ships 6.0.3 which is below Package.swift tools-version 6.2).
   Target Android stdlib / Dispatch / Foundation are rebuilt from
   swift-6.2.3-RELEASE sources (scripts/build-swift-android-sdk.sh). NDK r27d
@@ -57,5 +58,5 @@ MaintainerNotes: |-
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
 UpdateCheckData: android/app/build.gradle|versionCode\s+(\d+)|.|versionName\s+"([^"]+)"
-CurrentVersion: 0.0.22
-CurrentVersionCode: 22
+CurrentVersion: 0.0.23
+CurrentVersionCode: 23
