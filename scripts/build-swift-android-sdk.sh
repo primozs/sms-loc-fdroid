@@ -202,14 +202,29 @@ export ANDROID_NDK="$NDK_HOME"
 unset ANDROID_NDK_ROOT || true
 
 # Debian clang cannot link the Android stdlib (ld.lld: unable to find -lgcc).
-# Swift.org host tarballs ship a matching clang; with system swiftlang use the
-# NDK clang/lld already downloaded as a build tool (same as local spike).
+# Swift.org host tarballs ship a matching clang; with system swiftlang put
+# NDK clang/lld next to Debian swift on PATH (build-script probes PATH for
+# clang before --native-clang-tools-path is enough).
 NATIVE_CLANG_TOOLS="$TOOLCHAIN_BIN"
 if [[ "$USE_SYSTEM_SWIFT" == "1" ]]; then
-  NATIVE_CLANG_TOOLS="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin"
-  [[ -x "$NATIVE_CLANG_TOOLS/clang" ]] \
-    || { echo "missing NDK clang at $NATIVE_CLANG_TOOLS" >&2; exit 1; }
-  echo "==> native clang tools: NDK ($( "$NATIVE_CLANG_TOOLS/clang" --version 2>/dev/null | sed -n '1p' ))"
+  NDK_LLVM_BIN="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin"
+  [[ -x "$NDK_LLVM_BIN/clang" ]] \
+    || { echo "missing NDK clang at $NDK_LLVM_BIN" >&2; exit 1; }
+  HOST_BIN="$CACHE_ROOT/tools/host-bin"
+  mkdir -p "$HOST_BIN"
+  ln -sfn "$(command -v swift)" "$HOST_BIN/swift"
+  ln -sfn "$(command -v swiftc)" "$HOST_BIN/swiftc"
+  ln -sfn "$NDK_LLVM_BIN/clang" "$HOST_BIN/clang"
+  ln -sfn "$NDK_LLVM_BIN/clang++" "$HOST_BIN/clang++"
+  ln -sfn "$NDK_LLVM_BIN/ld.lld" "$HOST_BIN/ld.lld"
+  # Common llvm helpers build-script may resolve next to clang.
+  for t in llvm-ar llvm-ranlib llvm-objcopy llvm-objdump; do
+    [[ -x "$NDK_LLVM_BIN/$t" ]] && ln -sfn "$NDK_LLVM_BIN/$t" "$HOST_BIN/$t"
+  done
+  TOOLCHAIN_BIN="$HOST_BIN"
+  NATIVE_CLANG_TOOLS="$HOST_BIN"
+  export PATH="$HOST_BIN:$PATH"
+  echo "==> host-bin: Debian swift + NDK clang ($( "$HOST_BIN/clang" --version 2>/dev/null | sed -n '1p' ))"
 fi
 
 MARKER="$WORK/.sdk-built"

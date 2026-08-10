@@ -1,0 +1,1 @@
+F-Droid: put NDK clang on PATH beside Debian swift so build-script finds it.
