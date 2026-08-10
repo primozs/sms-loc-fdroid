@@ -3,16 +3,16 @@
 #
 # Build (from repo root):
 #   docker build -f deploy/docker/swift-android-sdk/Dockerfile \
-#     -t ghcr.io/primozs/sms-loc-fdroid/swift-android-sdk:6.3.3-aarch64-api24 .
+#     -t ghcr.io/primozs/sms-loc-fdroid/swift-android-sdk:6.2.3-aarch64-api24 .
 #
 # Export artifactbundle tarball:
-#   docker create --name sdk ghcr.io/.../swift-android-sdk:6.3.3-aarch64-api24
+#   docker create --name sdk ghcr.io/.../swift-android-sdk:6.2.3-aarch64-api24
 #   docker cp sdk:/opt/swift-android-sdk.artifactbundle.tar.gz .
 FROM ubuntu:24.04
 
 ENV DEBIAN_FRONTEND=noninteractive \
-    SWIFT_VER=6.3.3 \
-    SWIFT_TAG=swift-6.3.3-RELEASE \
+    SWIFT_VER=6.2.3 \
+    SWIFT_TAG=swift-6.2.3-RELEASE \
     ANDROID_ARCH=aarch64 \
     ANDROID_API=24 \
     SMSLOC_SWIFT_CACHE=/opt/smsloc-swift \

@@ -1,0 +1,1 @@
+F-Droid: Node in gostiteljski Swift iz Debian apt; Android Swift runtime obnovljen na 6.2.3.

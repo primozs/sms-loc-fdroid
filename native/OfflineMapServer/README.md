@@ -3,12 +3,12 @@
 Vapor + `FileMiddleware` static file server for offline map tiles.
 Plan: [`docs/offline-map-swift-poc.md`](../../docs/offline-map-swift-poc.md).
 
-Requires **Swift 6.3.3** (see repo `.swift-version`) matching the Android Swift SDK.
+Requires **Swift 6.2.3** (see repo `.swift-version`) matching the Android Swift SDK.
 
 ## Stage 0 status
 
 - [x] Host build + smoke (`/healthy`, fixture `style.json`)
-- [x] Android Swift SDK 6.3.3 + NDK r27d configured
+- [x] Android Swift SDK 6.2.3 + NDK r27d configured
 - [x] `aarch64-unknown-linux-android28` release binary builds (~175 MB with `--static-swift-stdlib`)
 
 ## Host run
@@ -38,7 +38,7 @@ runtime, then package JNI libs:
 
 ```sh
 ./scripts/build-swift-android-sdk.sh   # ~25–40m first time
-swift sdk install ~/.cache/smsloc-fdroid-swift/swift-6.3.3-RELEASE-android-24-0.1.artifactbundle
+swift sdk install ~/.cache/smsloc-fdroid-swift/swift-6.2.3-RELEASE-android-24-0.1.artifactbundle
 ./native/OfflineMapServer/scripts/package-android-jni.sh
 ```
 

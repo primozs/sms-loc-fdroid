@@ -4,9 +4,9 @@
 #
 # Invoked from fdroiddata metadata with cwd = android/ (script cds to repo root).
 #
-# Host Swift toolchain + from-source Android SDK live under $HOME (outside the
-# VCS checkout) so fdroid's binary scanner does not trip on build tools.
-# Target .so files under jniLibs are produced here and listed under scanignore.
+# Host Swift: Debian swiftlang on F-Droid (PATH). Local-dev may use a Swift.org
+# host tarball via build-swift-android-sdk.sh. Target .so under jniLibs are
+# produced here and listed under scanignore.
 #
 # Do NOT pull a published Docker/GHCR SDK image here — F-Droid must rebuild.
 set -euo pipefail
@@ -14,7 +14,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-SWIFT_VER="${SWIFT_VER:-6.3.3}"
+SWIFT_VER="${SWIFT_VER:-6.2.3}"
 CACHE_ROOT="${SMSLOC_SWIFT_CACHE:-$HOME/.cache/smsloc-fdroid-swift}"
 BUNDLE_NAME="swift-${SWIFT_VER}-RELEASE-android-24-0.1.artifactbundle"
 BUNDLE_OUT="${SMSLOC_SWIFT_SDK_BUNDLE:-$CACHE_ROOT/$BUNDLE_NAME}"
@@ -22,24 +22,29 @@ SDK_ID="swift-${SWIFT_VER}-RELEASE_android"
 
 export PATH="${HOME}/.local/bin:/usr/local/bin:$PATH"
 export SMSLOC_SWIFT_CACHE="$CACHE_ROOT"
+export SWIFT_VER
 
 echo "==> rebuild Swift Android SDK from source (stdlib/Dispatch/Foundation)"
 ./scripts/build-swift-android-sdk.sh
 [[ -d "$BUNDLE_OUT/swift-android" ]] \
   || { echo "missing SDK bundle at $BUNDLE_OUT" >&2; exit 1; }
 
-# Host compiler PATH (build script installed it under CACHE_ROOT).
-TOOLCHAIN_DIR="$CACHE_ROOT/swift-${SWIFT_VER}-RELEASE-ubuntu24.04"
-if [[ ! -x "$TOOLCHAIN_DIR/usr/bin/swift" ]]; then
-  # allow alternate host id layouts
-  shopt -s nullglob
-  for d in "$CACHE_ROOT"/swift-${SWIFT_VER}-RELEASE-*/usr/bin/swift; do
-    TOOLCHAIN_DIR="$(cd "$(dirname "$d")/../.." && pwd)"
-    break
-  done
-  shopt -u nullglob
+# Ensure host swift is on PATH (system Debian, or local-dev tarball).
+if ! command -v swift >/dev/null \
+  || ! swift --version 2>/dev/null | head -1 | grep -q "$SWIFT_VER"; then
+  TOOLCHAIN_DIR="$CACHE_ROOT/swift-${SWIFT_VER}-RELEASE-ubuntu24.04"
+  if [[ ! -x "$TOOLCHAIN_DIR/usr/bin/swift" ]]; then
+    shopt -s nullglob
+    for d in "$CACHE_ROOT"/swift-${SWIFT_VER}-RELEASE-*/usr/bin/swift; do
+      TOOLCHAIN_DIR="$(cd "$(dirname "$d")/../.." && pwd)"
+      break
+    done
+    shopt -u nullglob
+  fi
+  [[ -x "$TOOLCHAIN_DIR/usr/bin/swift" ]] \
+    || { echo "swift ${SWIFT_VER} not on PATH and no host tarball" >&2; exit 1; }
+  export PATH="$TOOLCHAIN_DIR/usr/bin:$PATH"
 fi
-export PATH="$TOOLCHAIN_DIR/usr/bin:$PATH"
 swift --version
 
 echo "==> register SDK with swiftpm ($SDK_ID)"

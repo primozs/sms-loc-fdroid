@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Unsigned release APK the way F-Droid should build it (no keystore signing).
-# Requires: yarn, Node, Android SDK, Swift 6.3.3 + Android Swift SDK (see docs/fdroid.md).
+# Requires: yarn, Node, Android SDK, Swift 6.2.3 + Android Swift SDK (see docs/fdroid.md).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"

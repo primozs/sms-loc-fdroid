@@ -154,7 +154,7 @@ Keep JS and Java parsing of this format in sync when changing the wire format.
 
 1. **Config files are gitignored** — missing `config/*/index.ts` or `src/config.ts` breaks builds; use examples + `yarn configure:dev|prod`
 2. **Must `ionic-sync` after web changes** before expecting them on device
-3. **OfflineMapServer `.so` missing** — run `package-android-jni.sh` (Swift 6.3.3 + Android SDK); adds ~87 MB to APK
+3. **OfflineMapServer `.so` missing** — run `package-android-jni.sh` (Swift 6.2.3 + Android SDK); adds ~87 MB to APK
 4. **Native SMS path ≠ JS SMS path** — background replies go through Java `SmsReceiver`; UI send/watch uses the Capacitor Sms plugin
 5. **Battery optimization** — `MainActivity` may prompt to ignore battery optimizations for reliable background location
 6. **Phone numbers** — native code normalizes to E.164 via libphonenumber; contact matching depends on that

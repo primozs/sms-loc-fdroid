@@ -18,7 +18,7 @@ permissions:
 
 env:
   IMAGE: ghcr.io/${{ github.repository_owner }}/sms-loc-fdroid/swift-android-sdk
-  TAG: 6.3.3-aarch64-api24
+  TAG: 6.2.3-aarch64-api24
 
 jobs:
   build-and-push:

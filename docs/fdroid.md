@@ -24,10 +24,10 @@ Prerequisites on the host:
 
 1. Node.js + Yarn (Classic) matching `package.json` / `yarn.lock`
 2. Android SDK (this repo: compile/target SDK from `android/variables.gradle`)
-3. Network access to download Swift **6.3.3** host toolchain, NDK **r27d**, and
-   Swift sources (first run). Optional: system `ninja-build`, `git`, `perl`,
-   `patch`. CMake ≥3.26 and `patchelf` are auto-fetched into
-   `$HOME/.cache/smsloc-fdroid-swift/tools` when missing.
+3. Host Swift **6.2.3** (Debian `swiftlang`, or a local Swift.org tarball
+   fallback), NDK **r27d**, and network for Swift sources (first run). Optional:
+   system `ninja-build`, `git`, `perl`, `patch`. CMake ≥3.26 and `patchelf` are
+   auto-fetched into `$HOME/.cache/smsloc-fdroid-swift/tools` when missing.
 
 Then:
 

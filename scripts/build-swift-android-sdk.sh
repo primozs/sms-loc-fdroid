@@ -5,17 +5,34 @@
 #   - scripts/fdroid-prebuild.sh  (F-Droid: always from source)
 #   - deploy/docker/swift-android-sdk/Dockerfile  (published cache for local/CI)
 #
-# Host Swift compiler + NDK are downloaded build tools. Target Android libs are
-# compiled here. Based on finagolfin/swift-android-sdk + swiftlang Android.md.
+# Host Swift: prefer Debian/system `swiftlang` (F-Droid). Fall back to a
+# Swift.org host tarball for local-dev only. NDK remains a download. Target
+# Android libs are compiled here. Based on finagolfin/swift-android-sdk.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 VENDOR="$ROOT/native/OfflineMapServer/swift-android-sdk"
 
-SWIFT_VER="${SWIFT_VER:-6.3.3}"
+# Match Debian forky/sid swiftlang (Package.swift tools-version 6.2).
+SWIFT_VER="${SWIFT_VER:-6.2.3}"
 SWIFT_TAG="${SWIFT_TAG:-swift-${SWIFT_VER}-RELEASE}"
-HOST_ID="${SWIFT_HOST_ID:-ubuntu2404}"
-HOST_NAME="${SWIFT_HOST_NAME:-ubuntu24.04}"
+# Local-dev host tarball: ubuntu24.04 needs glibc ≥2.38; jammy hosts use 22.04.
+# Avoid `head` in pipelines under pipefail (SIGPIPE → exit 141).
+if [[ -z "${SWIFT_HOST_ID:-}" || -z "${SWIFT_HOST_NAME:-}" ]]; then
+  _glibc_line="$(ldd --version 2>/dev/null)" || true
+  _glibc_minor="$(printf '%s\n' "$_glibc_line" | sed -n '1s/.* \([0-9]\+\)\.\([0-9]\+\).*/\2/p')"
+  if [[ "${_glibc_minor:-0}" -lt 38 ]]; then
+    HOST_ID=ubuntu2204
+    HOST_NAME=ubuntu22.04
+  else
+    HOST_ID=ubuntu2404
+    HOST_NAME=ubuntu24.04
+  fi
+  unset _glibc_line _glibc_minor
+else
+  HOST_ID="$SWIFT_HOST_ID"
+  HOST_NAME="$SWIFT_HOST_NAME"
+fi
 ANDROID_ARCH="${ANDROID_ARCH:-aarch64}"
 ANDROID_API="${ANDROID_API:-24}"
 NDK_VERSION="${NDK_VERSION:-r27d}"
@@ -24,7 +41,15 @@ WORK="$CACHE_ROOT/sdk-build-${SWIFT_TAG}-${ANDROID_ARCH}-api${ANDROID_API}"
 TOOLCHAIN_DIR="$CACHE_ROOT/${SWIFT_TAG}-${HOST_NAME}"
 BUNDLE_NAME="${SWIFT_TAG}-android-${ANDROID_API}-0.1.artifactbundle"
 BUNDLE_OUT="${SMSLOC_SWIFT_SDK_BUNDLE:-$CACHE_ROOT/$BUNDLE_NAME}"
+# Ignore a leftover SMSLOC_SWIFT_SDK_BUNDLE that points at a different SWIFT_TAG
+# (e.g. 6.3.3 path while building 6.2.3).
+if [[ -n "${SMSLOC_SWIFT_SDK_BUNDLE:-}" && "$BUNDLE_OUT" != *"${SWIFT_TAG}"* ]]; then
+  echo "==> ignoring SMSLOC_SWIFT_SDK_BUNDLE=$BUNDLE_OUT (does not match ${SWIFT_TAG})"
+  BUNDLE_OUT="$CACHE_ROOT/$BUNDLE_NAME"
+fi
 KEEP_WORK="${SMSLOC_SWIFT_SDK_KEEP_WORK:-0}"
+# Force Swift.org host tarball even if system swift exists (local experiments).
+FORCE_HOST_TARBALL="${SMSLOC_SWIFT_FORCE_HOST_TARBALL:-0}"
 
 # Prefer a Kitware CMake ≥3.26 if we installed one under the cache (Ubuntu
 # 22.04 / Debian bookworm ship older; libdispatch for Swift 6.3 needs ≥3.26).
@@ -113,16 +138,57 @@ echo "using $(command -v patchelf)"
 echo "==> Swift Android SDK from source (${SWIFT_TAG}, ${ANDROID_ARCH}, API ${ANDROID_API})"
 mkdir -p "$CACHE_ROOT" "$WORK"
 
-if [[ ! -x "$TOOLCHAIN_DIR/usr/bin/swift" ]]; then
-  echo "==> host toolchain → $TOOLCHAIN_DIR"
-  BRANCH="swift-${SWIFT_VER}-release"
-  curl -fsSL -o "$CACHE_ROOT/swift-host.tar.gz" \
-    "https://download.swift.org/${BRANCH}/${HOST_ID}/${SWIFT_TAG}/${SWIFT_TAG}-${HOST_NAME}.tar.gz"
-  tar -xzf "$CACHE_ROOT/swift-host.tar.gz" -C "$CACHE_ROOT"
+resolve_host_swift() {
+  # Prefer Debian/system swiftlang when its version matches SWIFT_VER (F-Droid).
+  if [[ "$FORCE_HOST_TARBALL" != "1" ]] && command -v swift >/dev/null; then
+    local ver_line
+    ver_line="$(swift --version 2>/dev/null | head -1 || true)"
+    if [[ "$ver_line" == *"$SWIFT_VER"* ]]; then
+      local swift_bin clang_bin
+      swift_bin="$(command -v swift)"
+      if command -v clang >/dev/null; then
+        clang_bin="$(command -v clang)"
+      else
+        clang_bin="$swift_bin"
+      fi
+      TOOLCHAIN_BIN="$(cd "$(dirname "$swift_bin")" && pwd)"
+      # build-script wants a directory that contains both swift and clang.
+      if [[ "$(dirname "$clang_bin")" != "$TOOLCHAIN_BIN" ]]; then
+        mkdir -p "$CACHE_ROOT/tools/host-bin"
+        ln -sfn "$swift_bin" "$CACHE_ROOT/tools/host-bin/swift"
+        ln -sfn "$(command -v swiftc 2>/dev/null || echo "$swift_bin")" \
+          "$CACHE_ROOT/tools/host-bin/swiftc"
+        ln -sfn "$clang_bin" "$CACHE_ROOT/tools/host-bin/clang"
+        ln -sfn "$(command -v clang++ 2>/dev/null || echo "$clang_bin")" \
+          "$CACHE_ROOT/tools/host-bin/clang++"
+        TOOLCHAIN_BIN="$CACHE_ROOT/tools/host-bin"
+      fi
+      echo "==> using system Swift: $ver_line"
+      echo "    tools dir: $TOOLCHAIN_BIN"
+      return 0
+    fi
+    echo "==> system Swift is not ${SWIFT_VER} ($ver_line); using host tarball"
+  fi
+  if [[ ! -x "$TOOLCHAIN_DIR/usr/bin/swift" ]]; then
+    echo "==> host toolchain tarball → $TOOLCHAIN_DIR (local-dev fallback)"
+    BRANCH="swift-${SWIFT_VER}-release"
+    curl -fsSL -o "$CACHE_ROOT/swift-host.tar.gz" \
+      "https://download.swift.org/${BRANCH}/${HOST_ID}/${SWIFT_TAG}/${SWIFT_TAG}-${HOST_NAME}.tar.gz"
+    tar -xzf "$CACHE_ROOT/swift-host.tar.gz" -C "$CACHE_ROOT"
+  fi
+  export PATH="$TOOLCHAIN_DIR/usr/bin:$PATH"
+  TOOLCHAIN_BIN="$TOOLCHAIN_DIR/usr/bin"
+  echo "==> using tarball Swift (${HOST_NAME}): $($TOOLCHAIN_BIN/swift --version | head -1)"
+}
+resolve_host_swift
+export PATH="$TOOLCHAIN_BIN:$PATH"
+need swift
+if ! swift --version >/dev/null 2>&1; then
+  echo "host swift at $TOOLCHAIN_BIN/swift failed to run (glibc too old?)" >&2
+  echo "hint: set SWIFT_HOST_ID=ubuntu2204 SWIFT_HOST_NAME=ubuntu22.04" >&2
+  exit 1
 fi
-export PATH="$TOOLCHAIN_DIR/usr/bin:$PATH"
 swift --version
-TOOLCHAIN_BIN="$TOOLCHAIN_DIR/usr/bin"
 
 NDK_HOME="${ANDROID_NDK_HOME:-}"
 # Resolve symlinks; a dangling link (e.g. after removing an old SDK) is not a dir.
@@ -212,10 +278,26 @@ apply_patch_file() {
   fi
 }
 
+# Patches from finagolfin/swift-android-sdk branch matching SWIFT_VER major.minor
+# (6.2.x uses the 6.2 branch set; Foundation needs termux libandroid-spawn headers).
 apply_patch_file "$VENDOR/swift-android.patch"
 apply_patch_file "$VENDOR/swift-android-ci.patch"
-apply_patch_file "$VENDOR/swift-android-ci-prebuilt.patch"
-apply_patch_file "$VENDOR/swift-android-ci-release.patch"
+if [[ -f "$VENDOR/swift-android-ci-except-trunk.patch" ]]; then
+  apply_patch_file "$VENDOR/swift-android-ci-except-trunk.patch"
+fi
+if [[ -f "$VENDOR/swift-android-except-trunk.patch" ]]; then
+  apply_patch_file "$VENDOR/swift-android-except-trunk.patch"
+fi
+if [[ -f "$VENDOR/swift-android-testing-release.patch" ]]; then
+  apply_patch_file "$VENDOR/swift-android-testing-release.patch"
+fi
+# Legacy 6.3-oriented names (keep if present).
+if [[ -f "$VENDOR/swift-android-ci-prebuilt.patch" ]]; then
+  apply_patch_file "$VENDOR/swift-android-ci-prebuilt.patch"
+fi
+if [[ -f "$VENDOR/swift-android-ci-release.patch" ]]; then
+  apply_patch_file "$VENDOR/swift-android-ci-release.patch"
+fi
 
 SDK_DIR_NAME="swift-release-android-${ANDROID_ARCH}-${ANDROID_API}-sdk"
 # get-packages hardcodes -24-sdk for RELEASE tags
@@ -321,6 +403,11 @@ elif [[ -f "$RES_ARCH/android/${ANDROID_ARCH}/swiftrt.o" ]]; then
     "$RES_STATIC/android/${ANDROID_ARCH}/"
 fi
 ln -sfn ../swift/clang "$RES_ARCH/clang"
+# Termux libandroid-spawn.a for 16KB relink during OfflineMapServer packaging.
+if [[ -f "$SDK_PATH/usr/lib/libandroid-spawn.a" ]]; then
+  mkdir -p "$BUNDLE_ROOT/termux-libs"
+  cp -f "$SDK_PATH/usr/lib/libandroid-spawn.a" "$BUNDLE_ROOT/termux-libs/"
+fi
 
 [[ -d "$RES_ARCH/shims" ]] || { echo "missing SwiftShims (shims/) in packed SDK" >&2; exit 1; }
 [[ -f "$RES_ARCH/android/libswiftCore.so" || -f "$RES_ARCH/android/${ANDROID_ARCH}/libswiftCore.so" ]] \

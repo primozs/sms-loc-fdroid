@@ -10,14 +10,18 @@ ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
 PKG="$ROOT/native/OfflineMapServer"
 OUT="$ROOT/android/app/src/main/jniLibs/arm64-v8a"
 SDK_TRIPLE="aarch64-unknown-linux-android28"
+SWIFT_VER="${SWIFT_VER:-6.2.3}"
+# Prefer explicit artifact id so a leftover 6.3.x SDK does not win on triple match.
+SWIFT_SDK_ID="${SWIFT_SDK_ID:-swift-${SWIFT_VER}-RELEASE_android}"
 # Prefer from-source F-Droid/cache SDK, then official artifactbundle layout.
 _default_sdk_root() {
   local d
+  local ver="$SWIFT_VER"
   for d in \
     "${SMSLOC_SWIFT_SDK_BUNDLE:-}" \
-    "$HOME/.cache/smsloc-fdroid-swift/swift-6.3.3-RELEASE-android-24-0.1.artifactbundle" \
-    "$HOME/.swiftpm/swift-sdks/swift-6.3.3-RELEASE-android-24-0.1.artifactbundle" \
-    "$HOME/.swiftpm/swift-sdks/swift-6.3.3-RELEASE_android.artifactbundle"
+    "$HOME/.cache/smsloc-fdroid-swift/swift-${ver}-RELEASE-android-24-0.1.artifactbundle" \
+    "$HOME/.swiftpm/swift-sdks/swift-${ver}-RELEASE-android-24-0.1.artifactbundle" \
+    "$HOME/.swiftpm/swift-sdks/swift-${ver}-RELEASE_android.artifactbundle"
   do
     [[ -n "$d" && -d "$d/swift-android" ]] && { echo "$d/swift-android"; return; }
   done
@@ -38,6 +42,15 @@ if [[ -z "$SWIFT_RT" || ! -d "$SWIFT_RT" ]]; then
     SWIFT_RT="$_SDK_ANDROID/swift-resources/usr/lib/swift-aarch64/android"
   fi
 fi
+# Termux sysroot libs (libandroid-spawn) from the from-source SDK build.
+EXTRA_LIB_DIRS=()
+for d in \
+  "${SMSLOC_SWIFT_EXTRA_LIBS:-}" \
+  "${_SDK_ANDROID:+$_SDK_ANDROID/termux-libs}" \
+  "$HOME/.cache/smsloc-fdroid-swift/sdk-build-swift-${SWIFT_VER}-RELEASE-aarch64-api24/swift-release-android-aarch64-24-sdk/usr/lib"
+do
+  [[ -n "$d" && -d "$d" ]] && EXTRA_LIB_DIRS+=("$d")
+done
 
 if [[ ! -d "$NDK_HOME/toolchains" ]]; then
   echo "Set ANDROID_NDK_HOME to NDK r27d (see native/OfflineMapServer/README.md)" >&2
@@ -75,12 +88,12 @@ needed_libs() {
     | sed -n 's/.*Shared library: \[\(.*\)\]/\1/p'
 }
 
-# BFS: for each .so in OUT, pull missing NEEDED from SWIFT_RT or NDK libc++.
+# BFS: for each .so in OUT, pull missing NEEDED from SWIFT_RT, Termux sysroot, or NDK.
 resolve_deps() {
-  local changed=1
+  local changed=1 unresolved=0
   while [[ "$changed" -eq 1 ]]; do
     changed=0
-    local so name
+    local so name extra found
     for so in "$OUT"/*.so; do
       [[ -f "$so" ]] || continue
       while IFS= read -r name; do
@@ -91,20 +104,59 @@ resolve_deps() {
         if [[ -f "$OUT/$name" ]]; then
           continue
         fi
+        found=0
         if [[ -f "$SWIFT_RT/$name" ]]; then
           cp -f "$SWIFT_RT/$name" "$OUT/$name"
-          changed=1
+          found=1
           echo "  + $name (swift-rt)"
         elif [[ "$name" == "libc++_shared.so" && -f "$LIBCXX" ]]; then
           cp -f "$LIBCXX" "$OUT/$name"
-          changed=1
+          found=1
           echo "  + $name (ndk)"
+        elif [[ "$name" == "libandroid-spawn.so" ]]; then
+          # Termux .so is 4KB-aligned; relink from .a with 16KB pages.
+          if ensure_android_spawn_16k; then
+            found=1
+            echo "  + $name (relinked 16KB)"
+          fi
+        else
+          for extra in "${EXTRA_LIB_DIRS[@]+"${EXTRA_LIB_DIRS[@]}"}"; do
+            if [[ -f "$extra/$name" ]]; then
+              cp -f "$extra/$name" "$OUT/$name"
+              found=1
+              echo "  + $name (extra:$extra)"
+              break
+            fi
+          done
+        fi
+        if [[ "$found" -eq 1 ]]; then
+          changed=1
         else
           echo "  ! unresolved NEEDED: $name (from $(basename "$so"))" >&2
+          unresolved=1
         fi
       done < <(needed_libs "$so")
     done
   done
+  [[ "$unresolved" -eq 0 ]] || exit 1
+}
+
+ensure_android_spawn_16k() {
+  local a=""
+  local d
+  for d in "${EXTRA_LIB_DIRS[@]+"${EXTRA_LIB_DIRS[@]}"}"; do
+    if [[ -f "$d/libandroid-spawn.a" ]]; then
+      a="$d/libandroid-spawn.a"
+      break
+    fi
+  done
+  [[ -n "$a" ]] || return 1
+  "$CC" -shared -fPIC -fuse-ld=lld \
+    -Wl,--whole-archive "$a" -Wl,--no-whole-archive \
+    -Wl,-z,max-page-size=16384 \
+    -Wl,-z,common-page-size=16384 \
+    -Wl,-soname,libandroid-spawn.so \
+    -o "$OUT/libandroid-spawn.so"
 }
 
 strip_all() {
@@ -123,18 +175,40 @@ echo "==> clean $OUT"
 rm -rf "$OUT"
 mkdir -p "$OUT"
 
-echo "==> swift build OfflineMapServerCore ($SDK_TRIPLE release)"
+echo "==> swift build OfflineMapServerCore ($SDK_TRIPLE / $SWIFT_SDK_ID release)"
 cd "$PKG"
-swift build -c release --product OfflineMapServerCore --swift-sdk "$SDK_TRIPLE"
+# Skip rebuild when SMSLOC_JNI_REUSE_BUILD=1 and a product already exists (local spike).
+if [[ "${SMSLOC_JNI_REUSE_BUILD:-0}" == "1" ]] \
+   && compgen -G "$PKG/.build/aarch64-unknown-linux-android*/release/libOfflineMapServerCore.so" >/dev/null; then
+  echo "    reusing existing OfflineMapServerCore.so"
+else
+  rm -rf "$PKG/.build"
+  if ! swift build -c release --product OfflineMapServerCore \
+        --swift-sdk "${SDK_TRIPLE}" 2>/tmp/smsloc-swift-build.err; then
+    cat /tmp/smsloc-swift-build.err >&2 || true
+    swift build -c release --product OfflineMapServerCore --swift-sdk "$SWIFT_SDK_ID"
+  fi
+fi
 
-SWIFT_SO="$PKG/.build/$SDK_TRIPLE/release/libOfflineMapServerCore.so"
+SWIFT_SO=""
+shopt -s nullglob
+for cand in "$PKG"/.build/aarch64-unknown-linux-android*/release/libOfflineMapServerCore.so; do
+  SWIFT_SO="$cand"
+  break
+done
+shopt -u nullglob
+[[ -n "$SWIFT_SO" && -f "$SWIFT_SO" ]] \
+  || { echo "missing OfflineMapServerCore.so under $PKG/.build" >&2; exit 1; }
+BUILD_DIR="$(dirname "$SWIFT_SO")"
+SDK_TRIPLE="$(basename "$(dirname "$BUILD_DIR")")"
+echo "    product: $SWIFT_SO"
 cp -f "$SWIFT_SO" "$OUT/"
 
 echo "==> link JNI shim (16KB ELF page alignment)"
 # Android 15+ devices may use 16KB pages; NDK default for our clang was 4KB (0x1000).
 "$CC" -shared -fPIC \
   -I"$JNI_H" -I"$JNI_H/aarch64-linux-android" \
-  -L"$PKG/.build/$SDK_TRIPLE/release" -lOfflineMapServerCore \
+  -L"$BUILD_DIR" -lOfflineMapServerCore \
   -Wl,-z,max-page-size=16384 \
   -Wl,-z,common-page-size=16384 \
   -Wl,-rpath,'$ORIGIN' \

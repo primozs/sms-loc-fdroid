@@ -15,9 +15,9 @@ RepoType: git
 Repo: https://github.com/primozs/sms-loc-fdroid.git
 
 Builds:
-  - versionName: 0.0.19
-    versionCode: 19
-    commit: v0.0.19
+  - versionName: 0.0.20
+    versionCode: 20
+    commit: v0.0.20
     timeout: 14400
     subdir: android
     sudo:
@@ -25,9 +25,11 @@ Builds:
       - apt-get install -y curl ca-certificates xz-utils python3 python-is-python3
         gnupg unzip libncurses6 libncursesw6 libcurl4 libxml2 libsqlite3-0 zlib1g
         zlib1g-dev libedit2 libgcc-s1 libstdc++6 binutils build-essential gcc g++
-        libc6-dev ninja-build git perl patch
-      - curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
-      - apt-get install -y nodejs
+        libc6-dev ninja-build git perl patch nodejs npm
+      - echo "deb https://deb.debian.org/debian forky main" >
+        /etc/apt/sources.list.d/forky.list
+      - apt-get update
+      - apt-get install -y -t forky swiftlang
       - corepack enable
       - corepack prepare yarn@1.22.22 --activate
     gradle:
@@ -42,20 +44,17 @@ Builds:
 MaintainerNotes: |-
   Capacitor/Ionic Vue app. Offline maps use a Swift (Vapor) static server
   cross-compiled in prebuild via scripts/fdroid-prebuild.sh.
-  That script rebuilds the Swift Android stdlib / Dispatch / Foundation for
-  aarch64 from swift-*-RELEASE sources (scripts/build-swift-android-sdk.sh,
-  vendored finagolfin/swift-android-sdk patches). Host Swift 6.3.3 and NDK
-  r27d are downloaded build tools only — target .so in the APK are from source.
-  CMake ≥3.26 and patchelf are fetched into $HOME/.cache if distro packages
-  are too old. Do not substitute a prebuilt GHCR/Docker SDK image in F-Droid.
-  android/app/src/main/jniLibs is scanignored: OfflineMapServerCore/JNI plus
-  the from-source Swift runtime / NDK libc++ pulled by package-android-jni.sh.
-  node_modules must remain after prebuild (capacitor.settings.gradle); only
-  unused jar/wasm/tar.gz blobs are removed for the binary scanner.
+  Host tools from Debian: nodejs/npm (trixie) and swiftlang 6.2.3 (forky pin —
+  trixie ships 6.0.3 which is below Package.swift tools-version 6.2).
+  Target Android stdlib / Dispatch / Foundation are rebuilt from
+  swift-6.2.3-RELEASE sources (scripts/build-swift-android-sdk.sh). NDK r27d
+  remains a downloaded build tool. No NodeSource; no Swift.org host tarball
+  in the F-Droid recipe. CMake ≥3.26 / patchelf auto-fetched into $HOME/.cache
+  when missing. android/app/src/main/jniLibs is scanignored (prebuild outputs).
   Expect large APK (~arm64 + ~100MB Swift runtime) and a long prebuild.
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
 UpdateCheckData: android/app/build.gradle|versionCode\s+(\d+)|.|versionName\s+"([^"]+)"
-CurrentVersion: 0.0.19
-CurrentVersionCode: 19
+CurrentVersion: 0.0.20
+CurrentVersionCode: 20
