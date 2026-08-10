@@ -48,6 +48,8 @@ if [[ -n "${SMSLOC_SWIFT_SDK_BUNDLE:-}" && "$BUNDLE_OUT" != *"${SWIFT_TAG}"* ]];
   BUNDLE_OUT="$CACHE_ROOT/$BUNDLE_NAME"
 fi
 KEEP_WORK="${SMSLOC_SWIFT_SDK_KEEP_WORK:-0}"
+# Set when host swiftc comes from Debian/system (not Swift.org tarball).
+USE_SYSTEM_SWIFT=0
 # Force Swift.org host tarball even if system swift exists (local experiments).
 FORCE_HOST_TARBALL="${SMSLOC_SWIFT_FORCE_HOST_TARBALL:-0}"
 
@@ -146,25 +148,10 @@ resolve_host_swift() {
     if [[ "$ver_line" == *"$SWIFT_VER"* ]]; then
       local swift_bin clang_bin
       swift_bin="$(command -v swift)"
-      if command -v clang >/dev/null; then
-        clang_bin="$(command -v clang)"
-      else
-        clang_bin="$swift_bin"
-      fi
       TOOLCHAIN_BIN="$(cd "$(dirname "$swift_bin")" && pwd)"
-      # build-script wants a directory that contains both swift and clang.
-      if [[ "$(dirname "$clang_bin")" != "$TOOLCHAIN_BIN" ]]; then
-        mkdir -p "$CACHE_ROOT/tools/host-bin"
-        ln -sfn "$swift_bin" "$CACHE_ROOT/tools/host-bin/swift"
-        ln -sfn "$(command -v swiftc 2>/dev/null || echo "$swift_bin")" \
-          "$CACHE_ROOT/tools/host-bin/swiftc"
-        ln -sfn "$clang_bin" "$CACHE_ROOT/tools/host-bin/clang"
-        ln -sfn "$(command -v clang++ 2>/dev/null || echo "$clang_bin")" \
-          "$CACHE_ROOT/tools/host-bin/clang++"
-        TOOLCHAIN_BIN="$CACHE_ROOT/tools/host-bin"
-      fi
+      USE_SYSTEM_SWIFT=1
       echo "==> using system Swift: $ver_line"
-      echo "    tools dir: $TOOLCHAIN_BIN"
+      echo "    swift tools: $TOOLCHAIN_BIN"
       return 0
     fi
     echo "==> system Swift is not ${SWIFT_VER} ($ver_line); using host tarball"
@@ -213,6 +200,17 @@ export ANDROID_NDK_HOME="$NDK_HOME"
 export ANDROID_NDK="$NDK_HOME"
 # Avoid driver bug when ANDROID_NDK_ROOT is set (see finagolfin README)
 unset ANDROID_NDK_ROOT || true
+
+# Debian clang cannot link the Android stdlib (ld.lld: unable to find -lgcc).
+# Swift.org host tarballs ship a matching clang; with system swiftlang use the
+# NDK clang/lld already downloaded as a build tool (same as local spike).
+NATIVE_CLANG_TOOLS="$TOOLCHAIN_BIN"
+if [[ "$USE_SYSTEM_SWIFT" == "1" ]]; then
+  NATIVE_CLANG_TOOLS="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin"
+  [[ -x "$NATIVE_CLANG_TOOLS/clang" ]] \
+    || { echo "missing NDK clang at $NATIVE_CLANG_TOOLS" >&2; exit 1; }
+  echo "==> native clang tools: NDK ($( "$NATIVE_CLANG_TOOLS/clang" --version 2>/dev/null | sed -n '1p' ))"
+fi
 
 MARKER="$WORK/.sdk-built"
 if [[ -f "$MARKER" && -d "$BUNDLE_OUT/swift-android" && "${SMSLOC_SWIFT_SDK_FORCE:-0}" != "1" ]]; then
@@ -339,7 +337,7 @@ JOBS="${SMSLOC_SWIFT_SDK_JOBS:-$(nproc)}"
   --android-arch "$ANDROID_ARCH" \
   --android-api-level "$ANDROID_API" \
   --native-swift-tools-path="$TOOLCHAIN_BIN" \
-  --native-clang-tools-path="$TOOLCHAIN_BIN" \
+  --native-clang-tools-path="$NATIVE_CLANG_TOOLS" \
   --cross-compile-hosts="android-${ANDROID_ARCH}" \
   --cross-compile-deps-path="$SDK_PATH" \
   --skip-local-build \
