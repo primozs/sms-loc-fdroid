@@ -36,12 +36,10 @@ Builds:
     build:
       - cd ../..
       - ./scripts/fdroid-prebuild.sh
-    scanignore:
-      - android/app/src/main/jniLibs
 
 MaintainerNotes: |-
   Capacitor/Ionic Vue app. Offline maps use a Swift (Vapor) static server
-  cross-compiled in build via scripts/fdroid-prebuild.sh.
+  cross-compiled in build via scripts/fdroid-prebuild.sh (after the scanner).
   Host tools from Debian forky pin: nodejs/npm (Capacitor 8 needs ≥22; trixie
   is 20.x) and swiftlang 6.2.3 (trixie is 6.0.3; Package.swift needs ≥6.2).
   yarn --ignore-engines kept as belt-and-suspenders. Target Android stdlib /
@@ -50,9 +48,8 @@ MaintainerNotes: |-
   tool (also supplies clang/lld for the Android stdlib link — Debian clang
   cannot resolve -lgcc for that target). No NodeSource; no Swift.org host
   tarball in the F-Droid recipe. CMake ≥3.26 / patchelf auto-fetched into
-  $HOME/.cache when missing. android/app/src/main/jniLibs is scanignored
-  (build outputs). Expect large APK (~arm64 + ~100MB Swift runtime) and a
-  long build.
+  $HOME/.cache when missing. Expect large APK (~arm64 + ~100MB Swift runtime)
+  and a long build.
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
