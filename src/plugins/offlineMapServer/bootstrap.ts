@@ -1,5 +1,7 @@
 import { Capacitor } from '@capacitor/core';
+import { Network } from '@capacitor/network';
 import { watchNetwork } from '@/app/watchNetwork';
+import { logError } from '@/services/useLogger';
 import { setOfflineStyleOverride } from './applyLocalStyle';
 import { ensureOfflineMapServer } from './ensureServer';
 
@@ -17,12 +19,19 @@ const syncStyleForConnection = async (connected: boolean) => {
 
 /**
  * Start Swift server when pack installed; MapLibre uses LOCAL_MAPS_STYLE only when offline.
- * Idempotent network watcher (safe on resume). Initial style sync comes from watchNetwork.
+ * Idempotent network watcher (safe on resume).
  */
 export const bootstrapOfflineMaps = async () => {
   if (!Capacitor.isNativePlatform()) return;
 
   await ensureOfflineMapServer();
+
+  try {
+    const status = await Network.getStatus();
+    await syncStyleForConnection(status.connected);
+  } catch (e) {
+    logError(e);
+  }
 
   if (!stopNetworkWatch) {
     stopNetworkWatch = watchNetwork((status) => {

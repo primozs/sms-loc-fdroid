@@ -14,6 +14,8 @@ const props = defineProps<{
   initialZoom?: number;
 }>();
 
+const emit = defineEmits<{ ready: [] }>();
+
 const mapEl = ref<HTMLDivElement>();
 const mlMap = ref<MapLibreMap>();
 const ready = ref(false);
@@ -78,6 +80,7 @@ const createMap = (el: HTMLDivElement) => {
   map.once('load', () => {
     mapLoaded = true;
     ready.value = true;
+    emit('ready');
   });
 };
 

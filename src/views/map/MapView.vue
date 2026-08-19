@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import {
   IonContent,
   IonHeader,
@@ -14,6 +14,7 @@ import ContactFeatures from '@/views/contacts/ContactFeatures.vue';
 import MyLocation from './MyLocation.vue';
 import MlMap from '@/map/MlMap.vue';
 import MapModalData from './MapModalData.vue';
+import SpinnerDisplay from '@/components/SpinnerDisplay.vue';
 import { useDevMode } from '@/views/dev/useDevMode';
 import { whenElementSized } from '@/map/whenElementSized';
 import { useContactsData } from '@/services/useContactsData';
@@ -28,30 +29,32 @@ const { data } = useContactsData();
 const locStore = useLocation();
 
 const showMap = ref(false);
+const mapReady = ref(false);
 const sizeProbe = ref<HTMLDivElement>();
 /** Snapshot when map is first shown — passed into `new Map()`. */
 const openCamera = ref<MapCamera>();
 /** Bump on later tab enters so the live map recenters. */
 const focusKey = ref(0);
 
-const prepareCamera = async () => {
-  try {
-    await locStore.getLocation();
-  } catch {
-    // Keep last known; camera helper falls back as needed.
-  }
-  return cameraFromContactsOrLocation(data.value, locStore.lastLocation);
-};
+const isLoading = computed(() => !showMap.value || !mapReady.value);
 
 const revealOrRefocus = async () => {
   const probe = sizeProbe.value;
   if (!probe) return;
   await whenElementSized(probe);
-  const camera = await prepareCamera();
+  const camera = cameraFromContactsOrLocation(
+    data.value,
+    locStore.lastLocation,
+  );
 
   if (!showMap.value) {
     openCamera.value = camera;
     showMap.value = true;
+    if (!camera) {
+      void locStore.getLocation().then(() => {
+        focusKey.value += 1;
+      });
+    }
     return;
   }
 
@@ -80,10 +83,14 @@ onIonViewDidEnter(() => {
 
     <IonContent :scroll-y="false" class="map-page-content" :fullscreen="false">
       <div ref="sizeProbe" class="map-size-probe" aria-hidden="true"></div>
+      <div v-if="isLoading" class="app-overlay app-overlay--full">
+        <SpinnerDisplay />
+      </div>
       <MlMap
         v-if="showMap"
         :initial-center="openCamera?.center"
         :initial-zoom="openCamera?.zoom"
+        @ready="mapReady = true"
       >
         <ContactFeatures
           :skip-initial-fit="!!openCamera"
