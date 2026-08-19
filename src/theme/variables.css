@@ -3,6 +3,8 @@
 
 :root {
   color-scheme: light;
+  --ion-background-color: #ffffff;
+  --ion-text-color: #000000;
   --ion-color-primary: #7044ff;
   --ion-color-primary-rgb: 112, 68, 255;
   --ion-color-primary-contrast: #ffffff;
