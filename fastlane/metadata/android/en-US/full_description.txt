@@ -6,7 +6,7 @@ Features:
 • Whitelist contacts who may request your location
 • Hands-free SMS replies with latitude, longitude, altitude, accuracy, speed, and battery
 • Optional short help messages sent with your location
-• Map view for contacts’ last known positions
+• Map view for contacts’ last known positions (needs internet for online tiles, or optional ~300 MB offline pack in Settings)
 • Optional offline map pack download for areas with no network
 
 Privacy: location is sent only to numbers you whitelist, over SMS you already pay for. No Google Play Services, no ads, no analytics SDKs.

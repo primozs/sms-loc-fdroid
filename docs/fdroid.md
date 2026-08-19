@@ -73,8 +73,19 @@ Autoupdate in metadata uses `UpdateCheckMode: Tags`.
 
 ## AntiFeatures
 
-None declared: online map styles are optional; core SMS location works offline.
-Offline map pack is an explicit user download.
+`NonFreeNet` (declared in metadata):
+
+- Optional online map styles from `maptiles.stenar.si`
+- Optional offline map pack download from GitHub (`github.com/primozs/small-planet`)
+- Core SMS location sharing works without either (no `TetheredNet`)
+
+Draft text lives in [`docs/fdroid/metadata/si.stenar.smsloc.yml`](fdroid/metadata/si.stenar.smsloc.yml).
+
+## MR reply draft (NonFreeNet blocker)
+
+For [fdroiddata!45187](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/45187) after updating metadata:
+
+> Added `NonFreeNet` naming maptiles.stenar.si (optional online styles) and GitHub-hosted optional offline map pack. Core SMS location sharing does not use either. We removed `TetheredNet` earlier because the app is not broken offline for its primary function. Fork CI re-run: [pipeline link].
 
 ## Scanner notes
 

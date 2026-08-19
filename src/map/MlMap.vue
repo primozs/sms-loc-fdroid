@@ -14,7 +14,7 @@ const props = defineProps<{
   initialZoom?: number;
 }>();
 
-const emit = defineEmits<{ ready: [] }>();
+const emit = defineEmits<{ ready: []; styleError: [] }>();
 
 const mapEl = ref<HTMLDivElement>();
 const mlMap = ref<MapLibreMap>();
@@ -71,8 +71,13 @@ const createMap = (el: HTMLDivElement) => {
   });
   mlMap.value = map;
 
+  let styleErrored = false;
   map.on('error', (e) => {
     logError(e?.error ?? e);
+    if (!mapLoaded && !styleErrored) {
+      styleErrored = true;
+      emit('styleError');
+    }
   });
 
   setAttributions(map, baseLayer.attributions);

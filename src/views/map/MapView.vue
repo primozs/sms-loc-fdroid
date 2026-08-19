@@ -15,6 +15,7 @@ import MyLocation from './MyLocation.vue';
 import MlMap from '@/map/MlMap.vue';
 import MapModalData from './MapModalData.vue';
 import SpinnerDisplay from '@/components/SpinnerDisplay.vue';
+import ErrorCard from '@/components/ErrorCard.vue';
 import { useDevMode } from '@/views/dev/useDevMode';
 import { whenElementSized } from '@/map/whenElementSized';
 import { useContactsData } from '@/services/useContactsData';
@@ -30,13 +31,20 @@ const locStore = useLocation();
 
 const showMap = ref(false);
 const mapReady = ref(false);
+const mapStyleError = ref(false);
 const sizeProbe = ref<HTMLDivElement>();
 /** Snapshot when map is first shown — passed into `new Map()`. */
 const openCamera = ref<MapCamera>();
 /** Bump on later tab enters so the live map recenters. */
 const focusKey = ref(0);
 
-const isLoading = computed(() => !showMap.value || !mapReady.value);
+const isLoading = computed(
+  () => !showMap.value || (!mapReady.value && !mapStyleError.value),
+);
+
+const onMapStyleError = () => {
+  mapStyleError.value = true;
+};
 
 const revealOrRefocus = async () => {
   const probe = sizeProbe.value;
@@ -48,6 +56,8 @@ const revealOrRefocus = async () => {
   );
 
   if (!showMap.value) {
+    mapStyleError.value = false;
+    mapReady.value = false;
     openCamera.value = camera;
     showMap.value = true;
     if (!camera) {
@@ -86,11 +96,18 @@ onIonViewDidEnter(() => {
       <div v-if="isLoading" class="app-overlay app-overlay--full">
         <SpinnerDisplay />
       </div>
+      <div v-if="mapStyleError" class="app-overlay app-overlay--inset">
+        <ErrorCard
+          title=""
+          :content="$t('message.mapUnavailableHint')"
+        ></ErrorCard>
+      </div>
       <MlMap
         v-if="showMap"
         :initial-center="openCamera?.center"
         :initial-zoom="openCamera?.zoom"
         @ready="mapReady = true"
+        @style-error="onMapStyleError"
       >
         <ContactFeatures
           :skip-initial-fit="!!openCamera"

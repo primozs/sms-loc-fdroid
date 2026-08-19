@@ -85,6 +85,8 @@ export const messages = {
       download: 'Download',
       remove: 'Remove',
       offlineMaps: 'Offline maps',
+      mapUnavailableHint:
+        'Map could not load. Connect to the internet for online tiles, or download offline maps in Settings.',
       installing: 'Installing ...',
       webcams: 'Webcams',
       cloudCover: 'Cloud cover',
@@ -224,6 +226,8 @@ export const messages = {
       download: 'Prenesi',
       remove: 'Odstrani',
       offlineMaps: 'Zemljevidi brez povezave',
+      mapUnavailableHint:
+        'Zemljevida ni mogoče naložiti. Poveži se z internetom za spletne ploščice ali prenesi offline zemljevide v Nastavitvah.',
       installing: 'Nameščanje ...',
       webcams: 'Spletne kamere',
       cloudCover: 'Oblačnost',

@@ -6,7 +6,7 @@ Značilnosti:
 • Bela lista stikov, ki smejo zahtevati tvojo lokacijo
 • Samodejni SMS odgovori z lat/lon, nadmorsko višino, natančnostjo, hitrostjo in baterijo
 • Izbirna kratka sporočila pomoči skupaj z lokacijo
-• Zemljevid zadnjih znanih položajev
+• Zemljevid zadnjih znanih položajev (potreben internet za spletne ploščice ali izbirni ~300 MB offline paket v Nastavitvah)
 • Izbirni prenos paketa zemljevida za uporabo brez omrežja
 
 Zasebnost: lokacija gre samo na številke z bele liste, prek SMS. Brez Google Play Services, oglasov in analitike.
