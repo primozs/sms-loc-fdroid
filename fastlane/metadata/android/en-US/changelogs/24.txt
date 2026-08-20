@@ -1,0 +1,1 @@
+Fix Loc? auto-reply hanging without a Loc: SMS. GPS-only fixes with accuracy timeout; no stale network/last-known location.

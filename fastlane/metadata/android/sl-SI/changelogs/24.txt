@@ -1,0 +1,1 @@
+Popravilo samodejnega odgovora na Loc?, ki se je zataknil brez Loc: SMS. Samo GPS s časovno omejitvijo natančnosti; brez zastarele omrežne/zadnje znane lokacije.
