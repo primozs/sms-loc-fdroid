@@ -26,6 +26,7 @@ android {
            abiFilters "arm64-v8a"
         }
         resourceConfigurations += ["en", "sl"]
+        versionNameSuffix "staging"
     }
     buildTypes {
         debug {

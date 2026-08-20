@@ -35,6 +35,7 @@ const handleDidDismiss = () => {
 
 <template>
   <IonModal
+    handle-behavior="none"
     :is-open="isOpen"
     @didDismiss="handleDidDismiss"
     :initial-breakpoint="0.75"
