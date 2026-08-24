@@ -16,7 +16,8 @@ export type MessageType =
   | 'ON_MY_WAY'
   | 'NEED_HELP'
   | 'OK'
-  | 'CAN_NOT';
+  | 'CAN_NOT'
+  | 'LAST_KNOWN';
 
 export type GpsData = {
   lon: number;

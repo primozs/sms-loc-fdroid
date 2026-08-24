@@ -40,10 +40,23 @@ public class GpsData {
 
     @Nullable
     public static GpsData fromLocation(final Location loc, final Integer bat_p) {
+        return fromLocation(loc, bat_p, "");
+    }
+
+    @Nullable
+    public static GpsData fromLocation(final Location loc, final Integer bat_p, final String message) {
         if (loc == null) {
             return new GpsData();
         }
-        return new GpsData(loc.getLatitude(), loc.getLongitude(), (int) loc.getAltitude(), loc.getTime(), (int) loc.getSpeed(), (int) loc.getAccuracy(), bat_p, "");
+        return new GpsData(
+                loc.getLatitude(),
+                loc.getLongitude(),
+                (int) loc.getAltitude(),
+                loc.getTime(),
+                (int) loc.getSpeed(),
+                (int) loc.getAccuracy(),
+                bat_p,
+                message != null ? message : "");
     }
 
     public static GpsData fromSmsText(String str) {
@@ -89,7 +102,11 @@ public class GpsData {
         long printTs = ts / 1000;
 
         try {
-            return printLat + "," + printLon + "," + alt_m + "," + printTs + "," + v_kmh + "," + acc_m + "," + bat_p;
+            String body = printLat + "," + printLon + "," + alt_m + "," + printTs + "," + v_kmh + "," + acc_m + "," + bat_p;
+            if (message != null && !message.isEmpty()) {
+                body = body + "," + message;
+            }
+            return body;
         } catch (NullPointerException e) {
             return Constants.GPS_DATA_INVALID_ERR_STR;
         }

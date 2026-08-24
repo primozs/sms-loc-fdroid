@@ -43,7 +43,7 @@ const handleClose = () => {
   modalStore.setContactModel(null);
 };
 
-const actions: MessageType[] = [
+const actions: Exclude<MessageType, 'LAST_KNOWN'>[] = [
   'GO_FLY',
   'ALL_OK',
   'ON_MY_WAY',
@@ -53,8 +53,8 @@ const actions: MessageType[] = [
   'CAN_NOT',
 ];
 
-const getIcon = (action: MessageType) => {
-  const icons: Record<MessageType, string> = {
+const getIcon = (action: Exclude<MessageType, 'LAST_KNOWN'>) => {
+  const icons: Record<Exclude<MessageType, 'LAST_KNOWN'>, string> = {
     GO_FLY: partlySunnyOutline,
     ALL_OK: accessibilityOutline,
     ON_MY_WAY: arrowRedoOutline,
@@ -70,7 +70,7 @@ const getText = (action: MessageType) => {
   return t(`message.${action}`);
 };
 
-const handleAction = async (action: MessageType) => {
+const handleAction = async (action: Exclude<MessageType, 'LAST_KNOWN'>) => {
   const { value } = await Alert.confirm({
     title: t('message.sendMessage'),
     subHeader: getText(action),

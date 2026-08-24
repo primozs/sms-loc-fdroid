@@ -32,8 +32,9 @@ import si.stenar.smsloc.data.ResponseStore;
 import si.stenar.smsloc.R;
 
 /**
- * Hands-free Loc? reply: GPS-only, never network/cell or last-known cache.
- * Better to send Loc:GPS Data invalid than a stale/wrong position.
+ * Hands-free Loc? reply: GPS-first live fix; last-known only as labeled fallback.
+ * Never use network/cell. Prefer Loc:…,LAST_KNOWN over Loc:GPS Data invalid when
+ * a GPS cache exists after the live-fix window fails.
  */
 public class LocationRetrieverService extends Service {
     private static final String LOG_TAG = LocationRetrieverService.class.getSimpleName();
@@ -55,6 +56,8 @@ public class LocationRetrieverService extends Service {
     /** Best GPS fix received during this request (by accuracy, then recency). */
     @Nullable
     private Location bestGpsFix;
+    /** Optional Loc: message field (e.g. LAST_KNOWN); empty for live fixes. */
+    private String mReplyMessage = "";
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -63,6 +66,7 @@ public class LocationRetrieverService extends Service {
         mDetails.clear();
         finished = false;
         bestGpsFix = null;
+        mReplyMessage = "";
 
         mContactFound = ContactStore.getContacts(getApplication()).stream()
                 .filter(item -> mAddress.equals(item.address))
@@ -103,14 +107,14 @@ public class LocationRetrieverService extends Service {
             return START_NOT_STICKY;
         }
 
-        Log.i(LOG_TAG, "Waiting for GPS fix (no network/last-known)");
+        Log.i(LOG_TAG, "Waiting for GPS fix (last-known only as labeled fallback)");
         try {
             startGpsUpdates();
             scheduleTimeout(could_not_get_gps_fix);
         } catch (Exception e) {
             Log.e(LOG_TAG, e.toString());
             mDetails.add(e.getMessage());
-            finishOnce(null);
+            finishWithLastKnownOrInvalid(could_not_get_gps_fix);
         }
         return START_NOT_STICKY;
     }
@@ -126,9 +130,8 @@ public class LocationRetrieverService extends Service {
                 Log.i(LOG_TAG, "GPS timeout — sending best fix acc=" + bestGpsFix.getAccuracy());
                 finishOnce(bestGpsFix);
             } else {
-                Log.w(LOG_TAG, "GPS timeout — no fix, sending invalid");
-                mDetails.add(couldNotGetGpsFix);
-                finishOnce(null);
+                Log.w(LOG_TAG, "GPS timeout — no live fix, trying last-known");
+                finishWithLastKnownOrInvalid(couldNotGetGpsFix);
             }
         };
         timeoutHandler.postDelayed(timeoutRunnable, GPS_TIMEOUT_MS);
@@ -151,6 +154,34 @@ public class LocationRetrieverService extends Service {
         taskFinished(loc, mContactFound);
     }
 
+    /**
+     * After live GPS failed: send GPS last-known tagged LAST_KNOWN, else invalid.
+     * Never uses network/cell cache.
+     */
+    @SuppressLint("MissingPermission")
+    private void finishWithLastKnownOrInvalid(String couldNotGetGpsFix) {
+        if (finished) {
+            return;
+        }
+        Location lastKnown = null;
+        if (hasFineLocationPermission()) {
+            LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+            if (lm != null) {
+                lastKnown = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            }
+        }
+        if (lastKnown != null
+                && GpsData.fromLocation(lastKnown, Utils.getBatteryPercent(this)).dataValid()) {
+            Log.i(LOG_TAG, "Sending GPS last-known tagged " + Constants.MSG_LAST_KNOWN);
+            mReplyMessage = Constants.MSG_LAST_KNOWN;
+            finishOnce(lastKnown);
+            return;
+        }
+        Log.w(LOG_TAG, "No GPS last-known — sending invalid");
+        mDetails.add(couldNotGetGpsFix);
+        finishOnce(null);
+    }
+
     protected void taskFinished(@Nullable Location loc, @Nullable ContactData contactFound) {
         Resources resources = Utils.getLocalizedResources(this);
         String response_msg = resources.getString(R.string.response);
@@ -159,7 +190,7 @@ public class LocationRetrieverService extends Service {
         String error_msg = resources.getString(R.string.error);
         String missing_send_sms_permission_msg = resources.getString(R.string.missing_send_sms_permission);
 
-        GpsData gpsData = GpsData.fromLocation(loc, Utils.getBatteryPercent(this));
+        GpsData gpsData = GpsData.fromLocation(loc, Utils.getBatteryPercent(this), mReplyMessage);
         if (!gpsData.dataValid()) {
             mResponseStatus = invalid_msg;
             mDetails.add(gps_data_invalid_msg);
@@ -259,7 +290,8 @@ public class LocationRetrieverService extends Service {
             }
         };
 
-        // GPS only — never NETWORK / fused / last-known.
+        // GPS only — never NETWORK / fused. Last-known is used only after timeout
+        // via finishWithLastKnownOrInvalid (tagged LAST_KNOWN).
         locationManager.requestLocationUpdates(
                 LocationManager.GPS_PROVIDER,
                 1000L,
