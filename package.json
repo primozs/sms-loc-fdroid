@@ -53,18 +53,18 @@
     "@capawesome/capacitor-navigation-bar": "^8.0.1",
     "@ionic/vue": "^9.0.0",
     "@ionic/vue-router": "^9.0.0",
-    "@tanstack/vue-query": "^5.85.5",
+    "@tanstack/vue-query": "^5.102.2",
     "@vue/devtools-api": "^8",
     "@vueuse/core": "^14",
     "colormap": "^2.3.2",
     "dayjs": "^1.11.23",
     "ionicons": "^8.0.13",
-    "maplibre-gl": "^6.4.1",
+    "maplibre-gl": "^6.5.0",
     "marked": "^18.0.10",
     "pinia": "^4.0.3",
     "swiper": "^14",
     "vue": "^3.5.41",
-    "vue-i18n": "^11.4.8",
+    "vue-i18n": "^11.4.9",
     "vue-router": "^5.2.0"
   },
   "devDependencies": {
@@ -80,7 +80,7 @@
     "@vue/test-utils": "^2.4.6",
     "autoprefixer": "^10.4.21",
     "cypress": "^15.21.0",
-    "eslint": "^10.8.1",
+    "eslint": "^10.9.0",
     "eslint-plugin-vue": "^10",
     "globals": "^17.11.0",
     "jsdom": "^30.0.1",
@@ -91,6 +91,6 @@
     "vite": "8.2.2",
     "vitest": "^4.1.11",
     "vue-eslint-parser": "^10",
-    "vue-tsc": "^3.3.10"
+    "vue-tsc": "^3.3.11"
   }
 }
