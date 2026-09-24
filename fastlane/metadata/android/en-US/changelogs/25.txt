@@ -1,0 +1,1 @@
+Loc? reply: wait up to 60s for ≤20m GPS, then up to 5 more minutes for any live GPS before giving up. Dropped last-known fallback. Dependency updates.

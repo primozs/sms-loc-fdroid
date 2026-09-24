@@ -1,0 +1,1 @@
+Odgovor na Loc?: do 60s za GPS ≤20m, nato do 5 minut za katerikoli živi GPS. Brez zadnje znane lokacije. Posodobitve odvisnosti.
