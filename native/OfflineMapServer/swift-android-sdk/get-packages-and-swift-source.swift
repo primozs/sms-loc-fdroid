@@ -1,10 +1,13 @@
 import Foundation
 
-// The Termux packages to download and unpack
-// libxml2 needs liblzma and libiconv
-// libcurl needs zlib, libnghttp3, libnghttp2, libssh2, and openssl
-// Testing needs backtrace() from libandroid-execinfo
-var termuxPackages = ["libandroid-execinfo", "libandroid-spawn", "libandroid-spawn-static", "libcurl", "zlib", "libxml2", "libnghttp3", "libnghttp2", "libssh2", "openssl", "liblzma", "libiconv"]
+// Termux packages to download and unpack into the cross-compile sysroot.
+// SMSLoc OfflineMapServer needs Foundation (not FoundationNetworking).
+// LibXml2 is built from gnome source by build-swift-android-sdk.sh
+// (--static-libxml2); do not fetch curl/openssl/xml stacks from
+// packages.termux.dev.
+// Testing needs backtrace() from libandroid-execinfo.
+// Spawn is built from vendored source (native/libandroid-spawn / Task 4).
+var termuxPackages = ["libandroid-execinfo"]
 let termuxURL = "https://packages.termux.dev/apt/termux-main"
 
 var swiftRepos = ["llvm-project", "swift", "swift-experimental-string-processing", "swift-corelibs-libdispatch",
@@ -214,12 +217,16 @@ if !fmd.fileExists(atPath: sdkPath) {
                    toPath: sdkPath.appendingPathComponent("usr"))
 
   try fmd.removeItem(atPath: cwd.appendingPathComponent("data"))
-  try fmd.removeItem(atPath: sdkPath.appendingPathComponent("usr/bin/curl-config"))
-  try fmd.removeItem(atPath: sdkPath.appendingPathComponent("usr/bin/xml2-config"))
-  try fmd.removeItem(atPath: sdkPath.appendingPathComponent("usr/share/man"))
-  try fmd.removeItem(atPath: sdkPath.appendingPathComponent("usr/lib/ossl-modules"))
-  try fmd.removeItem(atPath: sdkPath.appendingPathComponent("usr/lib/engines-3"))
-  try fmd.removeItem(atPath: sdkPath.appendingPathComponent("usr/etc"))
+  // Optional cleanups (present only when curl/xml/openssl Termux debs were fetched).
+  for rel in [
+    "usr/bin/curl-config", "usr/bin/xml2-config", "usr/share/man",
+    "usr/lib/ossl-modules", "usr/lib/engines-3", "usr/etc",
+  ] {
+    let p = sdkPath.appendingPathComponent(rel)
+    if fmd.fileExists(atPath: p) {
+      try fmd.removeItem(atPath: p)
+    }
+  }
 }
 
 let libPath = sdkPath.appendingPathComponent("usr/lib")
