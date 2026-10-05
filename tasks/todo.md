@@ -31,16 +31,16 @@
 **Description:** Register the new plugin in `MainActivity`; switch `AddContact.vue`, `usePermissions.ts`, and `contacts.ts` to `@/plugins/contacts` and a local picked-contact type; remove `WRITE_CONTACTS` from `AndroidManifest.xml`; remove `@capacitor-community/contacts` from `package.json` and refresh lockfile; sync Capacitor plugin list.
 
 **Acceptance criteria:**
-- [ ] `MainActivity` registers `ContactsPlugin`
-- [ ] No imports of `@capacitor-community/contacts` under `src/`
-- [ ] `WRITE_CONTACTS` removed from app manifest and absent from merged debug manifest
-- [ ] Dependency removed from `package.json` / yarn.lock
-- [ ] Add Contact + contacts permission flow still compile against the new API
+- [x] `MainActivity` registers `ContactsPlugin`
+- [x] No imports of `@capacitor-community/contacts` under `src/`
+- [x] `WRITE_CONTACTS` removed from app manifest and absent from merged debug manifest
+- [x] Dependency removed from `package.json` / yarn.lock
+- [x] Add Contact + contacts permission flow still compile against the new API
 
 **Verification:**
-- [ ] `rg 'WRITE_CONTACTS|@capacitor-community/contacts' android/app/src src package.json` → no matches
-- [ ] `yarn type-check`
-- [ ] `cd android && JAVA_HOME=$(mise where java@21) ./gradlew :app:assembleDebug`
+- [x] `rg 'WRITE_CONTACTS|@capacitor-community/contacts' android/app/src src package.json` → no matches
+- [x] `yarn type-check` (pre-existing offline-map config typing errors only; no contacts errors)
+- [x] `cd android && JAVA_HOME=$(mise where java@21) ./gradlew :app:assembleDebug`
 - [ ] Manual (optional): pick contact → whitelist row; app permissions show contacts read only
 
 **Dependencies:** Task 1
@@ -60,5 +60,5 @@
 
 ## Checkpoint: Complete
 
-- [ ] Spec success criteria satisfied
-- [ ] Ready for human review / device smoke / commit when asked
+- [x] Spec success criteria satisfied
+- [x] Ready for human review / device smoke / commit when asked

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Contacts } from '@capacitor-community/contacts';
+import { Contacts } from '@/plugins/contacts';
 import { IonFab, IonFabButton, IonIcon, toastController } from '@ionic/vue';
 import { add } from 'ionicons/icons';
 import { useI18n } from 'vue-i18n';

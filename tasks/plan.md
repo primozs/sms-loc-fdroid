@@ -43,12 +43,12 @@ Build order: native plugin → TS bindings → cut over consumers → remove dep
 
 ### Phase 2: Cutover
 
-- [ ] Task 2: Wire call sites, drop WRITE + community package
+- [x] Task 2: Wire call sites, drop WRITE + community package
 
 ### Checkpoint: Complete
 
-- [ ] Grep clean for WRITE_CONTACTS and @capacitor-community/contacts
-- [ ] type-check + assembleDebug
+- [x] Grep clean for WRITE_CONTACTS and @capacitor-community/contacts
+- [x] type-check + assembleDebug
 - [ ] Human review / device smoke (pick + permissions)
 
 ## Risks and Mitigations

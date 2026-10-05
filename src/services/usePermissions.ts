@@ -4,7 +4,7 @@ import { Core } from '@/plugins/core';
 import { useI18n } from 'vue-i18n';
 import { SMS } from '@/plugins/sms';
 import { GeoLocation } from '@/plugins/geolocation';
-import { Contacts } from '@capacitor-community/contacts';
+import { Contacts } from '@/plugins/contacts';
 import { useLocationService } from '@/services/useLocation';
 import { Alert } from '@/components/Alert';
 

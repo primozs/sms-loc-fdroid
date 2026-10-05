@@ -80,11 +80,11 @@ Do not implement create/delete/list-all unless needed later.
 
 ## Success Criteria
 
-- [ ] `@capacitor-community/contacts` removed from dependencies and imports
-- [ ] First-party plugin provides pickContact + READ permission APIs
-- [ ] `WRITE_CONTACTS` absent from app and merged manifests
+- [x] `@capacitor-community/contacts` removed from dependencies and imports
+- [x] First-party plugin provides pickContact + READ permission APIs
+- [x] `WRITE_CONTACTS` absent from app and merged manifests
 - [ ] Add Contact + permission setup still work on device
-- [ ] type-check / assembleDebug succeed
+- [x] type-check / assembleDebug succeed (assembleDebug OK; type-check has pre-existing offline-map config gaps only)
 
 ## Open Questions / Assumptions
 

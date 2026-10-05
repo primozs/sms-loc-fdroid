@@ -1,5 +1,5 @@
 import { Core } from '@/plugins/core';
-import { ContactPayload } from '@capacitor-community/contacts';
+import type { PickedContact } from '@/plugins/contacts';
 import type { SQLiteDBConnection } from '@capacitor-community/sqlite';
 import { logDebug, logError } from './useLogger';
 
@@ -68,7 +68,7 @@ export class ContactStore {
     return constacts.find((item) => item.contactId === contactId);
   };
 
-  addContact = async (c: ContactPayload) => {
+  addContact = async (c: PickedContact) => {
     const contactId = c.contactId;
     const name = c.name?.display;
     const address = c.phones
