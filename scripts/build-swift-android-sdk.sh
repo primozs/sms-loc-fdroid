@@ -6,8 +6,10 @@
 #   - deploy/docker/swift-android-sdk/Dockerfile  (published cache for local/CI)
 #
 # Host Swift: prefer Debian/system `swiftlang` (F-Droid). Fall back to a
-# Swift.org host tarball for local-dev only. NDK remains a download. Target
-# Android libs are compiled here. Based on finagolfin/swift-android-sdk.
+# Swift.org host tarball for local-dev only. NDK comes from ANDROID_NDK_HOME
+# (F-Droid recipe `ndk: r27d`) or an already-installed cache dir — never
+# curled. CMake ≥3.26 and patchelf must be on PATH (Debian packages).
+# Target Android libs are compiled here. Based on finagolfin/swift-android-sdk.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -53,68 +55,33 @@ USE_SYSTEM_SWIFT=0
 # Force Swift.org host tarball even if system swift exists (local experiments).
 FORCE_HOST_TARBALL="${SMSLOC_SWIFT_FORCE_HOST_TARBALL:-0}"
 
-# Prefer a Kitware CMake ≥3.26 if we installed one under the cache (Ubuntu
-# 22.04 / Debian bookworm ship older; libdispatch for Swift 6.3 needs ≥3.26).
+# Host tools: Debian/F-Droid packages on PATH (cmake ≥3.26, patchelf). No tarball fetch.
 export PATH="${HOME}/.local/bin:/usr/local/bin:$PATH"
 mkdir -p "$CACHE_ROOT/tools"
 
-ensure_cmake() {
-  local major minor
-  if command -v cmake >/dev/null; then
-    major=$(cmake --version | head -1 | sed -n 's/.* \([0-9]\+\)\.\([0-9]\+\).*/\1/p')
-    minor=$(cmake --version | head -1 | sed -n 's/.* \([0-9]\+\)\.\([0-9]\+\).*/\2/p')
-    if [[ "${major:-0}" -gt 3 || ( "${major:-0}" -eq 3 && "${minor:-0}" -ge 26 ) ]]; then
-      return 0
-    fi
-  fi
-  local ver="3.30.5"
-  local prefix="$CACHE_ROOT/tools/cmake-${ver}-linux-x86_64"
-  if [[ ! -x "$prefix/bin/cmake" ]]; then
-    echo "==> fetch Kitware CMake ${ver} (need ≥3.26)"
-    curl -fsSL -o "$CACHE_ROOT/tools/cmake.tgz" \
-      "https://github.com/Kitware/CMake/releases/download/v${ver}/cmake-${ver}-linux-x86_64.tar.gz"
-    tar -xzf "$CACHE_ROOT/tools/cmake.tgz" -C "$CACHE_ROOT/tools"
-  fi
-  export PATH="$prefix/bin:$PATH"
-}
-
-ensure_patchelf() {
-  if command -v patchelf >/dev/null; then
-    return 0
-  fi
-  local ver="0.18.0"
-  local bin="$CACHE_ROOT/tools/patchelf-${ver}"
-  if [[ ! -x "$bin" ]]; then
-    echo "==> fetch patchelf ${ver}"
-    curl -fsSL -o "$CACHE_ROOT/tools/patchelf.tgz" \
-      "https://github.com/NixOS/patchelf/releases/download/${ver}/patchelf-${ver}-x86_64.tar.gz"
-    tar -xzf "$CACHE_ROOT/tools/patchelf.tgz" -C "$CACHE_ROOT/tools"
-    # tarball layout: bin/patchelf
-    if [[ -x "$CACHE_ROOT/tools/bin/patchelf" ]]; then
-      mv "$CACHE_ROOT/tools/bin/patchelf" "$bin"
-    elif [[ -x "$CACHE_ROOT/tools/patchelf-${ver}-x86_64/bin/patchelf" ]]; then
-      mv "$CACHE_ROOT/tools/patchelf-${ver}-x86_64/bin/patchelf" "$bin"
-    fi
-  fi
-  [[ -x "$bin" ]] || { echo "failed to install patchelf" >&2; exit 1; }
-  mkdir -p "$HOME/.local/bin"
-  ln -sfn "$bin" "$HOME/.local/bin/patchelf"
-  export PATH="$HOME/.local/bin:$PATH"
-}
-
-CMAKE_KITWARE="${SMSLOC_CMAKE_BIN:-}"
-if [[ -z "$CMAKE_KITWARE" ]]; then
-  shopt -s nullglob
-  for c in "$CACHE_ROOT"/tools/cmake-*-linux-x86_64/bin/cmake; do
-    if [[ -x "$c" ]]; then CMAKE_KITWARE="$c"; break; fi
-  done
-  shopt -u nullglob
-fi
-if [[ -n "$CMAKE_KITWARE" ]]; then
-  export PATH="$(dirname "$CMAKE_KITWARE"):${PATH}"
-fi
-
 need() { command -v "$1" >/dev/null || { echo "missing dependency: $1" >&2; exit 1; }; }
+
+require_cmake() {
+  local major minor
+  if ! command -v cmake >/dev/null; then
+    echo "missing cmake (≥3.26). Install the Debian package, e.g. apt install cmake" >&2
+    exit 1
+  fi
+  major=$(cmake --version | head -1 | sed -n 's/.* \([0-9]\+\)\.\([0-9]\+\).*/\1/p')
+  minor=$(cmake --version | head -1 | sed -n 's/.* \([0-9]\+\)\.\([0-9]\+\).*/\2/p')
+  if [[ "${major:-0}" -lt 3 || ( "${major:-0}" -eq 3 && "${minor:-0}" -lt 26 ) ]]; then
+    echo "cmake $(cmake --version | head -1) is too old (need ≥3.26); install a newer Debian cmake" >&2
+    exit 1
+  fi
+}
+
+require_patchelf() {
+  if ! command -v patchelf >/dev/null; then
+    echo "missing patchelf. Install the Debian package, e.g. apt install patchelf" >&2
+    exit 1
+  fi
+}
+
 need curl
 need tar
 need ninja
@@ -122,16 +89,14 @@ need python3
 need ar
 need xz
 need git
-ensure_cmake
-ensure_patchelf
+require_cmake
+require_patchelf
 # finagolfin get-packages uses `python` (Debian/F-Droid often only ship python3).
 if ! command -v python >/dev/null && command -v python3 >/dev/null; then
   mkdir -p "$CACHE_ROOT/tools/bin"
   ln -sfn "$(command -v python3)" "$CACHE_ROOT/tools/bin/python"
   export PATH="$CACHE_ROOT/tools/bin:$PATH"
 fi
-need cmake
-need patchelf
 need python
 
 echo "using $(command -v cmake) ($(cmake --version | head -1))"
@@ -177,8 +142,9 @@ if ! swift --version >/dev/null 2>&1; then
 fi
 swift --version
 
-NDK_HOME="${ANDROID_NDK_HOME:-}"
-# Resolve symlinks; a dangling link (e.g. after removing an old SDK) is not a dir.
+# F-Droid sets ANDROID_NDK_HOME / ANDROID_NDK / NDK when the recipe has ndk:.
+# Local: reuse an already-installed cache dir; never download from Google.
+NDK_HOME="${ANDROID_NDK_HOME:-${ANDROID_NDK:-${NDK:-}}}"
 if [[ -n "$NDK_HOME" ]]; then
   NDK_HOME="$(readlink -f "$NDK_HOME" 2>/dev/null || true)"
 fi
@@ -189,17 +155,17 @@ if [[ -L "$NDK_HOME" && ! -d "$NDK_HOME" ]]; then
   rm -f "$NDK_HOME"
 fi
 if [[ ! -d "$NDK_HOME/toolchains" ]]; then
-  echo "==> NDK ${NDK_VERSION} → $NDK_HOME"
-  curl -fSL -o "$CACHE_ROOT/ndk.zip" \
-    "https://dl.google.com/android/repository/android-ndk-${NDK_VERSION}-linux.zip"
-  unzip -qo "$CACHE_ROOT/ndk.zip" -d "$CACHE_ROOT"
-  NDK_HOME="$CACHE_ROOT/android-ndk-${NDK_VERSION}"
+  echo "missing Android NDK ${NDK_VERSION} at ${NDK_HOME}" >&2
+  echo "hint: set ANDROID_NDK_HOME, or use F-Droid recipe ndk: ${NDK_VERSION}" >&2
+  echo "      (do not curl dl.google.com — install via Android SDK / fdroidserver)" >&2
+  exit 1
 fi
 export ANDROID_NDK_HOME="$NDK_HOME"
 # build-script / finagolfin patches also look at ANDROID_NDK
 export ANDROID_NDK="$NDK_HOME"
 # Avoid driver bug when ANDROID_NDK_ROOT is set (see finagolfin README)
 unset ANDROID_NDK_ROOT || true
+echo "==> using NDK at $ANDROID_NDK_HOME"
 
 # Debian clang cannot link the Android stdlib (ld.lld: unable to find -lgcc).
 # Swift.org host tarballs ship a matching clang; with system swiftlang put

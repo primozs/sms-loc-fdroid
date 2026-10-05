@@ -25,9 +25,11 @@ Prerequisites on the host:
 1. Node.js + Yarn (Classic) matching `package.json` / `yarn.lock`
 2. Android SDK (this repo: compile/target SDK from `android/variables.gradle`)
 3. Host Swift **6.2.3** (Debian `swiftlang`, or a local Swift.org tarball
-   fallback), NDK **r27d**, and network for Swift sources (first run). Optional:
-   system `ninja-build`, `git`, `perl`, `patch`. CMake ≥3.26 and `patchelf` are
-   auto-fetched into `$HOME/.cache/smsloc-fdroid-swift/tools` when missing.
+   fallback), NDK **r27d** on `ANDROID_NDK_HOME` (or already under
+   `$HOME/.cache/smsloc-fdroid-swift/android-ndk-r27d`), and network for Swift
+   sources (first run). System packages: `cmake` (≥3.26), `patchelf`,
+   `ninja-build`, `git`, `perl`, `patch`. Scripts fail if cmake/patchelf/NDK
+   are missing — they do not curl Google/Kitware/NixOS tarballs.
 
 Then:
 
@@ -108,8 +110,10 @@ For [fdroiddata!45187](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/451
 - `scripts/fdroid-prebuild.sh` rebuilds the Android target stdlib / Dispatch /
   Foundation via `scripts/build-swift-android-sdk.sh` (vendored helpers from
   [finagolfin/swift-android-sdk](https://github.com/finagolfin/swift-android-sdk)).
-- Host Swift compiler + NDK remain downloaded **build tools**; APK `.so`s come
-  from that rebuild + `package-android-jni.sh`.
+- Host Swift compiler comes from Debian `swiftlang` on F-Droid; NDK **r27d**
+  from the recipe `ndk:` field (fdroidserver sets `ANDROID_NDK_HOME`). CMake
+  and patchelf are Debian packages. APK `.so`s come from the from-source
+  rebuild + `package-android-jni.sh`.
 - A GHCR Docker image may exist for other apps / local speed — **not** used by
   the F-Droid `prebuild`.
 - Expect ~25–40 min SDK rebuild and ~100 MB `jniLibs` (mostly Foundation ICU).

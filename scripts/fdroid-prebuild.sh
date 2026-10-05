@@ -54,9 +54,13 @@ if swift sdk list 2>/dev/null | grep -q "$SDK_ID"; then
 fi
 swift sdk install "$BUNDLE_OUT"
 
-export ANDROID_NDK_HOME="${ANDROID_NDK_HOME:-$CACHE_ROOT/android-ndk-r27d}"
-[[ -d "$ANDROID_NDK_HOME/toolchains" ]] \
-  || { echo "missing NDK at $ANDROID_NDK_HOME" >&2; exit 1; }
+# F-Droid recipe `ndk: r27d` sets ANDROID_NDK_HOME / ANDROID_NDK / NDK.
+export ANDROID_NDK_HOME="${ANDROID_NDK_HOME:-${ANDROID_NDK:-${NDK:-$CACHE_ROOT/android-ndk-r27d}}}"
+if [[ ! -d "$ANDROID_NDK_HOME/toolchains" ]]; then
+  echo "missing NDK at $ANDROID_NDK_HOME" >&2
+  echo "hint: set ANDROID_NDK_HOME or use F-Droid recipe ndk: r27d" >&2
+  exit 1
+fi
 # Prefer the just-installed copy under ~/.swiftpm for setup + packaging.
 SDK_ROOT=""
 for d in "$HOME/.swiftpm/swift-sdks"/*/swift-android; do

@@ -28,12 +28,13 @@ Builds:
     commit: b6879cb32dc403e1c5a66305f160f146138ebc27
     timeout: 14400
     subdir: android/app
+    ndk: r27d
     sudo:
       - apt-get update
       - apt-get install -y curl ca-certificates xz-utils python3 python-is-python3
         gnupg unzip libncurses6 libncursesw6 libcurl4 libxml2 libsqlite3-0 zlib1g
         zlib1g-dev libedit2 libgcc-s1 libstdc++6 binutils build-essential gcc g++
-        libc6-dev ninja-build git perl patch
+        libc6-dev ninja-build git perl patch cmake patchelf
       - echo "deb https://deb.debian.org/debian forky main" > /etc/apt/sources.list.d/forky.list
       - apt-get update
       - apt-get install -y -t forky swiftlang nodejs npm
@@ -52,12 +53,12 @@ MaintainerNotes: |-
   is 20.x) and swiftlang 6.2.3 (trixie is 6.0.3; Package.swift needs ≥6.2).
   yarn --ignore-engines kept as belt-and-suspenders. Target Android stdlib /
   Dispatch / Foundation are rebuilt from swift-6.2.3-RELEASE sources
-  (scripts/build-swift-android-sdk.sh). NDK r27d remains a downloaded build
-  tool (also supplies clang/lld for the Android stdlib link — Debian clang
-  cannot resolve -lgcc for that target). No NodeSource; no Swift.org host
-  tarball in the F-Droid recipe. CMake ≥3.26 / patchelf auto-fetched into
-  $HOME/.cache when missing. Expect large APK (~arm64 + ~100MB Swift runtime)
-  and a long build.
+  (scripts/build-swift-android-sdk.sh). NDK r27d via recipe ndk: (also
+  supplies clang/lld for the Android stdlib link — Debian clang cannot
+  resolve -lgcc for that target). CMake ≥3.26 and patchelf from Debian
+  packages (sudo); scripts do not curl them or the NDK zip. No NodeSource;
+  no Swift.org host tarball in the F-Droid recipe. Expect large APK
+  (~arm64 + ~100MB Swift runtime) and a long build.
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
