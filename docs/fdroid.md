@@ -20,6 +20,9 @@ icon, screenshots, changelogs). F-Droid pulls these from the tagged source.
 
 ## Unsigned local build (mirrors the recipe)
 
+Maintainer runbook (from-source SDK vs official prebuilt, phone checklist):
+[`docs/fdroid-local-build.md`](fdroid-local-build.md).
+
 Prerequisites on the host:
 
 1. Node.js + Yarn (Classic) matching `package.json` / `yarn.lock`
@@ -91,13 +94,48 @@ For [fdroiddata!45187](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/451
 
 ## Scanner notes
 
+F-Droid runs scandelete **after** `prebuild:` and **before** `build:` /
+Gradle. The recipe therefore runs `./scripts/fdroid-prebuild.sh` in
+`prebuild:` (not only under `build:`) so yarn install, the Swift SDK fetch,
+and JNI outputs are visible to the scanner — intentional, not evasion.
+
 - Do not commit `google-services.json` or `jniLibs/**/*.so`
 - GMS plugin is only applied if that JSON exists (keep it absent)
 - Prebuild installs Swift under `$HOME` (not the VCS tree), removes SPM
   `.build`, and strips only unused jar/wasm/tar.gz under `node_modules`
+  (never `@capacitor/cli/assets/*.tar.gz` — required by later `ionic-sync`)
 - Keep Capacitor plugin android sources in `node_modules` for Gradle
-- fdroiddata uses `scanignore: android/app/src/main/jniLibs` for libs **built
-  in prebuild** (OfflineMapServer + from-source Swift Android runtime)
+- `jniLibs` are produced in prebuild from **from-source** builds
+  (OfflineMapServer + Swift Android runtime + `native/libandroid-spawn`);
+  no `scanignore` unless Inclusion asks for one after reviewing those `.so`s
+- Termux: only `libandroid-execinfo` may still be fetched as a build-time
+  sysroot deb; spawn/curl/xml stacks are not
+
+## MR reply draft (sqlcipher / biometric)
+
+For Inclusion’s note on `libsqlcipher.so` + `USE_BIOMETRIC` /
+`USE_FINGERPRINT` via `@capacitor-community/sqlite`:
+
+> Thanks for flagging this. The app opens the DB unencrypted
+> (`encrypted = false` / `no-encryption`); we do not use biometric unlock or
+> SQLCipher encryption at runtime.
+>
+> `@capacitor-community/sqlite` is the standard Capacitor SQLite plugin. Its
+> Android code always links `net.zetetic:sqlcipher-android` (FLOSS, Maven
+> Central) and compiles against `androidx.biometric` / `security-crypto` even
+> when encryption and biometric auth are off — there is no upstream
+> “unencrypted-only” build flavour. A Gradle exclude does not compile.
+>
+> Replacing or forking that plugin solely to drop those transitive AARs would
+> be a large rewrite for no functional change. Per Inclusion Policy, FLOSS
+> prebuilts from Maven Central are allowed; Node/npm for the Capacitor web
+> build is also an accepted path. We would rather keep the maintained plugin
+> than vendor a fork of the entire SQLite stack.
+>
+> Happy to discuss if you prefer we strip the unused biometric permissions via
+> manifest merger (`tools:node="remove"`) while keeping the plugin, or if you
+> consider sqlcipher acceptable here as a required transitive of that plugin.
+> Guidance welcome.
 
 ## Reply notes (review: build the Swift SDK)
 
@@ -117,6 +155,11 @@ For [fdroiddata!45187](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/451
 - A GHCR Docker image may exist for other apps / local speed — **not** used by
   the F-Droid `prebuild`.
 - Expect ~25–40 min SDK rebuild and ~100 MB `jniLibs` (mostly Foundation ICU).
+- Termux: unused curl/xml/ssl debs dropped; `libandroid-spawn` built from
+  vendored source (`native/libandroid-spawn/`); only `libandroid-execinfo`
+  may still come from packages.termux.dev for Testing.
+- Recipe runs `fdroid-prebuild.sh` in `prebuild:` so the scanner sees yarn /
+  Swift outputs (not hidden under `build:`).
 
 ## Submit / verify
 
