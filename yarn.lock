@@ -858,11 +858,6 @@
   dependencies:
     css-tree "^3.0.0"
 
-"@capacitor-community/contacts@^8.0.0":
-  version "8.0.0"
-  resolved "https://registry.yarnpkg.com/@capacitor-community/contacts/-/contacts-8.0.0.tgz#775aac12971016a754cf3343747d1121a03c94a0"
-  integrity sha512-ST9DNZnbgMpFaICx0LLw95ZCNihNMrWfuc9MyeKZFnFYAfnFGa9gSGrRBLp7EEVtor8ZaiQrFOTiUgHu+/2GaQ==
-
 "@capacitor-community/sqlite@^8.1.1":
   version "8.1.1"
   resolved "https://registry.yarnpkg.com/@capacitor-community/sqlite/-/sqlite-8.1.1.tgz#0f1335e655a6e7cdf3144811810d95a38cd20415"

@@ -87,7 +87,7 @@ deploy/docker/            # Clean-room APK/AAB compile
 - Hands-free SMS location replies run in **native** code (`core/SmsReceiver`, `LocationRetrieverService`) so responses work when the UI is backgrounded or killed.
 - Capacitor plugins bridge permissions, SMS watch/send, geolocation, and locale into JS.
 
-Registered native plugins (`MainActivity`): `LocalePlugin`, `SmsPlugin`, `GeoLocationPlugin`, `CorePlugin`, `OfflineMapServerPlugin`.
+Registered native plugins (`MainActivity`): `LocalePlugin`, `SmsPlugin`, `ContactsPlugin`, `GeoLocationPlugin`, `CorePlugin`, `OfflineMapServerPlugin`.
 
 ### Offline maps (Swift)
 

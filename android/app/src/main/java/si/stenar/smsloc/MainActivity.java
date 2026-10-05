@@ -19,6 +19,7 @@ import si.stenar.smsloc.core.CorePlugin;
 import si.stenar.smsloc.plugins.Locale.LocalePlugin;
 import si.stenar.smsloc.plugins.GeoLocation.GeoLocationPlugin;
 import si.stenar.smsloc.plugins.Sms.SmsPlugin;
+import si.stenar.smsloc.plugins.Contacts.ContactsPlugin;
 import si.stenar.smsloc.plugins.OfflineMapServer.OfflineMapServerPlugin;
 
 public class MainActivity extends BridgeActivity {
@@ -34,6 +35,7 @@ public class MainActivity extends BridgeActivity {
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(LocalePlugin.class);
         registerPlugin(SmsPlugin.class);
+        registerPlugin(ContactsPlugin.class);
         registerPlugin(GeoLocationPlugin.class);
         registerPlugin(CorePlugin.class);
         registerPlugin(OfflineMapServerPlugin.class);

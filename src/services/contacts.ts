@@ -1,5 +1,5 @@
 import { Core } from '@/plugins/core';
-import { ContactPayload } from '@capacitor-community/contacts';
+import type { PickedContact } from '@/plugins/contacts';
 import type { SQLiteDBConnection } from '@capacitor-community/sqlite';
 import { logDebug, logError } from './useLogger';
 
@@ -48,7 +48,7 @@ export class ContactStore {
         return null;
       }
       const contacts = (
-        await this.db.query(`SELECT * from contacts WHERE id = ${id};`)
+        await this.db.query('SELECT * FROM contacts WHERE id = ?;', [id])
       ).values as ContactData[];
       return contacts[0] ?? null;
     } catch (error: any) {
@@ -62,13 +62,15 @@ export class ContactStore {
       logDebug('contacts getContactByContactId', 'no db');
       return;
     }
-    const constacts = (
-      await this.db.query(`SELECT * FROM contacts WHERE contactId=${contactId}`)
+    const contacts = (
+      await this.db.query('SELECT * FROM contacts WHERE contactId = ?;', [
+        contactId,
+      ])
     ).values as ContactData[];
-    return constacts.find((item) => item.contactId === contactId);
+    return contacts.find((item) => item.contactId === contactId);
   };
 
-  addContact = async (c: ContactPayload) => {
+  addContact = async (c: PickedContact) => {
     const contactId = c.contactId;
     const name = c.name?.display;
     const address = c.phones
@@ -81,16 +83,12 @@ export class ContactStore {
     const existContact = await this.getContactByContactId(c.contactId);
 
     if (existContact) {
-      this.db?.run(
-        `UPDATE contacts 
-          SET name = ${name},
-              address = ${formated.address}, 
-              image = ${image} 
-          WHERE 
-            contactId = ${contactId};`,
+      await this.db?.run(
+        'UPDATE contacts SET name = ?, address = ?, image = ? WHERE contactId = ?;',
+        [name, formated.address, image, contactId],
       );
     } else {
-      this.db?.run(
+      await this.db?.run(
         'INSERT INTO contacts (contactId, name, address, image) VALUES (?,?,?,?);',
         [contactId, name, formated.address, image],
       );
@@ -98,6 +96,8 @@ export class ContactStore {
   };
 
   removeContactByContactId = async (contactId: string) => {
-    await this.db?.run(`DELETE FROM contacts WHERE contactId=${contactId}`);
+    await this.db?.run('DELETE FROM contacts WHERE contactId = ?;', [
+      contactId,
+    ]);
   };
 }
