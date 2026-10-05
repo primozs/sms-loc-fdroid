@@ -1,6 +1,7 @@
 package si.stenar.smsloc.plugins.Contacts;
 
 import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
@@ -25,9 +26,20 @@ import java.util.ArrayList;
 final class ContactReader {
   private ContactReader() {}
 
+  /** Max contact photo bytes kept for the bridge / SQLite row. */
+  static final int MAX_PHOTO_BYTES = 512 * 1024;
+
   @Nullable
   static String idFromUri(@Nullable Uri uri) {
-    return uri != null ? uri.getLastPathSegment() : null;
+    if (uri == null || !ContactsContract.AUTHORITY.equals(uri.getAuthority())) {
+      return null;
+    }
+    try {
+      long id = ContentUris.parseId(uri);
+      return id >= 0 ? Long.toString(id) : null;
+    } catch (Exception e) {
+      return null;
+    }
   }
 
   @Nullable
@@ -147,7 +159,7 @@ final class ContactReader {
       return null;
     }
     byte[] blob = cursor.getBlob(index);
-    if (blob == null) {
+    if (blob == null || blob.length > MAX_PHOTO_BYTES) {
       return null;
     }
     String mimeType = "image/png";

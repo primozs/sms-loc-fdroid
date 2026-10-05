@@ -22,6 +22,9 @@ final class ContactPhoneTypes {
     if (type == Phone.TYPE_WORK_MOBILE) {
       return "work_mobile";
     }
+    if (type == Phone.TYPE_CUSTOM) {
+      return "custom";
+    }
     return "other";
   }
 }

@@ -1,5 +1,8 @@
 import type { PermissionState } from '@capacitor/core';
 
+/** Capacitor reject code when the user dismisses the system picker. */
+export const PICK_CANCELLED = 'PICK_CANCELLED';
+
 export interface ContactsPermissionStatus {
   contacts: PermissionState;
 }

@@ -41,7 +41,7 @@
 - [x] `rg 'WRITE_CONTACTS|@capacitor-community/contacts' android/app/src src package.json` → no matches
 - [x] `yarn type-check` (pre-existing offline-map config typing errors only; no contacts errors)
 - [x] `cd android && JAVA_HOME=$(mise where java@21) ./gradlew :app:assembleDebug`
-- [ ] Manual (optional): pick contact → whitelist row; app permissions show contacts read only
+- [x] Manual: pick contact → whitelist row; dismiss picker → no error toast; permissions show contacts read only
 
 **Dependencies:** Task 1
 

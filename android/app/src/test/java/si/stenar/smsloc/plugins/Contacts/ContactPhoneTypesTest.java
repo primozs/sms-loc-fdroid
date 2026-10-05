@@ -12,7 +12,12 @@ public class ContactPhoneTypesTest {
   }
 
   @Test
+  public void mapsCustomType() {
+    assertEquals("custom", ContactPhoneTypes.label(Phone.TYPE_CUSTOM));
+  }
+
+  @Test
   public void mapsUnknownTypeToOther() {
-    assertEquals("other", ContactPhoneTypes.label(Phone.TYPE_CUSTOM));
+    assertEquals("other", ContactPhoneTypes.label(99));
   }
 }

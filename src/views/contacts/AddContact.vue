@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Contacts } from '@/plugins/contacts';
+import { Contacts, PICK_CANCELLED } from '@/plugins/contacts';
 import { IonFab, IonFabButton, IonIcon, toastController } from '@ionic/vue';
 import { add } from 'ionicons/icons';
 import { useI18n } from 'vue-i18n';
@@ -13,7 +13,6 @@ const { contactsStore } = useDataStore();
 
 const addContactHandler = async () => {
   try {
-    Contacts.checkPermissions();
     const contact = await Contacts.pickContact({
       projection: {
         image: true,
@@ -29,6 +28,9 @@ const addContactHandler = async () => {
       queryKey: [`/contacts`],
     });
   } catch (error: any) {
+    if (error?.code === PICK_CANCELLED) {
+      return;
+    }
     const errorMsg =
       error.message === 'CONTACT_NOT_VALID'
         ? t('message.CONTACT_NOT_VALID')

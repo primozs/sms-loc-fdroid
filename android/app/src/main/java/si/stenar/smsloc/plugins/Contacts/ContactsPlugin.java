@@ -29,6 +29,8 @@ import org.json.JSONObject;
         })
 public class ContactsPlugin extends Plugin {
   static final String CONTACTS = "contacts";
+  /** Rejected when the user dismisses the system picker without selecting. */
+  static final String ERROR_PICK_CANCELLED = "PICK_CANCELLED";
 
   @PluginMethod
   public void pickContact(PluginCall call) {
@@ -61,14 +63,14 @@ public class ContactsPlugin extends Plugin {
       return;
     }
     if (activityResult.getResultCode() != Activity.RESULT_OK || activityResult.getData() == null) {
-      call.reject("Contact pick cancelled.");
+      call.reject("Contact pick cancelled.", ERROR_PICK_CANCELLED);
       return;
     }
 
     Uri uri = activityResult.getData().getData();
     String contactId = ContactReader.idFromUri(uri);
     if (contactId == null) {
-      call.reject("Parameter `contactId` not returned from pick.");
+      call.reject("Invalid contact URI from pick.");
       return;
     }
 

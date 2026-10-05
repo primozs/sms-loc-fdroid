@@ -49,7 +49,7 @@ Build order: native plugin → TS bindings → cut over consumers → remove dep
 
 - [x] Grep clean for WRITE_CONTACTS and @capacitor-community/contacts
 - [x] type-check + assembleDebug
-- [ ] Human review / device smoke (pick + permissions)
+- [x] Human review / device smoke (pick + permissions)
 
 ## Risks and Mitigations
 
