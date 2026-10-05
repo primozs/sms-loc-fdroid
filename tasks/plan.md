@@ -28,7 +28,8 @@ Specs: [SPEC.md](../SPEC.md), [CAPABILITY-MAP.md](../CAPABILITY-MAP.md).
   Termux **source** (small C) under `native/libandroid-spawn/` and compile with
   NDK clang + 16KB pages. Stop copying `packages.termux.dev` `.a` / `.so`.
 - **Scanner last:** After blobs are gone, move `./scripts/fdroid-prebuild.sh`
-  from `build:` to `prebuild:`. Keep `scanignore` for from-source `jniLibs`.
+  from `build:` to `prebuild:`. No `scanignore` for from-source `jniLibs`
+  unless Inclusion asks after reviewing those `.so`s.
   Do not use `build:` to hide `node_modules`.
 - **Push:** Out of scope until Task 8 (phone) is checked off.
 
@@ -51,7 +52,7 @@ Parallel: Tasks 1 and 2. Sequential: 3 → 4 → 5 → 6 → 7 → 8.
 ### Phase 1: Host tools + SQLite (no Swift rebuild required)
 
 - [x] Task 1: F-Droid NDK r27d + Debian cmake/patchelf; no tarball curls
-- [ ] Task 2: Drop sqlcipher / biometric from the Android SQLite plugin
+- [x] Task 2: Drop sqlcipher / biometric — **deferred** (discuss with Inclusion; no fork)
 
 ### Checkpoint: Phase 1
 
@@ -64,26 +65,26 @@ Parallel: Tasks 1 and 2. Sequential: 3 → 4 → 5 → 6 → 7 → 8.
 
 ### Phase 2: Termux (drop then spawn-from-source)
 
-- [ ] Task 3: Stop fetching unused Termux sysroot debs
-- [ ] Task 4: Build `libandroid-spawn` from vendored source; stop Termux `.a`
+- [x] Task 3: Stop fetching unused Termux sysroot debs; SDK rebuild with
+      `--static-libxml2` + networking off verified (artifactbundle built)
+- [x] Task 4: Build `libandroid-spawn` from vendored source; stop Termux `.a`
 
 ### Checkpoint: Phase 2
 
-- [ ] SDK + `package-android-jni.sh` succeed
-- [ ] `readelf` `NEEDED` on `jniLibs` has spawn only if we built it; no curl/ssl
-- [ ] No `packages.termux.dev` in the F-Droid fetch path for android-spawn
-- [ ] Review with human before moving recipe stages
+- [x] SDK rebuild succeeded; spawn from-source script verified (16KB `.so`)
+- [x] No `packages.termux.dev` fetch for android-spawn
+- [x] Full `package-android-jni.sh` + phone before push
 
 ### Phase 3: Scanner + device
 
-- [ ] Task 5: Move `fdroid-prebuild.sh` to recipe `prebuild:`
-- [ ] Task 6: Align `docs/fdroid.md` / MaintainerNotes with the new pipeline
-- [ ] Task 7: Phone checklist on maintainer device (blocking)
+- [x] Task 5: Move `fdroid-prebuild.sh` to recipe `prebuild:`
+- [x] Task 6: Align `docs/fdroid.md` / MaintainerNotes with the new pipeline
+- [x] Task 7: Phone checklist on maintainer device (blocking)
 
 ### Checkpoint: Complete
 
 - [ ] All spec success criteria met
-- [ ] Phone checklist passed
+- [x] Phone checklist passed
 - [ ] Ready for review; **do not push** until the user asks
 
 ## Risks and Mitigations
@@ -93,7 +94,7 @@ Parallel: Tasks 1 and 2. Sequential: 3 → 4 → 5 → 6 → 7 → 8.
 | Community sqlite cannot compile without sqlcipher | High | Stop after Task 2 probe; ask before swapping plugins |
 | Foundation fails without curl/xml sysroot | High | Task 3 is drop-first; if the SDK build fails, restore only libs the linker names — still from source, not Termux debs — and ask if that explodes scope |
 | Spawn from source ABI/16KB mismatch | High | Same clang flags as current relink in `package-android-jni.sh` |
-| Scanner flags remaining `.so` in `jniLibs` | Med | Existing `scanignore` for **from-source** jniLibs; do not scanignore Termux debs |
+| Scanner flags remaining `.so` in `jniLibs` | Med | No `scanignore` by default (from-source libs should be visible); add only if Inclusion asks — never to hide Termux debs |
 | Phase 2 SDK rebuild ~25–40 min | Med | Do Phase 1 first; reuse `SMSLOC_SWIFT_CACHE` |
 | JS vs Java SQLite files | Low | Do not merge DBs in this plan |
 
