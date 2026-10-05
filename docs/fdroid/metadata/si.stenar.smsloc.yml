@@ -44,9 +44,9 @@ Builds:
     prebuild:
       - cd ../..
       - ./scripts/fdroid-prebuild.sh
-    ndk: r27d
     scanignore:
       - android/app/src/main/jniLibs
+    ndk: r27d
 
 MaintainerNotes: |-
   Capacitor/Ionic Vue app. Offline maps use a Swift (Vapor) static server
