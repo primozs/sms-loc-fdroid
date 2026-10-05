@@ -94,15 +94,40 @@ final class OfflineMapPackInstaller {
   }
 
   private void download(String urlStr, File dest, Progress progress) throws IOException {
-    HttpURLConnection conn = (HttpURLConnection) new URL(urlStr).openConnection();
-    conn.setConnectTimeout(30_000);
-    conn.setReadTimeout(60_000);
-    conn.setInstanceFollowRedirects(true);
-    conn.connect();
-    int code = conn.getResponseCode();
-    if (code >= 400) {
-      conn.disconnect();
-      throw new IOException("HTTP " + code);
+    if (!OfflineMapServerPolicy.isAllowedPackDownloadUrl(urlStr)) {
+      throw new IOException("url not allowlisted");
+    }
+    String current = urlStr;
+    HttpURLConnection conn = null;
+    for (int hop = 0; hop < 5; hop++) {
+      if (!OfflineMapServerPolicy.isAllowedPackDownloadUrl(current)) {
+        throw new IOException("redirect not allowlisted");
+      }
+      conn = (HttpURLConnection) new URL(current).openConnection();
+      conn.setConnectTimeout(30_000);
+      conn.setReadTimeout(60_000);
+      conn.setInstanceFollowRedirects(false);
+      conn.connect();
+      int code = conn.getResponseCode();
+      if (code >= 300 && code < 400) {
+        String next = conn.getHeaderField("Location");
+        conn.disconnect();
+        conn = null;
+        if (next == null || next.isEmpty()) {
+          throw new IOException("redirect without Location");
+        }
+        // Relative Location → resolve against current.
+        current = new URL(new URL(current), next).toString();
+        continue;
+      }
+      if (code >= 400) {
+        conn.disconnect();
+        throw new IOException("HTTP " + code);
+      }
+      break;
+    }
+    if (conn == null) {
+      throw new IOException("too many redirects");
     }
     long total = conn.getContentLengthLong();
     long transferred = 0;

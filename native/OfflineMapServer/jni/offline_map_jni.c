@@ -6,6 +6,7 @@
 extern int32_t offline_map_server_start(const char *rootDir, const char *host, int32_t port);
 extern void offline_map_server_stop(void);
 extern int32_t offline_map_server_base_url(char *out, int32_t outLen);
+extern int32_t offline_map_server_ownership_token(char *out, int32_t outLen);
 
 JNIEXPORT jint JNICALL
 Java_si_stenar_smsloc_plugins_OfflineMapServer_OfflineMapServerNative_offline_1map_1server_1start(
@@ -52,6 +53,24 @@ Java_si_stenar_smsloc_plugins_OfflineMapServer_OfflineMapServerNative_offline_1m
   char buf[512];
   int32_t cap = (int32_t)(len < (jsize)sizeof(buf) ? len : (jsize)sizeof(buf));
   int32_t rc = offline_map_server_base_url(buf, cap);
+  if (rc != 0) return (jint)rc;
+
+  (*env)->SetByteArrayRegion(env, out, 0, cap, (const jbyte *)buf);
+  return 0;
+}
+
+JNIEXPORT jint JNICALL
+Java_si_stenar_smsloc_plugins_OfflineMapServer_OfflineMapServerNative_offline_1map_1server_1ownership_1token(
+    JNIEnv *env, jclass clazz, jbyteArray out) {
+  (void)clazz;
+  if (out == NULL) return 1;
+
+  jsize len = (*env)->GetArrayLength(env, out);
+  if (len < 2) return 1;
+
+  char buf[512];
+  int32_t cap = (int32_t)(len < (jsize)sizeof(buf) ? len : (jsize)sizeof(buf));
+  int32_t rc = offline_map_server_ownership_token(buf, cap);
   if (rc != 0) return (jint)rc;
 
   (*env)->SetByteArrayRegion(env, out, 0, cap, (const jbyte *)buf);
