@@ -25,10 +25,9 @@ Repo: https://github.com/primozs/sms-loc-fdroid.git
 Builds:
   - versionName: 0.0.25
     versionCode: 25
-    commit: 531df64e6aee2262b40e8451260cc2f762a2c383
+    commit: PLACEHOLDER
     timeout: 14400
     subdir: android/app
-    ndk: r27d
     sudo:
       - apt-get update
       - apt-get install -y curl ca-certificates xz-utils python3 python-is-python3
@@ -42,15 +41,19 @@ Builds:
       - corepack prepare yarn@1.22.22 --activate
     gradle:
       - yes
-    # Yarn + Swift SDK + JNI package before scandelete so downloads are visible.
     prebuild:
       - cd ../..
       - ./scripts/fdroid-prebuild.sh
+    ndk: r27d
+    scanignore:
+      - android/app/src/main/jniLibs
 
 MaintainerNotes: |-
   Capacitor/Ionic Vue app. Offline maps use a Swift (Vapor) static server
   cross-compiled in prebuild via scripts/fdroid-prebuild.sh (before the
   scanner, so yarn/Swift downloads are visible — not hidden under build:).
+  scanignore covers only from-source jniLibs produced in that prebuild
+  (OfflineMapServer + Swift Android runtime + native/libandroid-spawn).
   Host tools from Debian forky pin: nodejs/npm (Capacitor 8 needs ≥22; trixie
   is 20.x) and swiftlang 6.2.3 (trixie is 6.0.3; Package.swift needs ≥6.2).
   yarn --ignore-engines kept as belt-and-suspenders. Target Android stdlib /

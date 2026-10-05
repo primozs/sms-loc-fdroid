@@ -102,12 +102,13 @@ and JNI outputs are visible to the scanner — intentional, not evasion.
 - Do not commit `google-services.json` or `jniLibs/**/*.so`
 - GMS plugin is only applied if that JSON exists (keep it absent)
 - Prebuild installs Swift under `$HOME` (not the VCS tree), removes SPM
-  `.build`, and strips only unused jar/wasm/tar.gz under `node_modules`
-  (never `@capacitor/cli/assets/*.tar.gz` — required by later `ionic-sync`)
+  `.build`, and strips unused jar/wasm/tar.gz under `node_modules`
+  (including `@capacitor/cli/assets/*.tar.gz` after `ionic-sync`)
 - Keep Capacitor plugin android sources in `node_modules` for Gradle
 - `jniLibs` are produced in prebuild from **from-source** builds
   (OfflineMapServer + Swift Android runtime + `native/libandroid-spawn`);
-  no `scanignore` unless Inclusion asks for one after reviewing those `.so`s
+  recipe uses `scanignore: android/app/src/main/jniLibs` for those outputs
+  only (not Termux binary blobs)
 - Termux: only `libandroid-execinfo` may still be fetched as a build-time
   sysroot deb; spawn/curl/xml stacks are not
 

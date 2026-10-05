@@ -6,7 +6,7 @@
 #
 # Host Swift: Debian swiftlang on F-Droid (PATH). Local-dev may use a Swift.org
 # host tarball via build-swift-android-sdk.sh. Target .so under jniLibs are
-# produced here for scanner visibility (no default scanignore unless Inclusion asks).
+# produced here; recipe scanignores that path (from-source only).
 #
 # Do NOT pull a published Docker/GHCR SDK image here — F-Droid must rebuild.
 set -euo pipefail
@@ -83,15 +83,15 @@ yarn configure:prod -y
 yarn ionic-sync
 
 # Keep Capacitor android/ projects in node_modules; drop non-Gradle blobs that
-# trip fdroid's binary scanner (from a prior CI scan of this tree).
-# Do NOT delete @capacitor/cli/assets/*.tar.gz — Capacitor sync needs
-# capacitor-cordova-android-plugins.tar.gz on every later `ionic-sync`.
+# trip fdroid's binary scanner. Delete CLI asset tarballs *after* ionic-sync —
+# sync already ran; leaving them fails the post-prebuild scan.
 echo "==> cleanup scanner blobs (keep node_modules android sources)"
 rm -rf \
   native/OfflineMapServer/.build \
   .fdroid-swift \
   "$ROOT"/.swiftpm
 rm -f \
+  node_modules/@capacitor/cli/assets/*.tar.gz \
   node_modules/@trapezedev/gradle-parse/capacitor-gradle-parse.jar \
   node_modules/@trapezedev/gradle-parse/lib/*.jar \
   node_modules/sql.js/dist/*.wasm \
