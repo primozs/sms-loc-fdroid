@@ -25,7 +25,7 @@ Repo: https://github.com/primozs/sms-loc-fdroid.git
 Builds:
   - versionName: 0.0.25
     versionCode: 25
-    commit: 789f1ec6bc9d8f1ad7b07c5f23821b3dca4e504e
+    commit: 531df64e6aee2262b40e8451260cc2f762a2c383
     timeout: 14400
     subdir: android/app
     ndk: r27d
