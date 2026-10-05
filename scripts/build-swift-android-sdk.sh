@@ -6,8 +6,10 @@
 #   - deploy/docker/swift-android-sdk/Dockerfile  (published cache for local/CI)
 #
 # Host Swift: prefer Debian/system `swiftlang` (F-Droid). Fall back to a
-# Swift.org host tarball for local-dev only. NDK remains a download. Target
-# Android libs are compiled here. Based on finagolfin/swift-android-sdk.
+# Swift.org host tarball for local-dev only. NDK comes from ANDROID_NDK_HOME
+# (F-Droid recipe `ndk: r27d`) or an already-installed cache dir — never
+# curled. CMake ≥3.26 and patchelf must be on PATH (Debian packages).
+# Target Android libs are compiled here. Based on finagolfin/swift-android-sdk.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -53,68 +55,33 @@ USE_SYSTEM_SWIFT=0
 # Force Swift.org host tarball even if system swift exists (local experiments).
 FORCE_HOST_TARBALL="${SMSLOC_SWIFT_FORCE_HOST_TARBALL:-0}"
 
-# Prefer a Kitware CMake ≥3.26 if we installed one under the cache (Ubuntu
-# 22.04 / Debian bookworm ship older; libdispatch for Swift 6.3 needs ≥3.26).
+# Host tools: Debian/F-Droid packages on PATH (cmake ≥3.26, patchelf). No tarball fetch.
 export PATH="${HOME}/.local/bin:/usr/local/bin:$PATH"
 mkdir -p "$CACHE_ROOT/tools"
 
-ensure_cmake() {
-  local major minor
-  if command -v cmake >/dev/null; then
-    major=$(cmake --version | head -1 | sed -n 's/.* \([0-9]\+\)\.\([0-9]\+\).*/\1/p')
-    minor=$(cmake --version | head -1 | sed -n 's/.* \([0-9]\+\)\.\([0-9]\+\).*/\2/p')
-    if [[ "${major:-0}" -gt 3 || ( "${major:-0}" -eq 3 && "${minor:-0}" -ge 26 ) ]]; then
-      return 0
-    fi
-  fi
-  local ver="3.30.5"
-  local prefix="$CACHE_ROOT/tools/cmake-${ver}-linux-x86_64"
-  if [[ ! -x "$prefix/bin/cmake" ]]; then
-    echo "==> fetch Kitware CMake ${ver} (need ≥3.26)"
-    curl -fsSL -o "$CACHE_ROOT/tools/cmake.tgz" \
-      "https://github.com/Kitware/CMake/releases/download/v${ver}/cmake-${ver}-linux-x86_64.tar.gz"
-    tar -xzf "$CACHE_ROOT/tools/cmake.tgz" -C "$CACHE_ROOT/tools"
-  fi
-  export PATH="$prefix/bin:$PATH"
-}
-
-ensure_patchelf() {
-  if command -v patchelf >/dev/null; then
-    return 0
-  fi
-  local ver="0.18.0"
-  local bin="$CACHE_ROOT/tools/patchelf-${ver}"
-  if [[ ! -x "$bin" ]]; then
-    echo "==> fetch patchelf ${ver}"
-    curl -fsSL -o "$CACHE_ROOT/tools/patchelf.tgz" \
-      "https://github.com/NixOS/patchelf/releases/download/${ver}/patchelf-${ver}-x86_64.tar.gz"
-    tar -xzf "$CACHE_ROOT/tools/patchelf.tgz" -C "$CACHE_ROOT/tools"
-    # tarball layout: bin/patchelf
-    if [[ -x "$CACHE_ROOT/tools/bin/patchelf" ]]; then
-      mv "$CACHE_ROOT/tools/bin/patchelf" "$bin"
-    elif [[ -x "$CACHE_ROOT/tools/patchelf-${ver}-x86_64/bin/patchelf" ]]; then
-      mv "$CACHE_ROOT/tools/patchelf-${ver}-x86_64/bin/patchelf" "$bin"
-    fi
-  fi
-  [[ -x "$bin" ]] || { echo "failed to install patchelf" >&2; exit 1; }
-  mkdir -p "$HOME/.local/bin"
-  ln -sfn "$bin" "$HOME/.local/bin/patchelf"
-  export PATH="$HOME/.local/bin:$PATH"
-}
-
-CMAKE_KITWARE="${SMSLOC_CMAKE_BIN:-}"
-if [[ -z "$CMAKE_KITWARE" ]]; then
-  shopt -s nullglob
-  for c in "$CACHE_ROOT"/tools/cmake-*-linux-x86_64/bin/cmake; do
-    if [[ -x "$c" ]]; then CMAKE_KITWARE="$c"; break; fi
-  done
-  shopt -u nullglob
-fi
-if [[ -n "$CMAKE_KITWARE" ]]; then
-  export PATH="$(dirname "$CMAKE_KITWARE"):${PATH}"
-fi
-
 need() { command -v "$1" >/dev/null || { echo "missing dependency: $1" >&2; exit 1; }; }
+
+require_cmake() {
+  local major minor
+  if ! command -v cmake >/dev/null; then
+    echo "missing cmake (≥3.26). Install the Debian package, e.g. apt install cmake" >&2
+    exit 1
+  fi
+  major=$(cmake --version | head -1 | sed -n 's/.* \([0-9]\+\)\.\([0-9]\+\).*/\1/p')
+  minor=$(cmake --version | head -1 | sed -n 's/.* \([0-9]\+\)\.\([0-9]\+\).*/\2/p')
+  if [[ "${major:-0}" -lt 3 || ( "${major:-0}" -eq 3 && "${minor:-0}" -lt 26 ) ]]; then
+    echo "cmake $(cmake --version | head -1) is too old (need ≥3.26); install a newer Debian cmake" >&2
+    exit 1
+  fi
+}
+
+require_patchelf() {
+  if ! command -v patchelf >/dev/null; then
+    echo "missing patchelf. Install the Debian package, e.g. apt install patchelf" >&2
+    exit 1
+  fi
+}
+
 need curl
 need tar
 need ninja
@@ -122,16 +89,14 @@ need python3
 need ar
 need xz
 need git
-ensure_cmake
-ensure_patchelf
+require_cmake
+require_patchelf
 # finagolfin get-packages uses `python` (Debian/F-Droid often only ship python3).
 if ! command -v python >/dev/null && command -v python3 >/dev/null; then
   mkdir -p "$CACHE_ROOT/tools/bin"
   ln -sfn "$(command -v python3)" "$CACHE_ROOT/tools/bin/python"
   export PATH="$CACHE_ROOT/tools/bin:$PATH"
 fi
-need cmake
-need patchelf
 need python
 
 echo "using $(command -v cmake) ($(cmake --version | head -1))"
@@ -141,12 +106,22 @@ echo "==> Swift Android SDK from source (${SWIFT_TAG}, ${ANDROID_ARCH}, API ${AN
 mkdir -p "$CACHE_ROOT" "$WORK"
 
 resolve_host_swift() {
-  # Prefer Debian/system swiftlang when its version matches SWIFT_VER (F-Droid).
+  # Prefer a matching host Swift (Debian swiftlang on F-Droid, or a local
+  # swiftly toolchain). Fall back to a Swift.org host tarball for local-dev.
+  local swiftly_tc="${SWIFTLY_HOME_DIR:-$HOME/.local/share/swiftly}/toolchains/${SWIFT_VER}/usr/bin"
+  if [[ "$FORCE_HOST_TARBALL" != "1" && -x "$swiftly_tc/swift" ]]; then
+    export PATH="$swiftly_tc:$PATH"
+    TOOLCHAIN_BIN="$swiftly_tc"
+    USE_SYSTEM_SWIFT=1
+    echo "==> using swiftly Swift ${SWIFT_VER}: $($TOOLCHAIN_BIN/swift --version 2>/dev/null | head -1)"
+    echo "    swift tools: $TOOLCHAIN_BIN"
+    return 0
+  fi
   if [[ "$FORCE_HOST_TARBALL" != "1" ]] && command -v swift >/dev/null; then
     local ver_line
     ver_line="$(swift --version 2>/dev/null | head -1 || true)"
     if [[ "$ver_line" == *"$SWIFT_VER"* ]]; then
-      local swift_bin clang_bin
+      local swift_bin
       swift_bin="$(command -v swift)"
       TOOLCHAIN_BIN="$(cd "$(dirname "$swift_bin")" && pwd)"
       USE_SYSTEM_SWIFT=1
@@ -177,8 +152,9 @@ if ! swift --version >/dev/null 2>&1; then
 fi
 swift --version
 
-NDK_HOME="${ANDROID_NDK_HOME:-}"
-# Resolve symlinks; a dangling link (e.g. after removing an old SDK) is not a dir.
+# F-Droid sets ANDROID_NDK_HOME / ANDROID_NDK / NDK when the recipe has ndk:.
+# Local: reuse an already-installed cache dir; never download from Google.
+NDK_HOME="${ANDROID_NDK_HOME:-${ANDROID_NDK:-${NDK:-}}}"
 if [[ -n "$NDK_HOME" ]]; then
   NDK_HOME="$(readlink -f "$NDK_HOME" 2>/dev/null || true)"
 fi
@@ -189,17 +165,17 @@ if [[ -L "$NDK_HOME" && ! -d "$NDK_HOME" ]]; then
   rm -f "$NDK_HOME"
 fi
 if [[ ! -d "$NDK_HOME/toolchains" ]]; then
-  echo "==> NDK ${NDK_VERSION} → $NDK_HOME"
-  curl -fSL -o "$CACHE_ROOT/ndk.zip" \
-    "https://dl.google.com/android/repository/android-ndk-${NDK_VERSION}-linux.zip"
-  unzip -qo "$CACHE_ROOT/ndk.zip" -d "$CACHE_ROOT"
-  NDK_HOME="$CACHE_ROOT/android-ndk-${NDK_VERSION}"
+  echo "missing Android NDK ${NDK_VERSION} at ${NDK_HOME}" >&2
+  echo "hint: set ANDROID_NDK_HOME, or use F-Droid recipe ndk: ${NDK_VERSION}" >&2
+  echo "      (do not curl dl.google.com — install via Android SDK / fdroidserver)" >&2
+  exit 1
 fi
 export ANDROID_NDK_HOME="$NDK_HOME"
 # build-script / finagolfin patches also look at ANDROID_NDK
 export ANDROID_NDK="$NDK_HOME"
 # Avoid driver bug when ANDROID_NDK_ROOT is set (see finagolfin README)
 unset ANDROID_NDK_ROOT || true
+echo "==> using NDK at $ANDROID_NDK_HOME"
 
 # Debian clang cannot link the Android stdlib (ld.lld: unable to find -lgcc).
 # Swift.org host tarballs ship a matching clang; with system swiftlang put
@@ -210,21 +186,57 @@ if [[ "$USE_SYSTEM_SWIFT" == "1" ]]; then
   NDK_LLVM_BIN="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin"
   [[ -x "$NDK_LLVM_BIN/clang" ]] \
     || { echo "missing NDK clang at $NDK_LLVM_BIN" >&2; exit 1; }
+  # Resolve real binaries first — never ln -s then overwrite; that truncates
+  # the NDK clang-18 through the symlink (seen: 135MB → 130B wrapper).
+  NDK_CLANG="$(readlink -f "$NDK_LLVM_BIN/clang")"
+  NDK_CLANGXX="$(readlink -f "$NDK_LLVM_BIN/clang++")"
+  NDK_LLD="$(readlink -f "$NDK_LLVM_BIN/ld.lld")"
   HOST_BIN="$CACHE_ROOT/tools/host-bin"
   mkdir -p "$HOST_BIN"
-  ln -sfn "$(command -v swift)" "$HOST_BIN/swift"
-  ln -sfn "$(command -v swiftc)" "$HOST_BIN/swiftc"
-  ln -sfn "$NDK_LLVM_BIN/clang" "$HOST_BIN/clang"
-  ln -sfn "$NDK_LLVM_BIN/clang++" "$HOST_BIN/clang++"
-  ln -sfn "$NDK_LLVM_BIN/ld.lld" "$HOST_BIN/ld.lld"
-  # Common llvm helpers build-script may resolve next to clang.
+  # Prefer real toolchain bins (not a version-manager shim like swiftly that
+  # can resolve to a different Swift than SWIFT_VER when cwd changes).
+  SWIFT_BIN="$(command -v swift)"
+  SWIFT_C_BIN="$(command -v swiftc)"
+  if [[ -x "${SWIFTLY_HOME_DIR:-$HOME/.local/share/swiftly}/toolchains/${SWIFT_VER}/usr/bin/swift" ]]; then
+    SWIFT_BIN="${SWIFTLY_HOME_DIR:-$HOME/.local/share/swiftly}/toolchains/${SWIFT_VER}/usr/bin/swift"
+    SWIFT_C_BIN="${SWIFTLY_HOME_DIR:-$HOME/.local/share/swiftly}/toolchains/${SWIFT_VER}/usr/bin/swiftc"
+  else
+    SWIFT_BIN="$(readlink -f "$SWIFT_BIN")"
+    SWIFT_C_BIN="$(readlink -f "$SWIFT_C_BIN")"
+  fi
+  # Wrap swift/swiftc (don't bare-symlink): Arch may lack libncurses.so.6
+  # while Debian F-Droid has it; keep ~/.local/lib on the loader path.
+  for pair in "swift:$SWIFT_BIN" "swiftc:$SWIFT_C_BIN"; do
+    name="${pair%%:*}"
+    target="${pair#*:}"
+    rm -f "$HOST_BIN/$name"
+    {
+      printf '%s\n' '#!/usr/bin/env bash'
+      printf 'export LD_LIBRARY_PATH=%q${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}\n' \
+        "$HOME/.local/lib"
+      printf 'exec %q "$@"\n' "$target"
+    } > "$HOST_BIN/$name"
+    chmod +x "$HOST_BIN/$name"
+  done
+  # Wrappers so clang's resource-dir stays under the NDK tree (symlink of
+  # clang into HOST_BIN makes it look for lib/clang next to HOST_BIN).
+  for pair in "clang:$NDK_CLANG" "clang++:$NDK_CLANGXX" "ld.lld:$NDK_LLD"; do
+    name="${pair%%:*}"
+    target="${pair#*:}"
+    rm -f "$HOST_BIN/$name"
+    printf '#!/usr/bin/env bash\nexec %q "$@"\n' "$target" > "$HOST_BIN/$name"
+    chmod +x "$HOST_BIN/$name"
+  done
   for t in llvm-ar llvm-ranlib llvm-objcopy llvm-objdump; do
-    [[ -x "$NDK_LLVM_BIN/$t" ]] && ln -sfn "$NDK_LLVM_BIN/$t" "$HOST_BIN/$t"
+    if [[ -x "$NDK_LLVM_BIN/$t" ]]; then
+      rm -f "$HOST_BIN/$t"
+      ln -sfn "$(readlink -f "$NDK_LLVM_BIN/$t")" "$HOST_BIN/$t"
+    fi
   done
   TOOLCHAIN_BIN="$HOST_BIN"
   NATIVE_CLANG_TOOLS="$HOST_BIN"
   export PATH="$HOST_BIN:$PATH"
-  echo "==> host-bin: Debian swift + NDK clang ($( "$HOST_BIN/clang" --version 2>/dev/null | sed -n '1p' ))"
+  echo "==> host-bin: Debian/swiftly swift + NDK clang wrappers ($( "$HOST_BIN/clang" --version 2>/dev/null | sed -n '1p' ))"
 fi
 
 MARKER="$WORK/.sdk-built"
@@ -255,6 +267,33 @@ if [[ ! -d "$WORK/swift" ]]; then
   cp "$VENDOR/get-packages-and-swift-source.swift" "$WORK/"
   SWIFT_TAG="$SWIFT_TAG" ANDROID_ARCH="$ANDROID_ARCH" \
     "$TOOLCHAIN_BIN/swift" get-packages-and-swift-source.swift
+fi
+
+# Foundation's CMake always find_package(LibXml2 REQUIRED). Do not restore
+# Termux libxml2 .deb — build static libxml2 from gnome source via
+# build-script --static-libxml2 (matches swift update-checkout pin).
+LIBXML2_TAG="${LIBXML2_TAG:-v2.11.5}"
+# gnome/libxml2 v2.11.5 source tarball (github.com/gnome/libxml2 archive/refs/tags).
+LIBXML2_SHA256="${LIBXML2_SHA256:-6c28059e2e3eeb42b5b4b16489e3916a6346c1095a74fee3bc65cdc5d89a6215}"
+if [[ ! -d "$WORK/libxml2" ]]; then
+  echo "==> fetch libxml2 ${LIBXML2_TAG} (Foundation static dep, not Termux)"
+  need curl
+  need tar
+  need sha256sum
+  (
+    cd "$WORK"
+    curl -fsSL -o "libxml2-${LIBXML2_TAG}.tar.gz" \
+      "https://github.com/gnome/libxml2/archive/refs/tags/${LIBXML2_TAG}.tar.gz"
+    echo "${LIBXML2_SHA256}  libxml2-${LIBXML2_TAG}.tar.gz" | sha256sum -c -
+    tar xf "libxml2-${LIBXML2_TAG}.tar.gz"
+    # gnome archives as libxml2-<tag without v> or libxml2-<full tag>
+    if [[ -d "libxml2-${LIBXML2_TAG#v}" ]]; then
+      mv "libxml2-${LIBXML2_TAG#v}" libxml2
+    else
+      mv "libxml2-${LIBXML2_TAG}" libxml2
+    fi
+    rm -f "libxml2-${LIBXML2_TAG}.tar.gz"
+  )
 fi
 
 echo "==> apply Android patches"
@@ -292,7 +331,8 @@ apply_patch_file() {
 }
 
 # Patches from finagolfin/swift-android-sdk branch matching SWIFT_VER major.minor
-# (6.2.x uses the 6.2 branch set; Foundation needs termux libandroid-spawn headers).
+# (6.2.x uses the 6.2 branch set; Foundation needs libandroid-spawn headers
+# from native/libandroid-spawn, installed into the SDK sysroot below).
 apply_patch_file "$VENDOR/swift-android.patch"
 apply_patch_file "$VENDOR/swift-android-ci.patch"
 if [[ -f "$VENDOR/swift-android-ci-except-trunk.patch" ]]; then
@@ -337,13 +377,34 @@ echo "==> rewrite Termux pkg-config prefixes → $SDK_PATH/usr"
 find "$SDK_PATH/usr" -name '*.pc' -print0 2>/dev/null \
   | xargs -0 -r sed -i "s|/data/data/com.termux/files/usr|${SDK_PATH}/usr|g"
 
-# Drop a failed/partial cmake tree so configure is clean.
-rm -rf "$WORK/build"
+# Foundation needs posix_spawn headers/libs; build from vendored source
+# (not packages.termux.dev).
+echo "==> libandroid-spawn from source → $SDK_PATH/usr"
+ANDROID_NDK_HOME="$ANDROID_NDK_HOME" \
+  "$ROOT/scripts/build-libandroid-spawn.sh" "$SDK_PATH/usr"
+
+# Drop Foundation/libxml2 cmake trees so LibXml2 / networking flags reconfigure.
+# Full `rm -rf "$WORK/build"` only when SMSLOC_SWIFT_SDK_CLEAN_BUILD=1.
+if [[ "${SMSLOC_SWIFT_SDK_CLEAN_BUILD:-0}" == "1" ]]; then
+  rm -rf "$WORK/build"
+else
+  rm -rf \
+    "$WORK/build/Ninja-Release/foundation-android-${ANDROID_ARCH}" \
+    "$WORK/build/Ninja-Release/libxml2-android-${ANDROID_ARCH}" \
+    "$WORK/build/Ninja-Release/libxml2-linux-x86_64"
+fi
 
 echo "==> build-script (Android ${ANDROID_ARCH}, this takes a long time)"
 # Flags aligned with finagolfin/swift-android-sdk CI (sdks.yml), aarch64-only,
 # without SwiftPM/llbuild (we only need stdlib + Dispatch + Foundation).
+# --static-libxml2: compile gnome/libxml2 into the Android destdir (no Termux
+#   libxml2 .deb). FOUNDATION_BUILD_NETWORKING=OFF: skip curl/openssl.
+# foundation-cmake-options must be space-separated (not ';'): build-script-impl
+# word-splits into cmake -D args. Do not put comments inside the \ continuation.
 JOBS="${SMSLOC_SWIFT_SDK_JOBS:-$(nproc)}"
+# Tools (plutil) fail to link on Android (ICU/libc++ shlib-undefined); we only
+# need the Foundation libs for OfflineMapServer.
+FOUNDATION_CMAKE_OPTS="-DCMAKE_SHARED_LINKER_FLAGS= -DFOUNDATION_BUILD_NETWORKING:BOOL=OFF -DFOUNDATION_BUILD_TOOLS:BOOL=OFF"
 ./swift/utils/build-script -RA \
   --skip-build-cmark \
   --build-llvm=0 \
@@ -357,6 +418,7 @@ JOBS="${SMSLOC_SWIFT_SDK_JOBS:-$(nproc)}"
   --cross-compile-deps-path="$SDK_PATH" \
   --skip-local-build \
   --build-swift-static-stdlib \
+  --static-libxml2 \
   --xctest \
   --install-swift \
   --install-libdispatch \
@@ -366,7 +428,7 @@ JOBS="${SMSLOC_SWIFT_SDK_JOBS:-$(nproc)}"
   --swift-install-components='clang-resource-dir-symlink;license;stdlib;sdk-overlay' \
   --cross-compile-append-host-target-to-destdir=False \
   --cross-compile-build-swift-tools=False \
-  --foundation-cmake-options=-DCMAKE_SHARED_LINKER_FLAGS='' \
+  --foundation-cmake-options="$FOUNDATION_CMAKE_OPTS" \
   --libdispatch-cmake-options=-DCMAKE_SHARED_LINKER_FLAGS='' \
   -j"$JOBS"
 
@@ -416,10 +478,11 @@ elif [[ -f "$RES_ARCH/android/${ANDROID_ARCH}/swiftrt.o" ]]; then
     "$RES_STATIC/android/${ANDROID_ARCH}/"
 fi
 ln -sfn ../swift/clang "$RES_ARCH/clang"
-# Termux libandroid-spawn.a for 16KB relink during OfflineMapServer packaging.
-if [[ -f "$SDK_PATH/usr/lib/libandroid-spawn.a" ]]; then
-  mkdir -p "$BUNDLE_ROOT/termux-libs"
-  cp -f "$SDK_PATH/usr/lib/libandroid-spawn.a" "$BUNDLE_ROOT/termux-libs/"
+# Spawn .so is built from native/libandroid-spawn during package-android-jni /
+# build-libandroid-spawn — do not ship Termux's prebuilt .a in the bundle.
+if [[ -d "$BUNDLE_ROOT/termux-libs" ]]; then
+  rm -f "$BUNDLE_ROOT/termux-libs/libandroid-spawn.a"
+  rmdir "$BUNDLE_ROOT/termux-libs" 2>/dev/null || true
 fi
 
 [[ -d "$RES_ARCH/shims" ]] || { echo "missing SwiftShims (shims/) in packed SDK" >&2; exit 1; }

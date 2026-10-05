@@ -5,6 +5,7 @@ import { maplibreMapkey } from '@/map/mapKeys';
 import { mapSetStyleEffect, type MapLibreMap } from './MaplibreLayer';
 import { type LayerTypeItem, useUseBaseLayers } from './baseLayers';
 import { initMap } from './initMap';
+import { shouldApplyStyleWatch } from './styleSwapGate';
 import { AttributionControl, type LngLatLike } from 'maplibre-gl';
 import { logError } from '@/services/useLogger';
 
@@ -85,6 +86,11 @@ const createMap = (el: HTMLDivElement) => {
   map.once('load', () => {
     mapLoaded = true;
     ready.value = true;
+    // Override may have changed while the first style was loading — re-apply.
+    setBaseLayer(
+      layersSetting.selectedLayer,
+      activeStyleUrl(),
+    );
     emit('ready');
   });
 };
@@ -104,13 +110,17 @@ watch(
       layersSetting.styleUrlOverride,
     ] as const,
   ([selected, override], prev) => {
-    if (!selected || !mlMap.value || !mapLoaded) return;
+    if (!selected) return;
     const prevSelected = prev?.[0];
-    const prevOverride = prev?.[1];
     if (
-      prevSelected &&
-      prevSelected.key === selected.key &&
-      prevOverride === override
+      !shouldApplyStyleWatch({
+        mapExists: !!mlMap.value,
+        hasSelected: true,
+        selectedKey: selected.key,
+        override,
+        prevSelectedKey: prevSelected?.key,
+        prevOverride: prev?.[1],
+      })
     ) {
       return;
     }

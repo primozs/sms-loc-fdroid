@@ -42,11 +42,11 @@ if [[ -z "$SWIFT_RT" || ! -d "$SWIFT_RT" ]]; then
     SWIFT_RT="$_SDK_ANDROID/swift-resources/usr/lib/swift-aarch64/android"
   fi
 fi
-# Termux sysroot libs (libandroid-spawn) from the from-source SDK build.
+# Extra Swift/sysroot lib dirs (optional). Spawn is built from source below —
+# do not rely on Termux termux-libs/*.a.
 EXTRA_LIB_DIRS=()
 for d in \
   "${SMSLOC_SWIFT_EXTRA_LIBS:-}" \
-  "${_SDK_ANDROID:+$_SDK_ANDROID/termux-libs}" \
   "$HOME/.cache/smsloc-fdroid-swift/sdk-build-swift-${SWIFT_VER}-RELEASE-aarch64-api24/swift-release-android-aarch64-24-sdk/usr/lib"
 do
   [[ -n "$d" && -d "$d" ]] && EXTRA_LIB_DIRS+=("$d")
@@ -114,10 +114,10 @@ resolve_deps() {
           found=1
           echo "  + $name (ndk)"
         elif [[ "$name" == "libandroid-spawn.so" ]]; then
-          # Termux .so is 4KB-aligned; relink from .a with 16KB pages.
+          # Build from vendored source with 16KB pages (no Termux .a).
           if ensure_android_spawn_16k; then
             found=1
-            echo "  + $name (relinked 16KB)"
+            echo "  + $name (from-source 16KB)"
           fi
         else
           for extra in "${EXTRA_LIB_DIRS[@]+"${EXTRA_LIB_DIRS[@]}"}"; do
@@ -142,21 +142,17 @@ resolve_deps() {
 }
 
 ensure_android_spawn_16k() {
-  local a=""
-  local d
-  for d in "${EXTRA_LIB_DIRS[@]+"${EXTRA_LIB_DIRS[@]}"}"; do
-    if [[ -f "$d/libandroid-spawn.a" ]]; then
-      a="$d/libandroid-spawn.a"
-      break
-    fi
-  done
-  [[ -n "$a" ]] || return 1
-  "$CC" -shared -fPIC -fuse-ld=lld \
-    -Wl,--whole-archive "$a" -Wl,--no-whole-archive \
-    -Wl,-z,max-page-size=16384 \
-    -Wl,-z,common-page-size=16384 \
-    -Wl,-soname,libandroid-spawn.so \
-    -o "$OUT/libandroid-spawn.so"
+  # Build from vendored AOSP/Termux source (native/libandroid-spawn), not a
+  # packages.termux.dev .a.
+  local stage
+  stage=$(mktemp -d)
+  ANDROID_NDK_HOME="$NDK_HOME" \
+    "$ROOT/scripts/build-libandroid-spawn.sh" "$stage" || {
+      rm -rf "$stage"
+      return 1
+    }
+  cp -f "$stage/lib/libandroid-spawn.so" "$OUT/libandroid-spawn.so"
+  rm -rf "$stage"
 }
 
 strip_all() {

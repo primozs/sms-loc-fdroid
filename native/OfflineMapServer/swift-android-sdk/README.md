@@ -20,6 +20,12 @@ stdlib / Dispatch / Foundation for **aarch64** from `swift-*-RELEASE` sources;
 the host Swift compiler and NDK remain build tools (Debian `swiftlang` on
 F-Droid; Swift.org tarball fallback for local-dev).
 
-Termux `.deb` packages are **build-time** sysroot deps for Foundation (spawn /
-execinfo / optional curl+xml). SMSLoc’s APK packaging only copies transitive
-`NEEDED` libs of `OfflineMapServerCore` (no FoundationNetworking/XML).
+Termux `.deb` packages are **build-time** sysroot deps. SMSLoc fetches only
+`libandroid-execinfo` (Testing backtrace). curl / openssl / xml stacks are
+**not** downloaded from `packages.termux.dev`. Foundation still needs LibXml2
+at compile time — `build-swift-android-sdk.sh` fetches `gnome/libxml2` and
+builds it with `--static-libxml2`. Networking stays off
+(`FOUNDATION_BUILD_NETWORKING=OFF`). `libandroid-spawn` is compiled from
+vendored source under `native/libandroid-spawn/` (see
+`scripts/build-libandroid-spawn.sh`). APK packaging only copies transitive
+`NEEDED` libs of `OfflineMapServerCore`.

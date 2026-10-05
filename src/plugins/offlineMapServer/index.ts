@@ -19,3 +19,4 @@ export {
 export { ensureOfflineMapServer } from './ensureServer';
 export { nextStyleOverride, setOfflineStyleOverride } from './applyLocalStyle';
 export { bootstrapOfflineMaps } from './bootstrap';
+export { shouldUseLocalStyle } from './localStyleDecision';

@@ -34,4 +34,7 @@ final class OfflineMapServerNative {
 
   /** 0 = ok and out filled; non-zero = error */
   static native int offline_map_server_base_url(byte[] out);
+
+  /** 0 = ok and out filled; non-zero = error */
+  static native int offline_map_server_ownership_token(byte[] out);
 }

@@ -48,24 +48,35 @@ public class OfflineMapServerPlugin extends Plugin {
       return;
     }
 
-    String rootDir = call.getString("rootDir", "");
+    // Ignore caller rootDir — only serve allowlisted app trees.
     boolean fixture = Boolean.TRUE.equals(call.getBoolean("fixture", false));
-    if (rootDir == null || rootDir.isEmpty()) {
-      File root = fixture ? offlineMapFixtureRoot() : offlineMapRoot();
-      if (fixture) {
-        try {
-          ensureFixture(root);
-        } catch (IOException e) {
-          call.reject("fixture write failed: " + e.getMessage());
-          return;
-        }
-      } else if (!root.isDirectory() && !root.mkdirs()) {
-        call.reject("mkdir offline-map failed");
+    File root = fixture ? offlineMapFixtureRoot() : offlineMapRoot();
+    if (fixture) {
+      try {
+        ensureFixture(root);
+      } catch (IOException e) {
+        call.reject("fixture write failed: " + e.getMessage());
         return;
       }
-      rootDir = root.getAbsolutePath();
+    } else if (!root.isDirectory() && !root.mkdirs()) {
+      call.reject("mkdir offline-map failed");
+      return;
     }
+    if (!OfflineMapServerPolicy.isAllowedServeRoot(root, offlineMapRoot(), offlineMapFixtureRoot())) {
+      call.reject("rootDir not allowlisted");
+      return;
+    }
+    String rootDir = root.getAbsolutePath();
+
     String host = call.getString("host", "127.0.0.1");
+    if (host == null || host.isEmpty()) {
+      host = "127.0.0.1";
+    }
+    // IPv4 loopback only — health probe is IPv4.
+    if (!"127.0.0.1".equals(host)) {
+      call.reject("host must be 127.0.0.1");
+      return;
+    }
     Integer port = call.getInt("port", 4000);
 
     int rc = OfflineMapServerNative.offline_map_server_start(rootDir, host, port);
@@ -74,9 +85,17 @@ public class OfflineMapServerPlugin extends Plugin {
       return;
     }
 
+    String token = readOwnershipToken();
+    if (token.isEmpty()) {
+      OfflineMapServerNative.offline_map_server_stop();
+      call.reject("offline_map_server_start produced no ownership token");
+      return;
+    }
+
     JSObject ret = new JSObject();
     ret.put("baseUrl", readBaseUrl());
     ret.put("rootDir", rootDir);
+    ret.put("ownershipToken", token);
     call.resolve(ret);
   }
 
@@ -96,6 +115,10 @@ public class OfflineMapServerPlugin extends Plugin {
     String url = call.getString("url", "");
     if (url == null || url.isEmpty()) {
       call.reject("url required");
+      return;
+    }
+    if (!OfflineMapServerPolicy.isAllowedPackDownloadUrl(url)) {
+      call.reject("url not allowlisted");
       return;
     }
     if (installer.isBusy()) {
@@ -201,8 +224,20 @@ public class OfflineMapServerPlugin extends Plugin {
   }
 
   private static String readBaseUrl() {
+    return readNativeCString(OfflineMapServerNative::offline_map_server_base_url);
+  }
+
+  private static String readOwnershipToken() {
+    return readNativeCString(OfflineMapServerNative::offline_map_server_ownership_token);
+  }
+
+  private interface NativeCStringReader {
+    int read(byte[] out);
+  }
+
+  private static String readNativeCString(NativeCStringReader reader) {
     byte[] buf = new byte[512];
-    int rc = OfflineMapServerNative.offline_map_server_base_url(buf);
+    int rc = reader.read(buf);
     if (rc != 0) return "";
     int end = 0;
     while (end < buf.length && buf[end] != 0) end++;

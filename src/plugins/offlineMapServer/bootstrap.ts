@@ -1,20 +1,26 @@
 import { Capacitor } from '@capacitor/core';
-import { Network } from '@capacitor/network';
+import { Network, type ConnectionStatus } from '@capacitor/network';
 import { watchNetwork } from '@/app/watchNetwork';
 import { logError } from '@/services/useLogger';
 import { setOfflineStyleOverride } from './applyLocalStyle';
 import { ensureOfflineMapServer } from './ensureServer';
+import { shouldUseLocalStyle } from './localStyleDecision';
 
 let stopNetworkWatch: (() => void) | undefined;
 
-const syncStyleForConnection = async (connected: boolean) => {
-  if (connected) {
+/** Capacitor `connected` = has a network *interface*, not "has internet". */
+export const isNetworkOnline = (status: ConnectionStatus): boolean =>
+  status.connected && status.connectionType !== 'none';
+
+const syncStyleForConnection = async (status: ConnectionStatus) => {
+  if (isNetworkOnline(status)) {
     // Online → stenar base layers (clear pack override only).
     setOfflineStyleOverride(false);
     return;
   }
   const result = await ensureOfflineMapServer();
-  setOfflineStyleOverride(result.started && result.installed);
+  // Fail-closed: need pack + proven start + process-private ownership token.
+  setOfflineStyleOverride(shouldUseLocalStyle(result));
 };
 
 /**
@@ -28,14 +34,14 @@ export const bootstrapOfflineMaps = async () => {
 
   try {
     const status = await Network.getStatus();
-    await syncStyleForConnection(status.connected);
+    await syncStyleForConnection(status);
   } catch (e) {
     logError(e);
   }
 
   if (!stopNetworkWatch) {
     stopNetworkWatch = watchNetwork((status) => {
-      void syncStyleForConnection(status.connected);
+      void syncStyleForConnection(status);
     });
   }
 };

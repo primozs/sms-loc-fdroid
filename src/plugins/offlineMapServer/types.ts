@@ -23,7 +23,7 @@ export type OfflineMapProgress = {
 export interface OfflineMapServerPlugin {
   start(
     options?: OfflineMapServerStartOptions,
-  ): Promise<{ baseUrl: string; rootDir: string }>;
+  ): Promise<{ baseUrl: string; rootDir: string; ownershipToken: string }>;
   stop(): Promise<void>;
   getBaseUrl(): Promise<{ baseUrl: string }>;
   isAvailable(): Promise<{ available: boolean; error?: string }>;

@@ -65,11 +65,15 @@ public class OfflineMapServerInstrumentedTest {
         OfflineMapServerNative.offline_map_server_start(
             root.getAbsolutePath(), "127.0.0.1", PORT));
 
-    // Idempotent second start must not fail / crash.
+    String token1 = readOwnershipToken();
+    assertFalse("ownership token required after start", token1.isEmpty());
+
+    // Idempotent second start must not fail / crash and must keep ownership.
     assertEquals(
         0,
         OfflineMapServerNative.offline_map_server_start(
             root.getAbsolutePath(), "127.0.0.1", PORT));
+    assertEquals(token1, readOwnershipToken());
 
     assertEquals(200, httpStatus("http://127.0.0.1:" + PORT + "/healthy"));
     assertEquals(
@@ -94,6 +98,7 @@ public class OfflineMapServerInstrumentedTest {
     }
 
     OfflineMapServerNative.offline_map_server_stop();
+    assertTrue("token cleared after stop", readOwnershipToken().isEmpty());
     try {
       httpStatus("http://127.0.0.1:" + PORT + "/healthy", 800);
       fail("expected failure after stop");
@@ -106,7 +111,17 @@ public class OfflineMapServerInstrumentedTest {
         0,
         OfflineMapServerNative.offline_map_server_start(
             root.getAbsolutePath(), "127.0.0.1", PORT));
+    assertFalse(readOwnershipToken().isEmpty());
     assertEquals(200, httpStatus("http://127.0.0.1:" + PORT + "/healthy"));
+  }
+
+  private static String readOwnershipToken() {
+    byte[] buf = new byte[512];
+    int rc = OfflineMapServerNative.offline_map_server_ownership_token(buf);
+    if (rc != 0) return "";
+    int end = 0;
+    while (end < buf.length && buf[end] != 0) end++;
+    return new String(buf, 0, end, StandardCharsets.UTF_8);
   }
 
   private static void write(File file, String body) throws Exception {

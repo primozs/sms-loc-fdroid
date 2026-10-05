@@ -2,6 +2,11 @@ import Foundation
 #if canImport(FoundationNetworking)
 import FoundationNetworking
 #endif
+#if canImport(Darwin)
+import Darwin
+#elseif canImport(Glibc)
+import Glibc
+#endif
 import OfflineMapServerCore
 import XCTest
 
@@ -57,6 +62,10 @@ final class OfflineMapServerCoreTests: XCTestCase {
     let healthy = try await httpGet("http://127.0.0.1:\(port)/healthy")
     XCTAssertEqual(healthy.status, 200)
     XCTAssertTrue(healthy.body.contains("ts"))
+    XCTAssertFalse(healthy.body.contains("token"), "bearer must not be public")
+    XCTAssertFalse(healthy.body.contains("root"), "pack path must not be public")
+    let ownership = await OfflineMapServer.getOwnershipToken()
+    XCTAssertFalse(ownership.isEmpty)
 
     let style = try await httpGet(
       "http://127.0.0.1:\(port)/styles/fixture/style.json"
@@ -113,6 +122,68 @@ final class OfflineMapServerCoreTests: XCTestCase {
     } catch {
       // connection refused / reset
     }
+    let token = await OfflineMapServer.getOwnershipToken()
+    XCTAssertTrue(token.isEmpty)
+  }
+
+  func testIdempotentStartKeepsOwnershipToken() async throws {
+    try await OfflineMapServer.start(
+      rootDirectory: root,
+      host: "127.0.0.1",
+      port: port
+    )
+    let first = await OfflineMapServer.getOwnershipToken()
+    XCTAssertFalse(first.isEmpty)
+
+    try await OfflineMapServer.start(
+      rootDirectory: root,
+      host: "127.0.0.1",
+      port: port
+    )
+    let second = await OfflineMapServer.getOwnershipToken()
+    XCTAssertEqual(first, second, "re-start must keep in-process ownership")
+  }
+
+  func testStartRejectsNonLoopbackHost() async {
+    do {
+      try await OfflineMapServer.start(
+        rootDirectory: root,
+        host: "0.0.0.0",
+        port: port
+      )
+      XCTFail("LAN bind must be rejected")
+    } catch {
+      // expected
+    }
+  }
+
+  func testStartFailsWhenPortOccupied() async throws {
+    // Claim an exclusive port (retry — random setUp port can still be in TIME_WAIT).
+    var occupiedPort = 0
+    var fd: Int32 = -1
+    for _ in 0..<30 {
+      occupiedPort = 42_000 + Int.random(in: 0..<2_000)
+      fd = occupyLoopback(port: occupiedPort)
+      if fd >= 0 { break }
+    }
+    guard fd >= 0 else {
+      XCTFail("could not occupy a loopback port for the test")
+      return
+    }
+    defer { close(fd) }
+
+    do {
+      try await OfflineMapServer.start(
+        rootDirectory: root,
+        host: "127.0.0.1",
+        port: occupiedPort
+      )
+      XCTFail("start must fail when the port is already bound")
+    } catch {
+      // expected
+    }
+    let tokenAfterFail = await OfflineMapServer.getOwnershipToken()
+    XCTAssertTrue(tokenAfterFail.isEmpty)
   }
 }
 
@@ -138,4 +209,28 @@ private func httpGet(_ url: String) async throws -> HttpResult {
     }
     task.resume()
   }
+}
+
+private func occupyLoopback(port: Int) -> Int32 {
+  #if canImport(Glibc)
+  let sockType = Int32(SOCK_STREAM.rawValue)
+  #else
+  let sockType = SOCK_STREAM
+  #endif
+  let fd = socket(AF_INET, sockType, 0)
+  guard fd >= 0 else { return -1 }
+  var addr = sockaddr_in()
+  addr.sin_family = sa_family_t(AF_INET)
+  addr.sin_port = in_port_t(UInt16(port).bigEndian)
+  addr.sin_addr = in_addr(s_addr: inet_addr("127.0.0.1"))
+  let bindRc = withUnsafePointer(to: &addr) { ptr in
+    ptr.withMemoryRebound(to: sockaddr.self, capacity: 1) {
+      bind(fd, $0, socklen_t(MemoryLayout<sockaddr_in>.size))
+    }
+  }
+  if bindRc != 0 || listen(fd, 1) != 0 {
+    close(fd)
+    return -1
+  }
+  return fd
 }
