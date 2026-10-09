@@ -51,9 +51,7 @@ public class SmsReceiver extends BroadcastReceiver {
                     default:
                         continue;
                 }
-                Intent bIntent = new Intent(action);
-                bIntent.putExtra("address", address);
-                context.sendBroadcast(bIntent);
+                context.sendBroadcast(new Intent(action).setPackage(context.getPackageName()));
             } catch (Exception e) {
                 Log.e(LOG_TAG, e.toString());
                 LogStore.addLog(context, new LogData(0L, System.currentTimeMillis(), LOG_TAG, e.toString()));

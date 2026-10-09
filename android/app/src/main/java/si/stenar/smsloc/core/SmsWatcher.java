@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 
+import androidx.core.content.ContextCompat;
+
 public class SmsWatcher {
     private final Context mContext;
     private BroadcastReceiver mReceiver;
@@ -27,7 +29,7 @@ public class SmsWatcher {
         intentFilter.addAction(Constants.INTENT_ACTION_REQUEST_RECEIVED);
         intentFilter.addAction(Constants.INTENT_ACTION_NOT_WHITELISTED);
 
-        mContext.registerReceiver(mReceiver, intentFilter);
+        ContextCompat.registerReceiver(mContext, mReceiver, intentFilter, ContextCompat.RECEIVER_NOT_EXPORTED);
     }
 
     public void unregisterReceiver() {
