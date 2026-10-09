@@ -9,6 +9,8 @@ import android.provider.Telephony;
 import android.telephony.SmsMessage;
 import android.util.Log;
 
+import androidx.core.content.ContextCompat;
+
 public class SmsReceiver {
     private BroadcastReceiver receiver;
     private static final String SMS_RECEIVED_ACTION = "android.provider.Telephony.SMS_RECEIVED";
@@ -44,7 +46,8 @@ public class SmsReceiver {
         };
 
         try {
-            this.context.registerReceiver(receiver, filter);
+            // SMS_RECEIVED comes from the phone process (radio UID); NOT_EXPORTED would drop it.
+            ContextCompat.registerReceiver(this.context, receiver, filter, ContextCompat.RECEIVER_EXPORTED);
         } catch (Exception e) {
             Log.e(LOG_TAG, e.getMessage());
             smsResultCallback.error("Sms receiver init error: " + e.toString());

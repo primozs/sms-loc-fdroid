@@ -11,6 +11,8 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.telephony.SmsManager;
 
+import androidx.core.content.ContextCompat;
+
 import java.util.ArrayList;
 
 public class SmsSender {
@@ -69,9 +71,10 @@ public class SmsSender {
         };
 
         String intentFilterAction = "SMS_SENT" + java.util.UUID.randomUUID().toString();
-        context.registerReceiver(broadcastReceiver, new IntentFilter(intentFilterAction));
+        ContextCompat.registerReceiver(context, broadcastReceiver, new IntentFilter(intentFilterAction), ContextCompat.RECEIVER_NOT_EXPORTED);
 
-        PendingIntent sentIntent = PendingIntent.getBroadcast(context, 0, new Intent(intentFilterAction), PendingIntent.FLAG_IMMUTABLE);
+        Intent sent = new Intent(intentFilterAction).setPackage(context.getPackageName());
+        PendingIntent sentIntent = PendingIntent.getBroadcast(context, 0, sent, PendingIntent.FLAG_IMMUTABLE);
         if (parts.size() > 1) {
             ArrayList<PendingIntent> sentIntents = new ArrayList<>();
             for (int i = 0; i < parts.size(); i++) {

@@ -1,12 +1,21 @@
 package si.stenar.smsloc.core;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.Arrays;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.junit.Test;
+import si.stenar.smsloc.MainActivity;
 
 public class LocationRetrieverServiceExportTest {
   private static final String SERVICE = "si.stenar.smsloc.core.LocationRetrieverService";
@@ -19,12 +28,44 @@ public class LocationRetrieverServiceExportTest {
   }
 
   @Test
+  public void geoLocationForegroundServiceIsNotExported() throws Exception {
+    String block =
+        serviceBlock(
+            readManifest(), "si.stenar.smsloc.plugins.GeoLocation.GeoLocationForegroundService");
+    assertTrue(block.contains("android:exported=\"false\""));
+    assertFalse(block.contains("android:exported=\"true\""));
+  }
+
+  @Test
   public void smsReceiverOnlyAcceptsBroadcastsFromTelephony() throws Exception {
     String xml = readManifest();
     int at = xml.indexOf("si.stenar.smsloc.core.SmsReceiver");
     int start = xml.lastIndexOf("<receiver", at);
     String openTag = xml.substring(start, xml.indexOf(">", at));
     assertTrue(openTag.contains("android:permission=\"android.permission.BROADCAST_SMS\""));
+  }
+
+  @Test
+  public void onlyLauncherAndPermissionGuardedSmsReceiverAreExported() throws Exception {
+    String xml = readManifest();
+    Set<String> exported = new TreeSet<>();
+    Matcher name = Pattern.compile("android:name=\"([^\"]+)\"").matcher("");
+    for (int at = xml.indexOf("android:exported=\"true\"");
+        at >= 0;
+        at = xml.indexOf("android:exported=\"true\"", at + 1)) {
+      String tag = xml.substring(xml.lastIndexOf("<", at), xml.indexOf(">", at));
+      exported.add(name.reset(tag).find() ? name.group(1) : tag);
+    }
+    assertEquals(
+        new TreeSet<>(Arrays.asList(".MainActivity", "si.stenar.smsloc.core.SmsReceiver")),
+        exported);
+  }
+
+  @Test
+  public void mainActivityDoesNotForceReceiverFlags() {
+    for (Method method : MainActivity.class.getDeclaredMethods()) {
+      assertNotEquals("registerReceiver", method.getName());
+    }
   }
 
   private static String readManifest() throws Exception {
