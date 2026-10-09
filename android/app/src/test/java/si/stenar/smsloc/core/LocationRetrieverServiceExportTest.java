@@ -19,6 +19,15 @@ public class LocationRetrieverServiceExportTest {
   }
 
   @Test
+  public void geoLocationForegroundServiceIsNotExported() throws Exception {
+    String block =
+        serviceBlock(
+            readManifest(), "si.stenar.smsloc.plugins.GeoLocation.GeoLocationForegroundService");
+    assertTrue(block.contains("android:exported=\"false\""));
+    assertFalse(block.contains("android:exported=\"true\""));
+  }
+
+  @Test
   public void smsReceiverOnlyAcceptsBroadcastsFromTelephony() throws Exception {
     String xml = readManifest();
     int at = xml.indexOf("si.stenar.smsloc.core.SmsReceiver");
