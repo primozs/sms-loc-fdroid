@@ -67,7 +67,8 @@ public class LocationRetrieverService extends Service {
         super.onStartCommand(intent, flags, startId);
         String address = intent == null ? null : intent.getStringExtra("address");
         List<ContactData> contacts = ContactStore.getContacts(getApplication());
-        if (!LocationReplyPolicy.mayReply(address, contacts)) {
+        mContactFound = LocationReplyPolicy.matchingContact(address, contacts);
+        if (mContactFound == null) {
             Log.w(LOG_TAG, "Not replying: address missing or not whitelisted");
             abandonUnlisted(startId, address);
             return START_NOT_STICKY;
@@ -78,11 +79,6 @@ public class LocationRetrieverService extends Service {
         finished = false;
         acceptAnyAccuracy = false;
         bestGpsFix = null;
-
-        mContactFound = contacts.stream()
-                .filter(item -> address.equals(item.address))
-                .findAny()
-                .orElse(null);
 
         Resources resources = Utils.getLocalizedResources(this);
         String request_from_msg = resources.getString(R.string.request_from);
@@ -206,12 +202,18 @@ public class LocationRetrieverService extends Service {
             mDetails.add(gps_data_invalid_msg);
         }
 
-        if (!Utils.sendSms(this, mAddress, Constants.RESPONSE_CODE + gpsData.toSmsText())) {
+        String sms = LocationReplyPolicy.locationSms(
+                mAddress, ContactStore.getContacts(this), gpsData.toSmsText());
+        if (sms == null) {
+            Log.w(LOG_TAG, "Not sending: address missing or not whitelisted");
+            mResponseStatus = LocationReplyPolicy.finishStatus(
+                    sms, mResponseStatus, resources.getString(R.string.not_whitelisted));
+        } else if (!Utils.sendSms(this, mAddress, sms)) {
             mResponseStatus = error_msg;
             mDetails.add(missing_send_sms_permission_msg);
         }
 
-        if (contactFound != null) {
+        if (LocationReplyPolicy.shouldRecordSent(sms, contactFound)) {
             ResponseData response = new ResponseData(0L, Constants.RESPONSE_TYPE_SENT,
                     contactFound.contactId, contactFound.address,
                     gpsData.lat, gpsData.lon, gpsData.ts, gpsData.alt_m,

@@ -1,8 +1,12 @@
 package si.stenar.smsloc.core;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import org.junit.Test;
@@ -34,5 +38,51 @@ public class LocationReplyPolicyTest {
     List<ContactData> contacts = Collections.singletonList(contact("+38640111222"));
     assertFalse(LocationReplyPolicy.mayReply("+386 40 111 222", contacts));
     assertFalse(LocationReplyPolicy.mayReply("040111222", contacts));
+  }
+
+  @Test
+  public void deniesNullContactEntry() {
+    List<ContactData> contacts = new ArrayList<>();
+    contacts.add(null);
+    assertFalse(LocationReplyPolicy.mayReply("+38640111222", contacts));
+  }
+
+  @Test
+  public void allowsMatchAfterNullContactEntry() {
+    List<ContactData> contacts = Arrays.asList(null, contact("+38640111222"));
+    assertTrue(LocationReplyPolicy.mayReply("+38640111222", contacts));
+  }
+
+  @Test
+  public void locationSmsIsNullWhenAddressIsNotWhitelisted() {
+    List<ContactData> contacts = Collections.singletonList(contact("+38640111222"));
+    assertNull(LocationReplyPolicy.locationSms("+38640999888", contacts, "46,14"));
+  }
+
+  @Test
+  public void locationSmsPrefixesWhitelistedGpsText() {
+    List<ContactData> contacts = Collections.singletonList(contact("+38640111222"));
+    assertEquals("Loc:46,14", LocationReplyPolicy.locationSms("+38640111222", contacts, "46,14"));
+  }
+
+  @Test
+  public void sentResponseIsNotRecordedWhenSmsWasNotSent() {
+    assertFalse(LocationReplyPolicy.shouldRecordSent(null, contact("+38640111222")));
+  }
+
+  @Test
+  public void sentResponseIsRecordedWhenSmsAndContactExist() {
+    assertTrue(LocationReplyPolicy.shouldRecordSent("Loc:46,14", contact("+38640111222")));
+  }
+
+  @Test
+  public void blockedFinishStatusReplacesOk() {
+    assertEquals(
+        "Not whitelisted", LocationReplyPolicy.finishStatus(null, "ok", "Not whitelisted"));
+  }
+
+  @Test
+  public void sentFinishStatusKeepsCurrentStatus() {
+    assertEquals("ok", LocationReplyPolicy.finishStatus("Loc:46,14", "ok", "Not whitelisted"));
   }
 }
