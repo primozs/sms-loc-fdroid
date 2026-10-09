@@ -23,6 +23,7 @@ import androidx.core.content.ContextCompat;
 import androidx.core.location.LocationManagerCompat;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import si.stenar.smsloc.data.ContactData;
 import si.stenar.smsloc.data.ContactStore;
@@ -64,27 +65,31 @@ public class LocationRetrieverService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
-        mAddress = intent.getStringExtra("address");
+        String address = intent == null ? null : intent.getStringExtra("address");
+        List<ContactData> contacts = ContactStore.getContacts(getApplication());
+        if (!LocationReplyPolicy.mayReply(address, contacts)) {
+            Log.w(LOG_TAG, "Not replying: address missing or not whitelisted");
+            abandonUnlisted(startId, address);
+            return START_NOT_STICKY;
+        }
+
+        mAddress = address;
         mDetails.clear();
         finished = false;
         acceptAnyAccuracy = false;
         bestGpsFix = null;
 
-        mContactFound = ContactStore.getContacts(getApplication()).stream()
-                .filter(item -> mAddress.equals(item.address))
+        mContactFound = contacts.stream()
+                .filter(item -> address.equals(item.address))
                 .findAny()
                 .orElse(null);
 
         Resources resources = Utils.getLocalizedResources(this);
         String request_from_msg = resources.getString(R.string.request_from);
-        String unlisted_msg = resources.getString(R.string.unlisted);
         String waiting_for_gps_fix = resources.getString(R.string.waiting_for_gps_fix);
         String could_not_get_gps_fix = resources.getString(R.string.could_not_get_gps_fix);
 
-        mTitle = String.format(request_from_msg,
-                mContactFound != null ?
-                        mContactFound.name :
-                        " " + unlisted_msg + " " + mAddress);
+        mTitle = String.format(request_from_msg, mContactFound.name);
         mResponseStatus = "ok";
 
         Notification notification = NotificationHandler.getInstance(this)
@@ -119,6 +124,24 @@ public class LocationRetrieverService extends Service {
             finishOnce(null);
         }
         return START_NOT_STICKY;
+    }
+
+    /** Foreground-service handshake, then stop. No GPS and no SMS. */
+    private void abandonUnlisted(int startId, @Nullable String address) {
+        try {
+            Resources resources = Utils.getLocalizedResources(this);
+            String shown = address == null ? "" : address;
+            Notification notification = NotificationHandler.getInstance(this).createNotification(
+                    resources.getString(R.string.request_from_unlisted, shown),
+                    resources.getString(R.string.not_whitelisted),
+                    null,
+                    false);
+            int notificationId = startId != 0 ? startId : 1;
+            startForeground(notificationId, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION);
+            stopForeground(true);
+        } finally {
+            stopSelf();
+        }
     }
 
     private void scheduleGoodAccuracyWindow(String couldNotGetGpsFix) {

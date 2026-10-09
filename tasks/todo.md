@@ -31,17 +31,17 @@
 
 **Acceptance criteria:**
 
-- [ ] `AndroidManifest.xml` sets `android:exported="false"` on `si.stenar.smsloc.core.LocationRetrieverService`
-- [ ] Null intent, missing `address`, empty `address`, or a number that fails `mayReply` returns `START_NOT_STICKY` without `requestLocationUpdates` or `Utils.sendSms`
-- [ ] Deny calls `startForeground`, then `stopForeground(true)`, then `stopSelf()`
-- [ ] A matching address still builds the "request from {name}" notification and runs the existing GPS reply path
-- [ ] `mAddress.equals` is not called when `address` is null
+- [x] `AndroidManifest.xml` sets `android:exported="false"` on `si.stenar.smsloc.core.LocationRetrieverService`
+- [x] Null intent, missing `address`, empty `address`, or a number that fails `mayReply` returns `START_NOT_STICKY` without `requestLocationUpdates` or `Utils.sendSms`
+- [x] Deny calls `startForeground`, then `stopForeground(true)`, then `stopSelf()`
+- [x] A matching address still builds the "request from {name}" notification and runs the existing GPS reply path
+- [x] `mAddress.equals` is not called when `address` is null
 
 **Verification:**
 
-- [ ] `./android/gradlew :app:testDebugUnitTest --tests si.stenar.smsloc.core.LocationReplyPolicyTest` still passes
-- [ ] Manifest diff shows `exported="false"` for this service only
-- [ ] Read `onStartCommand`: deny returns before `startGpsUpdates` and before `taskFinished`
+- [x] `./android/gradlew :app:testDebugUnitTest --tests si.stenar.smsloc.core.LocationReplyPolicyTest` still passes
+- [x] Manifest diff shows `exported="false"` for this service only
+- [x] Read `onStartCommand`: deny returns before `startGpsUpdates` and before `taskFinished`
 
 **Dependencies:** Task 1
 
@@ -54,8 +54,8 @@
 
 ## Checkpoint: After Tasks 1-2
 
-- [ ] Policy unit test passes
-- [ ] Service is not exported
-- [ ] Deny path sends no SMS and starts no GPS updates
-- [ ] Whitelisted path is the existing reply flow
-- [ ] No JS, wire-format, or `SmsReceiver` edits
+- [x] Policy unit test passes
+- [x] Service is not exported
+- [x] Deny path sends no SMS and starts no GPS updates
+- [x] Whitelisted path is the existing reply flow
+- [x] No JS, wire-format, or `SmsReceiver` edits

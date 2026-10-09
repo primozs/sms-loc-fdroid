@@ -31,14 +31,14 @@ AndroidManifest exported="false"   (independent, same slice)
 ### Phase 1: Gate
 
 - [x] Task 1: `LocationReplyPolicy` allow/deny
-- [ ] Task 2: Enforce it in `onStartCommand` and unexport the service
+- [x] Task 2: Enforce it in `onStartCommand` and unexport the service
 
 ### Checkpoint: Complete
 
-- [ ] `LocationReplyPolicyTest` passes
-- [ ] Manifest has `exported="false"` on `LocationRetrieverService`
-- [ ] Deny path cannot reach `Utils.sendSms` or `requestLocationUpdates`
-- [ ] Whitelisted `SmsReceiver` start still uses the existing GPS reply path
+- [x] `LocationReplyPolicyTest` passes
+- [x] Manifest has `exported="false"` on `LocationRetrieverService`
+- [x] Deny path cannot reach `Utils.sendSms` or `requestLocationUpdates`
+- [x] Whitelisted `SmsReceiver` start still uses the existing GPS reply path
 
 ## Risks and Mitigations
 
