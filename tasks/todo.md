@@ -58,4 +58,14 @@
 - [x] Service is not exported
 - [x] Deny path sends no SMS and starts no GPS updates
 - [x] Whitelisted path is the existing reply flow
-- [x] No JS, wire-format, or `SmsReceiver` edits
+- [x] No JS or wire-format edits
+
+## Follow-ups from review and ship gate
+
+- [x] Send time: `Loc:` is built only for a current exact match (`locationSms`); a null contact row is skipped
+- [x] A sent row is recorded only after `Utils.sendSms` accepted the message (`shouldRecordSent`)
+- [x] `SmsReceiver` uses `LocationReplyPolicy.matchingContact` for requests and responses
+- [x] `SmsReceiver` requires `android.permission.BROADCAST_SMS` and ignores intents that are not `SMS_RECEIVED`
+- [x] A denied start keeps a pending whitelisted request alive (`requestPending`) instead of stopping the service
+- [ ] Device check: whitelisted `Loc?`, unlisted `Loc?`, whitelisted `Loc?` with `SEND_SMS` revoked
+- [ ] Release: new `versionCode`, fastlane changelog, tag
