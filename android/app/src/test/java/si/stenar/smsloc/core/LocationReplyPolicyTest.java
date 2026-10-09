@@ -67,12 +67,27 @@ public class LocationReplyPolicyTest {
 
   @Test
   public void sentResponseIsNotRecordedWhenSmsWasNotSent() {
-    assertFalse(LocationReplyPolicy.shouldRecordSent(null, contact("+38640111222")));
+    assertFalse(LocationReplyPolicy.shouldRecordSent(null, contact("+38640111222"), false));
   }
 
   @Test
-  public void sentResponseIsRecordedWhenSmsAndContactExist() {
-    assertTrue(LocationReplyPolicy.shouldRecordSent("Loc:46,14", contact("+38640111222")));
+  public void sentResponseIsRecordedWhenSmsWasSent() {
+    assertTrue(LocationReplyPolicy.shouldRecordSent("Loc:46,14", contact("+38640111222"), true));
+  }
+
+  @Test
+  public void sentResponseIsNotRecordedWhenSendFails() {
+    assertFalse(LocationReplyPolicy.shouldRecordSent("Loc:46,14", contact("+38640111222"), false));
+  }
+
+  @Test
+  public void sentResponseIsNotRecordedWithoutContact() {
+    assertFalse(LocationReplyPolicy.shouldRecordSent("Loc:46,14", null, true));
+  }
+
+  @Test
+  public void sentResponseIsNotRecordedWithoutBody() {
+    assertFalse(LocationReplyPolicy.shouldRecordSent(null, contact("+38640111222"), true));
   }
 
   @Test

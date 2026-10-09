@@ -38,9 +38,10 @@ final class LocationReplyPolicy {
         return Constants.RESPONSE_CODE + gpsText;
     }
 
-    /** A sent row is recorded only after an SMS body exists for a known contact. */
-    static boolean shouldRecordSent(@Nullable String smsBody, @Nullable ContactData contact) {
-        return smsBody != null && contact != null;
+    /** A sent row is recorded only after Utils.sendSms accepted the message. */
+    static boolean shouldRecordSent(
+            @Nullable String smsBody, @Nullable ContactData contact, boolean sent) {
+        return sent && smsBody != null && contact != null;
     }
 
     /** No SMS body replaces the current status with the blocked label. */

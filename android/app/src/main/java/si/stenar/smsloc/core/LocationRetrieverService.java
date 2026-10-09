@@ -204,6 +204,7 @@ public class LocationRetrieverService extends Service {
 
         String sms = LocationReplyPolicy.locationSms(
                 mAddress, ContactStore.getContacts(this), gpsData.toSmsText());
+        boolean sent = false;
         if (sms == null) {
             Log.w(LOG_TAG, "Not sending: address missing or not whitelisted");
             mResponseStatus = LocationReplyPolicy.finishStatus(
@@ -211,9 +212,11 @@ public class LocationRetrieverService extends Service {
         } else if (!Utils.sendSms(this, mAddress, sms)) {
             mResponseStatus = error_msg;
             mDetails.add(missing_send_sms_permission_msg);
+        } else {
+            sent = true;
         }
 
-        if (LocationReplyPolicy.shouldRecordSent(sms, contactFound)) {
+        if (LocationReplyPolicy.shouldRecordSent(sms, contactFound, sent)) {
             ResponseData response = new ResponseData(0L, Constants.RESPONSE_TYPE_SENT,
                     contactFound.contactId, contactFound.address,
                     gpsData.lat, gpsData.lon, gpsData.ts, gpsData.alt_m,
