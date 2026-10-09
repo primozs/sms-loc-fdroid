@@ -91,6 +91,17 @@ public class LocationReplyPolicyTest {
   }
 
   @Test
+  public void requestIsPendingWhileWaitingForGps() {
+    assertTrue(LocationReplyPolicy.requestPending("+38640111222", false));
+  }
+
+  @Test
+  public void noRequestIsPendingBeforeStartOrAfterFinish() {
+    assertFalse(LocationReplyPolicy.requestPending(null, false));
+    assertFalse(LocationReplyPolicy.requestPending("+38640111222", true));
+  }
+
+  @Test
   public void blockedFinishStatusReplacesOk() {
     assertEquals(
         "Not whitelisted", LocationReplyPolicy.finishStatus(null, "ok", "Not whitelisted"));

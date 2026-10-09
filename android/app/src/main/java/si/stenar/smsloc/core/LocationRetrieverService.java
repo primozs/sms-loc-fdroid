@@ -53,6 +53,8 @@ public class LocationRetrieverService extends Service {
     private LocationManager locationManager;
     private LocationListener locationListener;
     private ContactData mContactFound;
+    private int mForegroundId;
+    private Notification mForegroundNotification;
     private final Handler timeoutHandler = new Handler(Looper.getMainLooper());
     private Runnable timeoutRunnable;
     private boolean finished;
@@ -67,13 +69,14 @@ public class LocationRetrieverService extends Service {
         super.onStartCommand(intent, flags, startId);
         String address = intent == null ? null : intent.getStringExtra("address");
         List<ContactData> contacts = ContactStore.getContacts(getApplication());
-        mContactFound = LocationReplyPolicy.matchingContact(address, contacts);
-        if (mContactFound == null) {
+        ContactData found = LocationReplyPolicy.matchingContact(address, contacts);
+        if (found == null) {
             Log.w(LOG_TAG, "Not replying: address missing or not whitelisted");
             abandonUnlisted(startId, address);
             return START_NOT_STICKY;
         }
 
+        mContactFound = found;
         mAddress = address;
         mDetails.clear();
         finished = false;
@@ -88,9 +91,10 @@ public class LocationRetrieverService extends Service {
         mTitle = String.format(request_from_msg, mContactFound.name);
         mResponseStatus = "ok";
 
-        Notification notification = NotificationHandler.getInstance(this)
+        mForegroundNotification = NotificationHandler.getInstance(this)
                 .createNotification(mTitle, waiting_for_gps_fix, null, true);
-        startForeground(startId, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION);
+        mForegroundId = startId != 0 ? startId : 1;
+        startForeground(mForegroundId, mForegroundNotification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION);
 
         if (!hasFineLocationPermission()) {
             Log.w(LOG_TAG, "ACCESS_FINE_LOCATION not granted");
@@ -122,16 +126,22 @@ public class LocationRetrieverService extends Service {
         return START_NOT_STICKY;
     }
 
-    /** Foreground-service handshake, then stop. No GPS and no SMS. */
+    /**
+     * Foreground-service handshake with no GPS and no SMS. Stops the service only when no
+     * whitelisted request is still waiting, because stopping would drop that reply.
+     */
     private void abandonUnlisted(int startId, @Nullable String address) {
+        Resources resources = Utils.getLocalizedResources(this);
+        String title = resources.getString(R.string.request_from_unlisted, address == null ? "" : address);
+        String status = resources.getString(R.string.not_whitelisted);
+        if (LocationReplyPolicy.requestPending(mAddress, finished)) {
+            startForeground(mForegroundId, mForegroundNotification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION);
+            NotificationHandler.getInstance(this).createAndPostNotification(title, status, null);
+            return;
+        }
         try {
-            Resources resources = Utils.getLocalizedResources(this);
-            String shown = address == null ? "" : address;
-            Notification notification = NotificationHandler.getInstance(this).createNotification(
-                    resources.getString(R.string.request_from_unlisted, shown),
-                    resources.getString(R.string.not_whitelisted),
-                    null,
-                    false);
+            Notification notification = NotificationHandler.getInstance(this)
+                    .createNotification(title, status, null, false);
             int notificationId = startId != 0 ? startId : 1;
             startForeground(notificationId, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION);
             stopForeground(true);

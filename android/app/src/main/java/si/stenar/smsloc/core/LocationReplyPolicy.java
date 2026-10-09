@@ -44,6 +44,11 @@ final class LocationReplyPolicy {
         return sent && smsBody != null && contact != null;
     }
 
+    /** A whitelisted request is still waiting for its GPS fix. */
+    static boolean requestPending(@Nullable String currentAddress, boolean finished) {
+        return currentAddress != null && !finished;
+    }
+
     /** No SMS body replaces the current status with the blocked label. */
     static String finishStatus(
             @Nullable String smsBody, String currentStatus, String blockedStatus) {
