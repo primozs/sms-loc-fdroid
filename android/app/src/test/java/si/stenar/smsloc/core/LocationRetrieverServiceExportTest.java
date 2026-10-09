@@ -18,6 +18,15 @@ public class LocationRetrieverServiceExportTest {
     assertFalse(block.contains("android:exported=\"true\""));
   }
 
+  @Test
+  public void smsReceiverOnlyAcceptsBroadcastsFromTelephony() throws Exception {
+    String xml = readManifest();
+    int at = xml.indexOf("si.stenar.smsloc.core.SmsReceiver");
+    int start = xml.lastIndexOf("<receiver", at);
+    String openTag = xml.substring(start, xml.indexOf(">", at));
+    assertTrue(openTag.contains("android:permission=\"android.permission.BROADCAST_SMS\""));
+  }
+
   private static String readManifest() throws Exception {
     File[] candidates = {
       new File("src/main/AndroidManifest.xml"),

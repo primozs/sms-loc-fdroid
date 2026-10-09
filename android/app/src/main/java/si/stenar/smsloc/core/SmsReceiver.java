@@ -27,7 +27,8 @@ public class SmsReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        if (context == null || intent == null) {
+        if (context == null || intent == null
+                || !Telephony.Sms.Intents.SMS_RECEIVED_ACTION.equals(intent.getAction())) {
             return;
         }
 
@@ -63,7 +64,7 @@ public class SmsReceiver extends BroadcastReceiver {
     protected String handleResponse(Context context, final String address, final String smsGeoDataMaybe) {
         GpsData location = GpsData.fromSmsText(smsGeoDataMaybe);
         List<ContactData> contacts = ContactStore.getContacts(context);
-        ContactData contactFound = contacts.stream().filter(item -> address.equals(item.address)).findAny().orElse(null);
+        ContactData contactFound = LocationReplyPolicy.matchingContact(address, contacts);
 
         Resources resources = Utils.getLocalizedResources(context);
 
@@ -104,7 +105,7 @@ public class SmsReceiver extends BroadcastReceiver {
 
     protected String handleRequest(Context context, final String address) {
         List<ContactData> contacts = ContactStore.getContacts(context);
-        ContactData contactFound = contacts.stream().filter(item -> address.equals(item.address)).findAny().orElse(null);
+        ContactData contactFound = LocationReplyPolicy.matchingContact(address, contacts);
 
         Resources resources = Utils.getLocalizedResources(context);
         String missing_send_sms_permission_msg = resources.getString(R.string.missing_send_sms_permission);
