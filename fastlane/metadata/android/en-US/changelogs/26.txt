@@ -1,0 +1,1 @@
+Security fixes: location is sent only to whitelisted contacts; other apps can no longer trigger SMS replies, fake incoming SMS, or see who asked for your location. Thanks to mezinster for the private report.

@@ -1,0 +1,1 @@
+Varnostni popravki: lokacija gre samo stikom z bele liste; druge aplikacije ne morejo več sprožiti SMS odgovorov, ponarediti prejetih SMS ali videti, kdo je zahteval vašo lokacijo. Hvala mezinster za zasebno prijavo.
