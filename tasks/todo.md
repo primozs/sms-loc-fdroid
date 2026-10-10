@@ -7,9 +7,9 @@ empty, do not curl `packages.termux.dev` Packages/debs; create a minimal
 `$sdkDir/usr/{lib,include}` so the cross-compile deps path still exists.
 
 **Acceptance criteria:**
-- [ ] Default `termuxPackages` is empty (no execinfo)
-- [ ] Empty list → no deb download; sysroot `usr` tree exists
-- [ ] Comments no longer say Testing needs Termux execinfo
+- [x] Default `termuxPackages` is empty (no execinfo)
+- [x] Empty list → no deb download; sysroot `usr` tree exists
+- [x] Comments no longer say Testing needs Termux execinfo
 
 **Verification:**
 - [ ] Manual: read the empty-list branch; `./scripts/check-termux-packages.sh` after Task 3

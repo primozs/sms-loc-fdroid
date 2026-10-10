@@ -3,11 +3,10 @@ import Foundation
 // Termux packages to download and unpack into the cross-compile sysroot.
 // SMSLoc OfflineMapServer needs Foundation (not FoundationNetworking).
 // LibXml2 is built from gnome source by build-swift-android-sdk.sh
-// (--static-libxml2); do not fetch curl/openssl/xml stacks from
-// packages.termux.dev.
-// Testing needs backtrace() from libandroid-execinfo.
-// Spawn is built from vendored source (native/libandroid-spawn / Task 4).
-var termuxPackages = ["libandroid-execinfo"]
+// (--static-libxml2). Spawn is from vendored source (native/libandroid-spawn).
+// Product SDK skips XCTest/Swift Testing — no libandroid-execinfo.
+// Default: zero Termux debs (empty sysroot skeleton below).
+var termuxPackages: [String] = []
 let termuxURL = "https://packages.termux.dev/apt/termux-main"
 
 var swiftRepos = ["llvm-project", "swift", "swift-experimental-string-processing", "swift-corelibs-libdispatch",
@@ -165,66 +164,78 @@ extension String {
 
 let fmd = FileManager.default
 let cwd = fmd.currentDirectoryPath
-let termuxArchive = cwd.appendingPathComponent("termux")
-if !fmd.fileExists(atPath: termuxArchive) {
-  try fmd.createDirectory(atPath: termuxArchive, withIntermediateDirectories: false)
-}
-
-if !fmd.fileExists(atPath: termuxArchive.appendingPathComponent("Packages-\(ANDROID_ARCH)")) {
-  _ = runCommand("curl", with: ["-o", "termux/Packages-\(ANDROID_ARCH)",
-      "\(termuxURL)/dists/stable/main/binary-\(ANDROID_ARCH == "armv7" ? "arm" : ANDROID_ARCH)/Packages"])
-}
-
-let packages = try String(contentsOfFile: termuxArchive.appendingPathComponent("Packages-\(ANDROID_ARCH)"), encoding: .utf8)
-
-for termuxPackage in termuxPackages {
-  guard let packagePathRange = packages.range(of: "Filename: \\S+/\(termuxPackage)_\\S+", options: .regularExpression) else {
-    fatalError("couldn't find \(termuxPackage) in Packages list")
-  }
-  let packagePath = packages[packagePathRange].dropFirst("Filename: ".count).description
-
-  guard let packageNameRange = packagePath.range(of: "\(termuxPackage)_\\S+", options: .regularExpression) else {
-    fatalError("couldn't extract \(termuxPackage) .deb package from package path")
-  }
-  let packageName = packagePath[packageNameRange]
-
-  print("Checking for \(packageName)")
-  if !fmd.fileExists(atPath: termuxArchive.appendingPathComponent(String(packageName))) {
-    print("Downloading \(packageName)")
-    _ = runCommand("curl", with: ["-f", "-o", "termux/\(packageName)",
-        "\(termuxURL)/\(packagePath)"])
-  }
-
-  if !fmd.fileExists(atPath: cwd.appendingPathComponent(sdkDir)) {
-    print("Unpacking \(packageName)")
-#if os(macOS)
-    _ = runCommand("tar", with: ["xf", "\(termuxArchive.appendingPathComponent(String(packageName)))"])
-#else
-    _ = runCommand("ar", with: ["x", "\(termuxArchive.appendingPathComponent(String(packageName)))"])
-#endif
-    _ = runCommand("tar", with: ["xf", "data.tar.xz"])
-  }
-}
-
 let sdkPath = cwd.appendingPathComponent(sdkDir)
-if !fmd.fileExists(atPath: sdkPath) {
-  try fmd.removeItem(atPath: cwd.appendingPathComponent("data.tar.xz"))
-  try fmd.removeItem(atPath: cwd.appendingPathComponent("control.tar.xz"))
-  try fmd.removeItem(atPath: cwd.appendingPathComponent("debian-binary"))
 
-  try fmd.createDirectory(atPath: sdkPath, withIntermediateDirectories: false)
-  try fmd.moveItem(atPath: cwd.appendingPathComponent("data/data/com.termux/files/usr"),
-                   toPath: sdkPath.appendingPathComponent("usr"))
+if termuxPackages.isEmpty {
+  // No packages.termux.dev contact: empty deps root for spawn + --static-libxml2.
+  if !fmd.fileExists(atPath: sdkPath) {
+    print("Creating empty cross-compile sysroot at \(sdkDir) (no Termux packages)")
+    try fmd.createDirectory(atPath: sdkPath.appendingPathComponent("usr/lib"),
+                            withIntermediateDirectories: true)
+    try fmd.createDirectory(atPath: sdkPath.appendingPathComponent("usr/include"),
+                            withIntermediateDirectories: true)
+  }
+} else {
+  let termuxArchive = cwd.appendingPathComponent("termux")
+  if !fmd.fileExists(atPath: termuxArchive) {
+    try fmd.createDirectory(atPath: termuxArchive, withIntermediateDirectories: false)
+  }
 
-  try fmd.removeItem(atPath: cwd.appendingPathComponent("data"))
-  // Optional cleanups (present only when curl/xml/openssl Termux debs were fetched).
-  for rel in [
-    "usr/bin/curl-config", "usr/bin/xml2-config", "usr/share/man",
-    "usr/lib/ossl-modules", "usr/lib/engines-3", "usr/etc",
-  ] {
-    let p = sdkPath.appendingPathComponent(rel)
-    if fmd.fileExists(atPath: p) {
-      try fmd.removeItem(atPath: p)
+  if !fmd.fileExists(atPath: termuxArchive.appendingPathComponent("Packages-\(ANDROID_ARCH)")) {
+    _ = runCommand("curl", with: ["-o", "termux/Packages-\(ANDROID_ARCH)",
+        "\(termuxURL)/dists/stable/main/binary-\(ANDROID_ARCH == "armv7" ? "arm" : ANDROID_ARCH)/Packages"])
+  }
+
+  let packages = try String(contentsOfFile: termuxArchive.appendingPathComponent("Packages-\(ANDROID_ARCH)"), encoding: .utf8)
+
+  for termuxPackage in termuxPackages {
+    guard let packagePathRange = packages.range(of: "Filename: \\S+/\(termuxPackage)_\\S+", options: .regularExpression) else {
+      fatalError("couldn't find \(termuxPackage) in Packages list")
+    }
+    let packagePath = packages[packagePathRange].dropFirst("Filename: ".count).description
+
+    guard let packageNameRange = packagePath.range(of: "\(termuxPackage)_\\S+", options: .regularExpression) else {
+      fatalError("couldn't extract \(termuxPackage) .deb package from package path")
+    }
+    let packageName = packagePath[packageNameRange]
+
+    print("Checking for \(packageName)")
+    if !fmd.fileExists(atPath: termuxArchive.appendingPathComponent(String(packageName))) {
+      print("Downloading \(packageName)")
+      _ = runCommand("curl", with: ["-f", "-o", "termux/\(packageName)",
+          "\(termuxURL)/\(packagePath)"])
+    }
+
+    if !fmd.fileExists(atPath: cwd.appendingPathComponent(sdkDir)) {
+      print("Unpacking \(packageName)")
+#if os(macOS)
+      _ = runCommand("tar", with: ["xf", "\(termuxArchive.appendingPathComponent(String(packageName)))"])
+#else
+      _ = runCommand("ar", with: ["x", "\(termuxArchive.appendingPathComponent(String(packageName)))"])
+#endif
+      _ = runCommand("tar", with: ["xf", "data.tar.xz"])
+    }
+  }
+
+  if !fmd.fileExists(atPath: sdkPath) {
+    try fmd.removeItem(atPath: cwd.appendingPathComponent("data.tar.xz"))
+    try fmd.removeItem(atPath: cwd.appendingPathComponent("control.tar.xz"))
+    try fmd.removeItem(atPath: cwd.appendingPathComponent("debian-binary"))
+
+    try fmd.createDirectory(atPath: sdkPath, withIntermediateDirectories: false)
+    try fmd.moveItem(atPath: cwd.appendingPathComponent("data/data/com.termux/files/usr"),
+                     toPath: sdkPath.appendingPathComponent("usr"))
+
+    try fmd.removeItem(atPath: cwd.appendingPathComponent("data"))
+    // Optional cleanups (present only when curl/xml/openssl Termux debs were fetched).
+    for rel in [
+      "usr/bin/curl-config", "usr/bin/xml2-config", "usr/share/man",
+      "usr/lib/ossl-modules", "usr/lib/engines-3", "usr/etc",
+    ] {
+      let p = sdkPath.appendingPathComponent(rel)
+      if fmd.fileExists(atPath: p) {
+        try fmd.removeItem(atPath: p)
+      }
     }
   }
 }
