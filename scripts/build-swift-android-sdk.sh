@@ -267,6 +267,8 @@ if [[ ! -d "$WORK/swift" ]]; then
   cp "$VENDOR/get-packages-and-swift-source.swift" "$WORK/"
   SWIFT_TAG="$SWIFT_TAG" ANDROID_ARCH="$ANDROID_ARCH" \
     "$TOOLCHAIN_BIN/swift" get-packages-and-swift-source.swift
+  # Fresh trees must be patched; KEEP_WORK cleanup can drop sources but leave marks.
+  rm -f "$WORK"/.patched-*
 fi
 
 # Foundation's CMake always find_package(LibXml2 REQUIRED). Do not restore
