@@ -32,12 +32,12 @@ test frameworks if cheap (e.g. drop from `swiftRepos` only if it does not
 break finagolfin patch apply — prefer minimal flag change first).
 
 **Acceptance criteria:**
-- [ ] Default SMSLoc SDK build-script invocation does not pass `--xctest` /
+- [x] Default SMSLoc SDK build-script invocation does not pass `--xctest` /
       `--install-xctest`
-- [ ] `ponytail:` comment documents ceiling + upgrade path
+- [x] `ponytail:` comment documents ceiling + upgrade path
 
 **Verification:**
-- [ ] `grep -n -- '--xctest' scripts/build-swift-android-sdk.sh` shows none
+- [x] `grep -n -- '--xctest' scripts/build-swift-android-sdk.sh` shows none
       (or only in comments)
 
 **Dependencies:** None (can parallel Task 1)
