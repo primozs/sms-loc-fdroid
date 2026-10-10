@@ -121,15 +121,15 @@ marker as needed) and confirm no `libandroid-execinfo_*.deb` download, then
 smoke `package-android-jni.sh`.
 
 **Acceptance criteria:**
-- [ ] Build log has no `Downloading libandroid-execinfo_` / Termux deb fetch
-- [ ] `build-swift-android-sdk.sh` completes successfully
-- [ ] `package-android-jni.sh` produces OfflineMapServer `.so`s under
+- [x] Build log has no `Downloading libandroid-execinfo_` / Termux deb fetch
+- [x] `build-swift-android-sdk.sh` completes successfully
+- [x] `package-android-jni.sh` produces OfflineMapServer `.so`s under
       `android/app/src/main/jniLibs/arm64-v8a/`
 
 **Verification:**
-- [ ] Build: `./scripts/build-swift-android-sdk.sh` (long)
-- [ ] Pack: `./native/OfflineMapServer/scripts/package-android-jni.sh`
-- [ ] Manual: confirm jniLibs outputs exist; do **not** commit them
+- [x] Build: `./scripts/build-swift-android-sdk.sh` (long)
+- [x] Pack: `./native/OfflineMapServer/scripts/package-android-jni.sh`
+- [x] Manual: confirm jniLibs outputs exist; do **not** commit them
 
 **Dependencies:** Tasks 1–4
 
@@ -141,6 +141,6 @@ smoke `package-android-jni.sh`.
 
 ## Checkpoint: Complete
 
-- [ ] All SPEC.md success criteria checked
-- [ ] No tag / fdroiddata pin in this change
+- [x] All SPEC.md success criteria checked
+- [x] No tag / fdroiddata pin in this change
 - [ ] Human review before `/as-build` follow-ups or release bump

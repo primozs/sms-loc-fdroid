@@ -93,16 +93,16 @@ SPEC.md                                → this file
 
 ## Success Criteria
 
-- [ ] `termuxPackages` has no packages (empty list / no fetch loop over Termux
+- [x] `termuxPackages` has no packages (empty list / no fetch loop over Termux
       debs for the default SMSLoc SDK path)
-- [ ] `./scripts/check-termux-packages.sh` exits 0 and asserts **zero** Termux
+- [x] `./scripts/check-termux-packages.sh` exits 0 and asserts **zero** Termux
       packages (not “OK still lists execinfo”)
-- [ ] `build-swift-android-sdk.sh` completes without downloading
+- [x] `build-swift-android-sdk.sh` completes without downloading
       `libandroid-execinfo_*.deb` from `packages.termux.dev`
-- [ ] If needed: SDK build skips XCTest and/or Swift Testing; product pack still
+- [x] If needed: SDK build skips XCTest and/or Swift Testing; product pack still
       works
-- [ ] Docs + draft metadata no longer claim a remaining Termux execinfo deb
-- [ ] No version tag / fdroiddata pin in this change (fix first; pin later)
+- [x] Docs + draft metadata no longer claim a remaining Termux execinfo deb
+- [x] No version tag / fdroiddata pin in this change (fix first; pin later)
 
 ## Out of scope
 
