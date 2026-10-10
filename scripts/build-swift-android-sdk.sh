@@ -404,37 +404,64 @@ echo "==> build-script (Android ${ANDROID_ARCH}, this takes a long time)"
 # ponytail: skip XCTest/Swift Testing (product JNI never links them; Testing
 # needed Termux libandroid-execinfo for backtrace). --xctest used to pull in
 # Foundation/Dispatch as deps — enable those explicitly instead.
+# Dispatch/Foundation link with -sdk $NDK_sysroot and need swiftrt.o there after
+# stdlib install; two phases + temporary NDK→destdir swift symlink.
 # Upgrade: restore --xctest only with from-source execinfo if SDK self-tests return.
 JOBS="${SMSLOC_SWIFT_SDK_JOBS:-$(nproc)}"
 # Tools (plutil) fail to link on Android (ICU/libc++ shlib-undefined); we only
 # need the Foundation libs for OfflineMapServer.
 FOUNDATION_CMAKE_OPTS="-DCMAKE_SHARED_LINKER_FLAGS= -DFOUNDATION_BUILD_NETWORKING:BOOL=OFF -DFOUNDATION_BUILD_TOOLS:BOOL=OFF"
+NDK_SYSROOT="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot"
+cleanup_ndk_swift() {
+  rm -rf "$NDK_SYSROOT/usr/lib/swift" "$NDK_SYSROOT/usr/lib/swift_static" || true
+}
+trap cleanup_ndk_swift EXIT
+
+bs_common=(
+  --skip-build-cmark
+  --build-llvm=0
+  --android
+  --android-ndk "$ANDROID_NDK_HOME"
+  --android-arch "$ANDROID_ARCH"
+  --android-api-level "$ANDROID_API"
+  --native-swift-tools-path="$TOOLCHAIN_BIN"
+  --native-clang-tools-path="$NATIVE_CLANG_TOOLS"
+  --cross-compile-hosts="android-${ANDROID_ARCH}"
+  --cross-compile-deps-path="$SDK_PATH"
+  --skip-local-build
+  --build-swift-static-stdlib
+  --install-destdir="$SDK_PATH"
+  --swift-install-components='clang-resource-dir-symlink;license;stdlib;sdk-overlay'
+  --cross-compile-append-host-target-to-destdir=False
+  --cross-compile-build-swift-tools=False
+  -j"$JOBS"
+)
+
+echo "==> build-script phase 1: Android stdlib (+ static libxml2)"
 ./swift/utils/build-script -RA \
-  --skip-build-cmark \
-  --build-llvm=0 \
-  --android \
-  --android-ndk "$ANDROID_NDK_HOME" \
-  --android-arch "$ANDROID_ARCH" \
-  --android-api-level "$ANDROID_API" \
-  --native-swift-tools-path="$TOOLCHAIN_BIN" \
-  --native-clang-tools-path="$NATIVE_CLANG_TOOLS" \
-  --cross-compile-hosts="android-${ANDROID_ARCH}" \
-  --cross-compile-deps-path="$SDK_PATH" \
-  --skip-local-build \
-  --build-swift-static-stdlib \
+  "${bs_common[@]}" \
   --static-libxml2 \
+  --install-swift
+
+echo "==> wire destdir swift into NDK sysroot for Dispatch/Foundation link"
+mkdir -p "$NDK_SYSROOT/usr/lib"
+ln -sfn "$SDK_PATH/usr/lib/swift" "$NDK_SYSROOT/usr/lib/swift"
+if [[ -d "$SDK_PATH/usr/lib/swift_static" ]]; then
+  ln -sfn "$SDK_PATH/usr/lib/swift_static" "$NDK_SYSROOT/usr/lib/swift_static"
+fi
+
+echo "==> build-script phase 2: Dispatch + Foundation (no XCTest)"
+./swift/utils/build-script -RA \
+  "${bs_common[@]}" \
   --libdispatch \
   --foundation \
-  --install-swift \
   --install-libdispatch \
   --install-foundation \
-  --install-destdir="$SDK_PATH" \
-  --swift-install-components='clang-resource-dir-symlink;license;stdlib;sdk-overlay' \
-  --cross-compile-append-host-target-to-destdir=False \
-  --cross-compile-build-swift-tools=False \
   --foundation-cmake-options="$FOUNDATION_CMAKE_OPTS" \
-  --libdispatch-cmake-options=-DCMAKE_SHARED_LINKER_FLAGS='' \
-  -j"$JOBS"
+  --libdispatch-cmake-options=-DCMAKE_SHARED_LINKER_FLAGS=''
+
+cleanup_ndk_swift
+trap - EXIT
 
 echo "==> post-process runtime rpaths + libc++"
 LIBCXX="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/${ANDROID_ARCH}-linux-android/libc++_shared.so"
