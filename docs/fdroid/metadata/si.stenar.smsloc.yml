@@ -23,8 +23,8 @@ RepoType: git
 Repo: https://github.com/primozs/sms-loc-fdroid.git
 
 Builds:
-  - versionName: 0.0.26
-    versionCode: 26
+  - versionName: 0.0.27
+    versionCode: 27
     commit: 8728c486a26758eb40d385fd1787e154dc08981e
     timeout: 14400
     subdir: android/app
@@ -75,5 +75,5 @@ MaintainerNotes: |-
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
 UpdateCheckData: android/app/build.gradle|versionCode\s+(\d+)|.|versionName\s+"([^"]+)"
-CurrentVersion: 0.0.26
-CurrentVersionCode: 26
+CurrentVersion: 0.0.27
+CurrentVersionCode: 27

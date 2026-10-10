@@ -134,10 +134,9 @@ For Inclusion’s note on `libsqlcipher.so` + `USE_BIOMETRIC` /
 > build is also an accepted path. We would rather keep the maintained plugin
 > than vendor a fork of the entire SQLite stack.
 >
-> Happy to discuss if you prefer we strip the unused biometric permissions via
-> manifest merger (`tools:node="remove"`) while keeping the plugin, or if you
-> consider sqlcipher acceptable here as a required transitive of that plugin.
-> Guidance welcome.
+> Unused `USE_BIOMETRIC` / `USE_FINGERPRINT` are stripped via manifest merger
+> (`tools:node="remove"`). sqlcipher-android remains as the plugin’s required
+> FLOSS Maven transitive.
 
 ## Reply notes (review: build the Swift SDK)
 
