@@ -56,13 +56,13 @@ fail if any package name remains in the default `termuxPackages` list.
 Keep existing spawn/curl/xml negative checks and spawn-from-source checks.
 
 **Acceptance criteria:**
-- [ ] Script fails if `libandroid-execinfo` (or any other) appears in the
+- [x] Script fails if `libandroid-execinfo` (or any other) appears in the
       default list
-- [ ] Script passes when the list is empty
-- [ ] Still asserts `--static-libxml2` + spawn from source
+- [x] Script passes when the list is empty
+- [x] Still asserts `--static-libxml2` + spawn from source
 
 **Verification:**
-- [ ] `./scripts/check-termux-packages.sh` exits 0
+- [x] `./scripts/check-termux-packages.sh` exits 0
 
 **Dependencies:** Task 1
 
@@ -75,8 +75,8 @@ Keep existing spawn/curl/xml negative checks and spawn-from-source checks.
 
 ## Checkpoint: Static gate (after Tasks 1–3)
 
-- [ ] `./scripts/check-termux-packages.sh` exits 0
-- [ ] No default Termux package names in get-packages source
+- [x] `./scripts/check-termux-packages.sh` exits 0
+- [x] No default Termux package names in get-packages source
 - [ ] Human skim empty-sysroot path before long build
 
 ---

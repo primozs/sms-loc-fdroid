@@ -167,7 +167,7 @@ let cwd = fmd.currentDirectoryPath
 let sdkPath = cwd.appendingPathComponent(sdkDir)
 
 if termuxPackages.isEmpty {
-  // No packages.termux.dev contact: empty deps root for spawn + --static-libxml2.
+  // No Termux .deb downloads: empty deps root for from-source libs + --static-libxml2.
   if !fmd.fileExists(atPath: sdkPath) {
     print("Creating empty cross-compile sysroot at \(sdkDir) (no Termux packages)")
     try fmd.createDirectory(atPath: sdkPath.appendingPathComponent("usr/lib"),
