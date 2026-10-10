@@ -141,5 +141,5 @@ yarn lint
 | `scripts/build-swift-android-sdk.sh` | From-source Swift Android SDK |
 | `scripts/build-libandroid-spawn.sh` | From-source spawn `.so` / `.a` / `spawn.h` |
 | `native/OfflineMapServer/scripts/package-android-jni.sh` | Fill gitignored `jniLibs` |
-| `scripts/check-termux-packages.sh` | Assert no Termux spawn/curl/xml fetch |
+| `scripts/check-termux-packages.sh` | Assert zero default Termux debs (+ no spawn/curl/xml) |
 | `scripts/check-host-tooling.sh` | NDK/cmake/patchelf fail-closed checks |

@@ -87,13 +87,13 @@ Keep existing spawn/curl/xml negative checks and spawn-from-source checks.
 (not “only remaining is execinfo”). Align local-build check description.
 
 **Acceptance criteria:**
-- [ ] `docs/fdroid.md` Termux bullets say no Termux debs
-- [ ] `docs/fdroid/metadata/si.stenar.smsloc.yml` Matches / Notes updated
-- [ ] `native/OfflineMapServer/swift-android-sdk/README.md` updated
-- [ ] `docs/fdroid-local-build.md` check-script blurb accurate if needed
+- [x] `docs/fdroid.md` Termux bullets say no Termux debs
+- [x] `docs/fdroid/metadata/si.stenar.smsloc.yml` Matches / Notes updated
+- [x] `native/OfflineMapServer/swift-android-sdk/README.md` updated
+- [x] `docs/fdroid-local-build.md` check-script blurb accurate if needed
 
 **Verification:**
-- [ ] `rg -n 'libandroid-execinfo|remaining Termux' docs/ native/OfflineMapServer/swift-android-sdk/README.md`
+- [x] `rg -n 'libandroid-execinfo|remaining Termux' docs/ native/OfflineMapServer/swift-android-sdk/README.md`
       shows only historical “removed” wording if any, not “still fetched”
 
 **Dependencies:** Tasks 1–3 (wording matches reality)
@@ -110,7 +110,7 @@ Keep existing spawn/curl/xml negative checks and spawn-from-source checks.
 
 ## Checkpoint: Wording (after Task 4)
 
-- [ ] No doc claims a remaining Termux execinfo deb
+- [x] No doc claims a remaining Termux execinfo deb
 
 ---
 

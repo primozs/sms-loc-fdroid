@@ -61,8 +61,9 @@ MaintainerNotes: |-
   (scripts/build-swift-android-sdk.sh). LibXml2 for Foundation is built from
   gnome/libxml2 (--static-libxml2); FoundationNetworking is off (no curl).
   libandroid-spawn is compiled from vendored source under
-  native/libandroid-spawn/ (not packages.termux.dev). Only remaining Termux
-  deb is libandroid-execinfo (Testing backtrace). NDK r27d via recipe ndk:
+  native/libandroid-spawn/ (not packages.termux.dev). No Termux .deb fetches
+  on the default SMSLoc SDK path (XCTest/Testing skipped; no
+  libandroid-execinfo). NDK r27d via recipe ndk:
   (also supplies clang/lld for the Android stdlib link — Debian clang cannot
   resolve -lgcc for that target). CMake ≥3.26 and patchelf from Debian
   packages (sudo); scripts do not curl them or the NDK zip. No NodeSource;

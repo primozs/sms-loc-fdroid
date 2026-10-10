@@ -109,8 +109,9 @@ and JNI outputs are visible to the scanner — intentional, not evasion.
   (OfflineMapServer + Swift Android runtime + `native/libandroid-spawn`);
   recipe uses `scanignore: android/app/src/main/jniLibs` for those outputs
   only (not Termux binary blobs)
-- Termux: only `libandroid-execinfo` may still be fetched as a build-time
-  sysroot deb; spawn/curl/xml stacks are not
+- Termux: no `.deb` fetches for the default SMSLoc SDK path (empty sysroot;
+  spawn from vendored source; libxml2 via `--static-libxml2`; XCTest/Testing
+  skipped so `libandroid-execinfo` is not needed)
 
 ## MR reply draft (sqlcipher / biometric)
 
@@ -156,9 +157,9 @@ For [fdroiddata!45187](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/451
 - A GHCR Docker image may exist for other apps / local speed — **not** used by
   the F-Droid `prebuild`.
 - Expect ~25–40 min SDK rebuild and ~100 MB `jniLibs` (mostly Foundation ICU).
-- Termux: unused curl/xml/ssl debs dropped; `libandroid-spawn` built from
-  vendored source (`native/libandroid-spawn/`); only `libandroid-execinfo`
-  may still come from packages.termux.dev for Testing.
+- Termux: no packages.termux.dev debs on the default path; `libandroid-spawn`
+  from vendored source (`native/libandroid-spawn/`); XCTest/Testing skipped
+  (no `libandroid-execinfo`).
 - Recipe runs `fdroid-prebuild.sh` in `prebuild:` so the scanner sees yarn /
   Swift outputs (not hidden under `build:`).
 
