@@ -15,10 +15,14 @@ ENV DEBIAN_FRONTEND=noninteractive \
     SWIFT_TAG=swift-6.2.3-RELEASE \
     ANDROID_ARCH=aarch64 \
     ANDROID_API=24 \
+    NDK_VERSION=r27d \
     SMSLOC_SWIFT_CACHE=/opt/smsloc-swift \
     SMSLOC_SWIFT_SDK_KEEP_WORK=0 \
     PATH=/root/.local/bin:/usr/local/bin:$PATH
 
+# Host tools + NDK live in this image only (local/CI GHCR). F-Droid never
+# uses this Dockerfile — recipe `ndk: r27d` + Debian cmake/patchelf instead.
+# build-swift-android-sdk.sh deliberately refuses to curl Google NDK.
 RUN apt-get update && apt-get install -y --no-install-recommends \
       ca-certificates curl xz-utils unzip git \
       build-essential clang ninja-build \
@@ -32,7 +36,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && ln -s /opt/cmake-3.30.5-linux-x86_64/bin/cmake /usr/local/bin/cmake \
     && ln -s /opt/cmake-3.30.5-linux-x86_64/bin/cpack /usr/local/bin/cpack \
     && ln -s /opt/cmake-3.30.5-linux-x86_64/bin/ctest /usr/local/bin/ctest \
-    && rm /tmp/cmake.tgz
+    && rm /tmp/cmake.tgz \
+    && mkdir -p "${SMSLOC_SWIFT_CACHE}" \
+    && curl -fsSL -o /tmp/ndk.zip \
+         "https://dl.google.com/android/repository/android-ndk-${NDK_VERSION}-linux.zip" \
+    && unzip -qo /tmp/ndk.zip -d "${SMSLOC_SWIFT_CACHE}" \
+    && rm /tmp/ndk.zip \
+    && test -d "${SMSLOC_SWIFT_CACHE}/android-ndk-${NDK_VERSION}/toolchains"
+
+ENV ANDROID_NDK_HOME=${SMSLOC_SWIFT_CACHE}/android-ndk-${NDK_VERSION} \
+    ANDROID_NDK=${SMSLOC_SWIFT_CACHE}/android-ndk-${NDK_VERSION}
 
 WORKDIR /src
 COPY scripts/build-swift-android-sdk.sh /src/scripts/build-swift-android-sdk.sh
