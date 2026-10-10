@@ -402,8 +402,9 @@ echo "==> build-script (Android ${ANDROID_ARCH}, this takes a long time)"
 # foundation-cmake-options must be space-separated (not ';'): build-script-impl
 # word-splits into cmake -D args. Do not put comments inside the \ continuation.
 # ponytail: skip XCTest/Swift Testing (product JNI never links them; Testing
-# needed Termux libandroid-execinfo for backtrace). Upgrade: restore --xctest
-# only with from-source execinfo if SDK self-tests return.
+# needed Termux libandroid-execinfo for backtrace). --xctest used to pull in
+# Foundation/Dispatch as deps — enable those explicitly instead.
+# Upgrade: restore --xctest only with from-source execinfo if SDK self-tests return.
 JOBS="${SMSLOC_SWIFT_SDK_JOBS:-$(nproc)}"
 # Tools (plutil) fail to link on Android (ICU/libc++ shlib-undefined); we only
 # need the Foundation libs for OfflineMapServer.
@@ -422,6 +423,8 @@ FOUNDATION_CMAKE_OPTS="-DCMAKE_SHARED_LINKER_FLAGS= -DFOUNDATION_BUILD_NETWORKIN
   --skip-local-build \
   --build-swift-static-stdlib \
   --static-libxml2 \
+  --libdispatch \
+  --foundation \
   --install-swift \
   --install-libdispatch \
   --install-foundation \
