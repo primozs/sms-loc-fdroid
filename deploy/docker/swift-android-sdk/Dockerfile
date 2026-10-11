@@ -27,7 +27,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       ca-certificates curl xz-utils unzip git \
       build-essential clang ninja-build \
       python3 python-is-python3 \
-      libncurses6 libcurl4 libxml2 libsqlite3-0 zlib1g libedit2 \
+      libncurses6 libcurl4 libxml2 libsqlite3-0 zlib1g zlib1g-dev libedit2 \
       patchelf perl \
     && rm -rf /var/lib/apt/lists/* \
     && curl -fsSL -o /tmp/cmake.tgz \
