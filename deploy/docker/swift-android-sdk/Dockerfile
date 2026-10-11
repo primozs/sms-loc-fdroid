@@ -48,9 +48,11 @@ ENV ANDROID_NDK_HOME=${SMSLOC_SWIFT_CACHE}/android-ndk-${NDK_VERSION} \
     ANDROID_NDK=${SMSLOC_SWIFT_CACHE}/android-ndk-${NDK_VERSION}
 
 WORKDIR /src
-COPY scripts/build-swift-android-sdk.sh /src/scripts/build-swift-android-sdk.sh
+COPY scripts/build-swift-android-sdk.sh scripts/build-libandroid-spawn.sh /src/scripts/
+COPY native/libandroid-spawn /src/native/libandroid-spawn
 COPY native/OfflineMapServer/swift-android-sdk /src/native/OfflineMapServer/swift-android-sdk
 RUN chmod +x /src/scripts/build-swift-android-sdk.sh \
+      /src/scripts/build-libandroid-spawn.sh \
     && /src/scripts/build-swift-android-sdk.sh \
     && cp -a "${SMSLOC_SWIFT_CACHE}/${SWIFT_TAG}-android-${ANDROID_API}-0.1.artifactbundle.tar.gz" \
          /opt/swift-android-sdk.artifactbundle.tar.gz \
